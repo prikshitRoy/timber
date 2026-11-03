@@ -13,6 +13,11 @@ import {
   saveState,
 } from "@/src/shared/storage/timber-storage";
 
+import type {
+  NativeBookmarkRecord,
+  BookmarkSyncSummary,
+} from "./bookmark.types";
+
 import { normalizeBookmarkUrl } from "./bookmark-normalizer";
 
 const now = () => Date.now();
@@ -488,6 +493,158 @@ class BookmarkRepository {
         }
     }
     }
+
+  // Create canonical bookmark(New URL), Reuse canonical ID(Same URL in another browser), Update source association(Existing bookmark moved or renamed), Remove stale association(Native bookmark deleted)
+  async syncNativeBookmarks(
+    sourceId: string,
+    nativeBookmarks: NativeBookmarkRecord[]
+  ): Promise<BookmarkSyncSummary> {
+    return this.mutate((state) => {
+      const source = state.sources.find(
+        (item) => item.id === sourceId
+      );
+
+      if (!source) {
+        throw new Error("Browser source not found.");
+      }
+
+      const seenNativeIds = new Set<string>();
+
+      let uniqueAdded = 0;
+      let associationsAdded = 0;
+      let associationsUpdated = 0;
+
+      for (const input of nativeBookmarks) {
+        // Ignore duplicate native IDs in an unexpected tree response.
+        if (seenNativeIds.has(input.nativeBookmarkId)) {
+          continue;
+        }
+
+        seenNativeIds.add(input.nativeBookmarkId);
+
+        const normalizedUrl = normalizeBookmarkUrl(input.url);
+
+        // Find the canonical bookmark.
+        let bookmark = state.bookmarks.find(
+          (item) => item.normalizedUrl === normalizedUrl
+        );
+
+        // Create it only when it doesn't already exist.
+        if (!bookmark) {
+          bookmark = {
+            id: createId(),
+            url: input.url,
+            normalizedUrl,
+            title: input.title || input.url,
+            createdAt: now(),
+            updatedAt: now(),
+          };
+
+          state.bookmarks.push(bookmark);
+
+          uniqueAdded++;
+        } else {
+          // When a URL exists in only one source, keep its
+          // canonical title synchronized with that source.
+          const existingSourceCount = state.bookmarkSources.filter(
+            (item) => item.bookmarkId === bookmark!.id
+          ).length;
+
+          if (existingSourceCount <= 1) {
+            bookmark.title = input.title || input.url;
+            bookmark.url = input.url;
+            bookmark.updatedAt = now();
+          }
+        }
+
+        // Find this bookmark's occurrence in the current browser.
+        const occurrence = state.bookmarkSources.find(
+          (item) =>
+            item.sourceId === sourceId &&
+            item.nativeBookmarkId === input.nativeBookmarkId
+        );
+
+        if (occurrence) {
+          const changed =
+            occurrence.bookmarkId !== bookmark.id ||
+            occurrence.title !== input.title ||
+            occurrence.parentNativeId !== input.parentNativeId ||
+            occurrence.index !== input.index ||
+            JSON.stringify(occurrence.folderPath) !==
+              JSON.stringify(input.folderPath);
+
+          occurrence.bookmarkId = bookmark.id;
+          occurrence.title = input.title;
+          occurrence.parentNativeId = input.parentNativeId;
+          occurrence.folderPath = [...input.folderPath];
+          occurrence.index = input.index;
+          occurrence.dateAdded = input.dateAdded;
+
+          if (changed) {
+            associationsUpdated++;
+          }
+        } else {
+          const newOccurrence: BookmarkSource = {
+            id: createId(),
+            bookmarkId: bookmark.id,
+            sourceId,
+            nativeBookmarkId: input.nativeBookmarkId,
+            title: input.title,
+            parentNativeId: input.parentNativeId,
+            folderPath: [...input.folderPath],
+            index: input.index,
+            dateAdded: input.dateAdded,
+          };
+
+          state.bookmarkSources.push(newOccurrence);
+
+          associationsAdded++;
+        }
+      }
+
+      // Remove associations that no longer exist in this browser.
+      const previousAssociationCount = state.bookmarkSources.length;
+
+      state.bookmarkSources = state.bookmarkSources.filter(
+        (item) =>
+          item.sourceId !== sourceId ||
+          seenNativeIds.has(item.nativeBookmarkId)
+      );
+
+      const associationsRemoved =
+        previousAssociationCount - state.bookmarkSources.length;
+
+      // Keep canonical records that are still referenced
+      // by a browser source or a custom page.
+      const linkedBookmarkIds = new Set(
+        state.bookmarkSources.map((item) => item.bookmarkId)
+      );
+
+      const customPageBookmarkIds = new Set(
+        state.pages
+          .filter((page) => page.type === "custom")
+          .flatMap((page) => page.bookmarkIds ?? [])
+      );
+
+      state.bookmarks = state.bookmarks.filter(
+        (bookmark) =>
+          linkedBookmarkIds.has(bookmark.id) ||
+          customPageBookmarkIds.has(bookmark.id)
+      );
+
+      source.lastSyncedAt = now();
+
+      return {
+        scanned: nativeBookmarks.length,
+        uniqueAdded,
+        associationsAdded,
+        associationsUpdated,
+        associationsRemoved,
+        totalUniqueBookmarks: state.bookmarks.length,
+      };
+    });
+  }
+
 }
 
   

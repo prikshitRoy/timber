@@ -33,10 +33,12 @@ export interface BookmarkSource {
   sourceId: string;
 
   nativeBookmarkId: string;
+
   title: string;
   parentNativeId?: string;
   folderPath: string[];
 
+  index?: number;
   dateAdded?: number;
 }
 

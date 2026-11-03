@@ -7,22 +7,18 @@
   "scripts": {
     "dev": "wxt -b chrome --mv3",
     "dev:brave": "wxt -b chrome --mv3",
-    "dev:firefox": "wxt -b firefox --mv3",
+    "dev:firefox": "wxt -b firefox",
 
     "build": "wxt build -b chrome --mv3",
     "build:brave": "wxt build -b chrome --mv3",
-    "build:firefox": "wxt build -b firefox --mv3",
+    "build:firefox": "wxt build -b firefox",
 
     "zip": "wxt zip -b chrome --mv3",
     "zip:brave": "wxt zip -b chrome --mv3",
-    "zip:firefox": "wxt zip -b firefox --mv3",
+    "zip:firefox": "wxt zip -b firefox",
 
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare"
-    },
-    "dependencies": {
-      "react": "^19.2.4",
-      "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
