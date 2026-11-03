@@ -15,11 +15,15 @@ yarn
 yarn wxt prepare
 ```
 ## Run:
+```bash
+yarn compile
+```
 
 ```bash
 yarn dev:brave
 ```
 or
+
 ```bash
 yarn dev:firefox
 ```

@@ -1,73 +1,77 @@
+
 import { browser } from "wxt/browser";
 
 import type {
   BrowserKind,
   TimberState,
-} from "../types/timber";
+} from "@/src/shared/types/timber";
 
-const STORAGE_KEY = "timber.state.v1";
+const STORAGE_KEY = "timber.state.v2";
 
-export async function loadTimberState(
-  browserKind: BrowserKind
-): Promise<TimberState> {
+export async function loadState(): Promise<TimberState | null> {
   const result = await browser.storage.local.get(STORAGE_KEY);
 
-  const existing = result[STORAGE_KEY] as TimberState | undefined;
+  return (result[STORAGE_KEY] as TimberState | undefined) ?? null;
+}
 
-  if (existing) {
-    if (existing.schemaVersion !== 1) {
-      throw new Error("Unsupported Timber storage version.");
-    }
+export async function saveState(state: TimberState): Promise<void> {
+  await browser.storage.local.set({
+    [STORAGE_KEY]: state,
+  });
+}
 
-    return existing;
-  }
-
+export function createInitialState(
+  browserKind: BrowserKind
+): TimberState {
   const now = Date.now();
 
   const sourceId = crypto.randomUUID();
-  const pageId = crypto.randomUUID();
+  const allPageId = crypto.randomUUID();
+  const sourcePageId = crypto.randomUUID();
 
-  const browserName = {
+  const browserName: Record<BrowserKind, string> = {
     brave: "Brave",
     firefox: "Firefox",
     chromium: "Chromium",
     unknown: "Browser",
-  }[browserKind];
+  };
 
-  const initialState: TimberState = {
-    schemaVersion: 1,
+  const name = browserName[browserKind];
 
-    source: {
-      id: sourceId,
-      browser: browserKind,
-      name: browserName,
-    },
+  return {
+    schemaVersion: 2,
+
+    sources: [
+      {
+        id: sourceId,
+        browser: browserKind,
+        name,
+        createdAt: now,
+      },
+    ],
+
+    bookmarks: [],
+
+    bookmarkSources: [],
 
     pages: [
       {
-        id: pageId,
-        name: `${browserName} Bookmarks`,
-        bookmarkIds: null,
+        id: allPageId,
+        name: "All Bookmarks",
+        type: "all",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: sourcePageId,
+        name: `${name} Bookmarks`,
+        type: "source",
         sourceId,
         createdAt: now,
         updatedAt: now,
       },
     ],
 
-    activePageId: pageId,
+    activePageId: allPageId,
   };
-
-  await browser.storage.local.set({
-    [STORAGE_KEY]: initialState,
-  });
-
-  return initialState;
-}
-
-export async function saveTimberState(
-  state: TimberState
-): Promise<void> {
-  await browser.storage.local.set({
-    [STORAGE_KEY]: state,
-  });
 }

@@ -1,34 +1,63 @@
+
 export type BrowserKind =
   | "brave"
   | "firefox"
   | "chromium"
   | "unknown";
 
+export type BookmarkPageType =
+  | "all"
+  | "source"
+  | "custom";
+
 export interface BrowserSource {
   id: string;
   browser: BrowserKind;
   name: string;
+  createdAt: number;
+  lastSyncedAt?: number;
+}
+
+export interface Bookmark {
+  id: string;
+  url: string;
+  normalizedUrl: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BookmarkSource {
+  id: string;
+  bookmarkId: string;
+  sourceId: string;
+
+  nativeBookmarkId: string;
+  title: string;
+  parentNativeId?: string;
+  folderPath: string[];
+
+  dateAdded?: number;
 }
 
 export interface BookmarkPage {
   id: string;
   name: string;
+  type: BookmarkPageType;
 
-  // null means display all native bookmarks.
-  // An array means display only selected bookmarks.
-  bookmarkIds: string[] | null;
-
-  sourceId: string;
+  sourceId?: string;
+  bookmarkIds?: string[];
 
   createdAt: number;
   updatedAt: number;
 }
 
 export interface TimberState {
-  schemaVersion: 1;
+  schemaVersion: 2;
 
-  source: BrowserSource;
-
+  sources: BrowserSource[];
+  bookmarks: Bookmark[];
+  bookmarkSources: BookmarkSource[];
   pages: BookmarkPage[];
 
   activePageId: string;
