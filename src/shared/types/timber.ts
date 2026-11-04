@@ -49,6 +49,7 @@ export interface BookmarkPage {
 
   sourceId?: string;
   bookmarkIds?: string[];
+  parentId?: string; // lets custom pages nest as Timber folders
 
   createdAt: number;
   updatedAt: number;

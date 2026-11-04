@@ -16,6 +16,8 @@ import {
 import type {
   NativeBookmarkRecord,
   BookmarkSyncSummary,
+  BookmarkSyncDiff,
+  BookmarkSyncSelection,
 } from "./bookmark.types";
 
 import { normalizeBookmarkUrl } from "./bookmark-normalizer";
@@ -328,13 +330,22 @@ class BookmarkRepository {
   }
 
   // Create a custom page.
-  async createPage(name: string): Promise<BookmarkPage> {
+  async createPage(name: string, parentId?: string): Promise<BookmarkPage> {
     return this.mutate((state) => {
+      if (parentId) {
+        const parent = state.pages.find((item) => item.id === parentId);
+
+        if (!parent || parent.type !== "custom") {
+          throw new Error("Parent folder not found.");
+        }
+      }
+
       const page: BookmarkPage = {
         id: createId(),
         name: name.trim(),
         type: "custom",
         bookmarkIds: [],
+        parentId,
         createdAt: now(),
         updatedAt: now(),
       };
@@ -347,6 +358,16 @@ class BookmarkRepository {
 
       return page;
     });
+  }
+
+  // Timber-created folders/pages nested under a parent
+  // (omit parentId for top-level custom pages/folders).
+  async getChildPages(parentId?: string): Promise<BookmarkPage[]> {
+    const state = await this.read();
+
+    return state.pages.filter(
+      (page) => page.type === "custom" && page.parentId === parentId
+    );
   }
 
   // Rename a page.
@@ -435,6 +456,14 @@ class BookmarkRepository {
 
       if (!page || page.type !== "custom") {
         throw new Error("Only custom pages can be deleted.");
+      }
+
+      // Move any nested folders up a level instead of orphaning them.
+      for (const child of state.pages) {
+        if (child.type === "custom" && child.parentId === pageId) {
+          child.parentId = page.parentId;
+          child.updatedAt = now();
+        }
       }
 
       state.pages = state.pages.filter(
@@ -631,6 +660,216 @@ class BookmarkRepository {
           linkedBookmarkIds.has(bookmark.id) ||
           customPageBookmarkIds.has(bookmark.id)
       );
+
+      source.lastSyncedAt = now();
+
+      return {
+        scanned: nativeBookmarks.length,
+        uniqueAdded,
+        associationsAdded,
+        associationsUpdated,
+        associationsRemoved,
+        totalUniqueBookmarks: state.bookmarks.length,
+      };
+    });
+  }
+
+
+    // Compare native bookmarks against Timber's catalog without
+  // changing anything — used to drive the scan review popup.
+  async computeSyncDiff(
+    sourceId: string,
+    nativeBookmarks: NativeBookmarkRecord[]
+  ): Promise<BookmarkSyncDiff> {
+    const state = await this.read();
+
+    const source = state.sources.find((item) => item.id === sourceId);
+
+    if (!source) {
+      throw new Error("Browser source not found.");
+    }
+
+    const existingBySourceNativeId = new Map<string, BookmarkSource>(
+      state.bookmarkSources
+        .filter((item) => item.sourceId === sourceId)
+        .map((item) => [item.nativeBookmarkId, item] as const)
+    );
+
+    const additions: BookmarkSyncDiff["additions"] = [];
+    const updates: BookmarkSyncDiff["updates"] = [];
+
+    const seenNativeIds = new Set<string>();
+
+    for (const native of nativeBookmarks) {
+      if (seenNativeIds.has(native.nativeBookmarkId)) continue;
+      seenNativeIds.add(native.nativeBookmarkId);
+
+      const occurrence = existingBySourceNativeId.get(
+        native.nativeBookmarkId
+      );
+
+      if (!occurrence) {
+        additions.push({ native });
+        continue;
+      }
+
+      const changed =
+        occurrence.title !== native.title ||
+        occurrence.parentNativeId !== native.parentNativeId ||
+        occurrence.index !== native.index ||
+        JSON.stringify(occurrence.folderPath) !==
+          JSON.stringify(native.folderPath);
+
+      if (changed) {
+        updates.push({
+          native,
+          bookmarkId: occurrence.bookmarkId,
+          previousTitle: occurrence.title,
+          previousFolderPath: occurrence.folderPath,
+        });
+      }
+    }
+
+    // Native bookmarks no longer present — flagged for review only.
+    // Nothing is deleted here.
+    const removals: BookmarkSyncDiff["removals"] = state.bookmarkSources
+      .filter(
+        (item) =>
+          item.sourceId === sourceId &&
+          !seenNativeIds.has(item.nativeBookmarkId)
+      )
+      .map((item) => {
+        const bookmark = state.bookmarks.find(
+          (b) => b.id === item.bookmarkId
+        );
+
+        return {
+          bookmarkSourceId: item.id,
+          bookmarkId: item.bookmarkId,
+          title: bookmark?.title ?? item.title,
+          url: bookmark?.url ?? "",
+          folderPath: item.folderPath,
+        };
+      });
+
+    return { sourceId, additions, updates, removals };
+  }
+
+  // Apply only the parts of a diff the user approved. Removals are
+  // never applied unless their bookmarkSourceId is explicitly listed
+  // in selection.confirmedRemovalIds.
+  async applySyncDiff(
+    sourceId: string,
+    nativeBookmarks: NativeBookmarkRecord[],
+    selection: BookmarkSyncSelection
+  ): Promise<BookmarkSyncSummary> {
+    const acceptedIds = new Set(selection.acceptedNativeIds);
+    const confirmedRemovals = new Set(selection.confirmedRemovalIds);
+
+    return this.mutate((state) => {
+      const source = state.sources.find((item) => item.id === sourceId);
+
+      if (!source) {
+        throw new Error("Browser source not found.");
+      }
+
+      let uniqueAdded = 0;
+      let associationsAdded = 0;
+      let associationsUpdated = 0;
+
+      const nativeById = new Map<string, NativeBookmarkRecord>(
+        nativeBookmarks.map((item) => [item.nativeBookmarkId, item] as const)
+      );
+
+      for (const nativeId of acceptedIds) {
+        const input = nativeById.get(nativeId);
+        if (!input) continue;
+
+        const normalizedUrl = normalizeBookmarkUrl(input.url);
+
+        let bookmark = state.bookmarks.find(
+          (item) => item.normalizedUrl === normalizedUrl
+        );
+
+        if (!bookmark) {
+          bookmark = {
+            id: createId(),
+            url: input.url,
+            normalizedUrl,
+            title: input.title || input.url,
+            createdAt: now(),
+            updatedAt: now(),
+          };
+
+          state.bookmarks.push(bookmark);
+          uniqueAdded++;
+        } else {
+          bookmark.title = input.title || input.url;
+          bookmark.url = input.url;
+          bookmark.updatedAt = now();
+        }
+
+        const occurrence = state.bookmarkSources.find(
+          (item) =>
+            item.sourceId === sourceId &&
+            item.nativeBookmarkId === input.nativeBookmarkId
+        );
+
+        if (occurrence) {
+          occurrence.bookmarkId = bookmark.id;
+          occurrence.title = input.title;
+          occurrence.parentNativeId = input.parentNativeId;
+          occurrence.folderPath = [...input.folderPath];
+          occurrence.index = input.index;
+          occurrence.dateAdded = input.dateAdded;
+
+          associationsUpdated++;
+        } else {
+          state.bookmarkSources.push({
+            id: createId(),
+            bookmarkId: bookmark.id,
+            sourceId,
+            nativeBookmarkId: input.nativeBookmarkId,
+            title: input.title,
+            parentNativeId: input.parentNativeId,
+            folderPath: [...input.folderPath],
+            index: input.index,
+            dateAdded: input.dateAdded,
+          });
+
+          associationsAdded++;
+        }
+      }
+
+      // Only remove associations (and orphaned canonical bookmarks)
+      // the user explicitly confirmed via the review popup.
+      let associationsRemoved = 0;
+
+      state.bookmarkSources = state.bookmarkSources.filter((item) => {
+        if (item.sourceId !== sourceId) return true;
+        if (!confirmedRemovals.has(item.id)) return true;
+
+        associationsRemoved++;
+        return false;
+      });
+
+      if (confirmedRemovals.size > 0) {
+        const linkedBookmarkIds = new Set(
+          state.bookmarkSources.map((item) => item.bookmarkId)
+        );
+
+        const customPageBookmarkIds = new Set(
+          state.pages
+            .filter((page) => page.type === "custom")
+            .flatMap((page) => page.bookmarkIds ?? [])
+        );
+
+        state.bookmarks = state.bookmarks.filter(
+          (bookmark) =>
+            linkedBookmarkIds.has(bookmark.id) ||
+            customPageBookmarkIds.has(bookmark.id)
+        );
+      }
 
       source.lastSyncedAt = now();
 

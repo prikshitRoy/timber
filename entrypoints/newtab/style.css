@@ -185,3 +185,100 @@ button:disabled {
     width: 100%;
   }
 }
+
+.native-changed-badge {
+  font-size: 12px;
+  color: #c0392b;
+  align-self: center;
+}
+
+.sync-review-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.sync-review-modal {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 480px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.sync-review-modal label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.sync-review-modal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.folder-tree-root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.folder-tree-source h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.folder-node {
+  margin-left: 4px;
+}
+
+.folder-header {
+  display: block;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  margin: 0;
+  color: #222;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.folder-header:hover {
+  background: #f0f0f0;
+  border-radius: 6px;
+}
+
+.folder-body {
+  margin-left: 16px;
+  padding-left: 10px;
+  border-left: 1px solid #eee;
+}
+
+.folder-bookmark-link {
+  display: block;
+  padding: 5px 4px;
+  color: #333;
+  text-decoration: none;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-bookmark-link:hover {
+  text-decoration: underline;
+}

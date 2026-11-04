@@ -1,6 +1,5 @@
 
 import { useEffect, useMemo, useState } from "react";
-
 import { browser } from "wxt/browser";
 
 import {
@@ -11,10 +10,19 @@ import {
 import { bookmarkRepository } from
     "../../src/shared/bookmarks/bookmark-repository";
 
-import type { Bookmark } from "../../src/shared/types/timber";
+import type { Bookmark, BrowserSource, BookmarkSource } from "../../src/shared/types/timber";
+import { buildNativeFolderTree } from "../../src/shared/bookmarks/bookmark-folder-tree";
+import FolderTree from "./FolderTree";
 
 import type { BookmarkSyncSummary } from
     "../../src/shared/bookmarks/bookmark.types";
+
+import type {
+    BookmarkSyncDiff,
+    BookmarkSyncSelection,
+    NativeBookmarkRecord,
+} from "../../src/shared/bookmarks/bookmark.types";
+import SyncReviewModal from "./SyncReviewModal";
 
 interface DashboardBookmark extends Bookmark {
     sourceCount: number;
@@ -30,41 +38,17 @@ function App() {
     const [status, setStatus] = useState("Checking bookmark access...");
     const [error, setError] = useState("");
 
-    /**
-     * Synchronize through the background process,
-     * then read the updated catalog.
-     */
-    async function synchronizeAndLoad() {
-        const summary = await browser.runtime.sendMessage({
-            type: "TIMBER_SYNC_BOOKMARKS",
-        }) as BookmarkSyncSummary;
+    const [nativeChanged, setNativeChanged] = useState(false);
+    const [pendingSync, setPendingSync] = useState<{
+        sourceId: string;
+        nativeBookmarks: NativeBookmarkRecord[];
+        diff: BookmarkSyncDiff;
+    } | null>(null);
 
-        const state = await bookmarkRepository.getState();
+    const [sources, setSources] = useState<BrowserSource[]>([]);
+    const [bookmarkSources, setBookmarkSources] = useState<BookmarkSource[]>([]);
 
-        const sourceCounts = new Map<string, number>();
 
-        for (const occurrence of state.bookmarkSources) {
-            sourceCounts.set(
-                occurrence.bookmarkId,
-                (sourceCounts.get(occurrence.bookmarkId) ?? 0) + 1
-            );
-        }
-
-        const dashboardBookmarks: DashboardBookmark[] =
-            state.bookmarks.map((bookmark) => ({
-                ...bookmark,
-                sourceCount: sourceCounts.get(bookmark.id) ?? 0,
-            }));
-
-        setBookmarks(dashboardBookmarks);
-
-        setStatus(
-            `${summary.scanned} web bookmarks scanned · ` +
-            `${summary.totalUniqueBookmarks} unique bookmarks`
-        );
-    }
-
-    // 
     async function loadCatalog() {
         const state = await bookmarkRepository.getState();
 
@@ -76,6 +60,11 @@ function App() {
                 (sourceCounts.get(occurrence.bookmarkId) ?? 0) + 1
             );
         }
+
+        setStatus(`${state.bookmarks.length} unique bookmarks`);
+
+        setSources(state.sources);
+        setBookmarkSources(state.bookmarkSources);
 
         setBookmarks(
             state.bookmarks.map((bookmark) => ({
@@ -128,7 +117,7 @@ function App() {
                     return;
                 }
 
-                await synchronizeAndLoad();
+                await loadCatalog();
 
             } catch (error) {
                 if (!cancelled) {
@@ -169,7 +158,7 @@ function App() {
             setConnected(true);
             setStatus("Synchronizing bookmarks...");
 
-            await synchronizeAndLoad();
+            await handleScan();
         } catch (error) {
             setError(
                 error instanceof Error
@@ -184,19 +173,54 @@ function App() {
     /**
      * Manually refresh native bookmarks.
      */
-    async function handleRefresh() {
+    async function handleScan() {
         try {
             setLoading(true);
             setError("");
 
-            await synchronizeAndLoad();
+            const result = await browser.runtime.sendMessage({
+                type: "TIMBER_SYNC_BOOKMARKS",
+            }) as {
+                sourceId: string;
+                nativeBookmarks: NativeBookmarkRecord[];
+                diff: BookmarkSyncDiff;
+            };
+
+            setNativeChanged(false);
+
+            const { additions, updates, removals } = result.diff;
+
+            if (additions.length === 0 && updates.length === 0 && removals.length === 0) {
+                setStatus("Timber is already up to date.");
+                return;
+            }
+
+            setPendingSync(result);
         } catch (error) {
-            setError(
-                error instanceof Error
-                    ? error.message
-                    : "Synchronization failed."
-            );
+            setError(error instanceof Error ? error.message : "Scan failed.");
         } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleApplySync(selection: BookmarkSyncSelection) {
+        if (!pendingSync) return;
+
+        try {
+            setLoading(true);
+
+            await browser.runtime.sendMessage({
+                type: "TIMBER_APPLY_SYNC_SELECTION",
+                sourceId: pendingSync.sourceId,
+                nativeBookmarks: pendingSync.nativeBookmarks,
+                selection,
+            });
+
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to apply changes.");
+        } finally {
+            setPendingSync(null);
             setLoading(false);
         }
     }
@@ -213,6 +237,23 @@ function App() {
         );
     }, [bookmarks, query]);
 
+    const bookmarksById = useMemo(() => {
+        const map = new Map<string, { title: string; url: string }>();
+        for (const bookmark of bookmarks) {
+            map.set(bookmark.id, { title: bookmark.title, url: bookmark.url });
+        }
+        return map;
+    }, [bookmarks]);
+
+    const folderTrees = useMemo(
+        () =>
+            sources.map((source) => ({
+                source,
+                tree: buildNativeFolderTree(bookmarkSources, source.id),
+            })),
+        [sources, bookmarkSources]
+    );
+
     return (
         <main className="timber-dashboard">
 
@@ -223,13 +264,13 @@ function App() {
                 </div>
 
                 <div className="header-actions">
+                    {connected && nativeChanged && (
+                        <span className="native-changed-badge">Bookmarks changed</span>
+                    )}
+
                     {connected && (
-                        <button
-                            onClick={handleRefresh}
-                            disabled={loading}
-                            type="button"
-                        >
-                            {loading ? "Syncing..." : "Refresh"}
+                        <button onClick={handleScan} disabled={loading} type="button">
+                            {loading ? "Scanning..." : "Scan"}
                         </button>
                     )}
                 </div>
@@ -270,40 +311,54 @@ function App() {
                         />
                     </section>
 
-                    {filteredBookmarks.length === 0 ? (
+                    {query ? (
+                        filteredBookmarks.length === 0 ? (
+                            <section className="empty-state">
+                                <h3>No bookmarks found</h3>
+                                <p>Try a different search.</p>
+                            </section>
+                        ) : (
+                            <section className="bookmark-grid">
+                                {filteredBookmarks.map((bookmark) => (
+                                    <article
+                                        className="bookmark-card"
+                                        key={bookmark.id}
+                                    >
+                                        <a
+                                            className="bookmark-link"
+                                            href={bookmark.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <h3>{bookmark.title}</h3>
+
+                                            <p>{bookmark.url}</p>
+                                        </a>
+
+                                        <footer>
+                                            {bookmark.sourceCount} browser
+                                            {bookmark.sourceCount === 1 ? "" : "s"}
+                                        </footer>
+                                    </article>
+                                ))}
+                            </section>
+                        )
+                    ) : bookmarks.length === 0 ? (
                         <section className="empty-state">
                             <h3>No bookmarks found</h3>
-                            <p>
-                                {query
-                                    ? "Try a different search."
-                                    : "Your browser doesn't have any supported web bookmarks yet."}
-                            </p>
+                            <p>Your browser doesn't have any supported web bookmarks yet.</p>
                         </section>
                     ) : (
-                        <section className="bookmark-grid">
-                            {filteredBookmarks.map((bookmark) => (
-                                <article
-                                    className="bookmark-card"
-                                    key={bookmark.id}
-                                >
-                                    <a
-                                        className="bookmark-link"
-                                        href={bookmark.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <h3>{bookmark.title}</h3>
-
-                                        <p>{bookmark.url}</p>
-                                    </a>
-
-                                    <footer>
-                                        {bookmark.sourceCount} browser
-                                        {bookmark.sourceCount === 1 ? "" : "s"}
-                                    </footer>
-                                </article>
+                        <div className="folder-tree-root">
+                            {folderTrees.map(({ source, tree }) => (
+                                <FolderTree
+                                    key={source.id}
+                                    source={source}
+                                    tree={tree}
+                                    bookmarksById={bookmarksById}
+                                />
                             ))}
-                        </section>
+                        </div>
                     )}
                 </>
             )}
@@ -315,6 +370,15 @@ function App() {
                     <span className="error-message">{error}</span>
                 )}
             </div>
+
+
+            {pendingSync && (
+                <SyncReviewModal
+                    diff={pendingSync.diff}
+                    onCancel={() => setPendingSync(null)}
+                    onApply={handleApplySync}
+                />
+            )}
 
         </main>
     );

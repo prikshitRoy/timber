@@ -5,7 +5,12 @@ import { detectBrowser } from "../browser/browser-info";
 import { bookmarkRepository } from "./bookmark-repository";
 import { readNativeBookmarkTree } from "./bookmark-tree-reader";
 import type { BrowserKind } from "../types/timber";
-import type { BookmarkSyncSummary } from "./bookmark.types";
+import type {
+  BookmarkSyncSummary,
+  BookmarkSyncDiff,
+  BookmarkSyncSelection,
+  NativeBookmarkRecord,
+} from "./bookmark.types";
 
 /**
  * Check whether Timber can access native bookmarks
@@ -74,5 +79,59 @@ export async function syncCurrentBrowserBookmarks():
   return bookmarkRepository.syncNativeBookmarks(
     source.id,
     nativeBookmarks
+  );
+}
+
+
+/**
+ * Compare the browser's current bookmarks against Timber's catalog
+ * without changing anything, so the user can review what changed.
+ */
+export async function computeCurrentBrowserSyncDiff(): Promise<{
+  sourceId: string;
+  nativeBookmarks: NativeBookmarkRecord[];
+  diff: BookmarkSyncDiff;
+}> {
+  const permitted = await hasBookmarkPermission();
+
+  if (!permitted) {
+    throw new Error("Bookmark permission not granted.");
+  }
+
+  const browserKind = await detectBrowser();
+  const state = await bookmarkRepository.initialize(browserKind);
+
+  let source = state.sources.find((item) => item.browser === browserKind);
+
+  if (!source) {
+    source = await bookmarkRepository.registerSource(
+      browserKind,
+      getBrowserName(browserKind)
+    );
+  }
+
+  const nativeBookmarks = await readNativeBookmarkTree();
+
+  const diff = await bookmarkRepository.computeSyncDiff(
+    source.id,
+    nativeBookmarks
+  );
+
+  return { sourceId: source.id, nativeBookmarks, diff };
+}
+
+/**
+ * Apply only the changes the user approved from a prior
+ * computeCurrentBrowserSyncDiff() call.
+ */
+export async function applyCurrentBrowserSyncSelection(
+  sourceId: string,
+  nativeBookmarks: NativeBookmarkRecord[],
+  selection: BookmarkSyncSelection
+): Promise<BookmarkSyncSummary> {
+  return bookmarkRepository.applySyncDiff(
+    sourceId,
+    nativeBookmarks,
+    selection
   );
 }
