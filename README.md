@@ -6,6 +6,7 @@
 npx wxt@latest init
 yarn install
 yarn add -D vite@^8 typescript
+yarn add -D tailwindcss @tailwindcss/vite
 ```
 
 ## Build:
