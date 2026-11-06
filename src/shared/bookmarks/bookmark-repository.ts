@@ -675,7 +675,7 @@ class BookmarkRepository {
   }
 
 
-    // Compare native bookmarks against Timber's catalog without
+  // Compare native bookmarks against Timber's catalog without
   // changing anything — used to drive the scan review popup.
   async computeSyncDiff(
     sourceId: string,
@@ -689,70 +689,28 @@ class BookmarkRepository {
       throw new Error("Browser source not found.");
     }
 
-    const existingBySourceNativeId = new Map<string, BookmarkSource>(
+    // A native bookmark is "new" only if Timber has no occurrence
+    // linking it, for this source, already. Title/folder changes on
+    // bookmarks Timber already has are intentionally ignored.
+    const existingNativeIds = new Set(
       state.bookmarkSources
         .filter((item) => item.sourceId === sourceId)
-        .map((item) => [item.nativeBookmarkId, item] as const)
+        .map((item) => item.nativeBookmarkId)
     );
 
     const additions: BookmarkSyncDiff["additions"] = [];
-    const updates: BookmarkSyncDiff["updates"] = [];
-
     const seenNativeIds = new Set<string>();
 
     for (const native of nativeBookmarks) {
       if (seenNativeIds.has(native.nativeBookmarkId)) continue;
       seenNativeIds.add(native.nativeBookmarkId);
 
-      const occurrence = existingBySourceNativeId.get(
-        native.nativeBookmarkId
-      );
-
-      if (!occurrence) {
+      if (!existingNativeIds.has(native.nativeBookmarkId)) {
         additions.push({ native });
-        continue;
-      }
-
-      const changed =
-        occurrence.title !== native.title ||
-        occurrence.parentNativeId !== native.parentNativeId ||
-        occurrence.index !== native.index ||
-        JSON.stringify(occurrence.folderPath) !==
-          JSON.stringify(native.folderPath);
-
-      if (changed) {
-        updates.push({
-          native,
-          bookmarkId: occurrence.bookmarkId,
-          previousTitle: occurrence.title,
-          previousFolderPath: occurrence.folderPath,
-        });
       }
     }
 
-    // Native bookmarks no longer present — flagged for review only.
-    // Nothing is deleted here.
-    const removals: BookmarkSyncDiff["removals"] = state.bookmarkSources
-      .filter(
-        (item) =>
-          item.sourceId === sourceId &&
-          !seenNativeIds.has(item.nativeBookmarkId)
-      )
-      .map((item) => {
-        const bookmark = state.bookmarks.find(
-          (b) => b.id === item.bookmarkId
-        );
-
-        return {
-          bookmarkSourceId: item.id,
-          bookmarkId: item.bookmarkId,
-          title: bookmark?.title ?? item.title,
-          url: bookmark?.url ?? "",
-          folderPath: item.folderPath,
-        };
-      });
-
-    return { sourceId, additions, updates, removals };
+    return { sourceId, additions };
   }
 
   // Apply only the parts of a diff the user approved. Removals are
@@ -764,7 +722,6 @@ class BookmarkRepository {
     selection: BookmarkSyncSelection
   ): Promise<BookmarkSyncSummary> {
     const acceptedIds = new Set(selection.acceptedNativeIds);
-    const confirmedRemovals = new Set(selection.confirmedRemovalIds);
 
     return this.mutate((state) => {
       const source = state.sources.find((item) => item.id === sourceId);
@@ -775,7 +732,6 @@ class BookmarkRepository {
 
       let uniqueAdded = 0;
       let associationsAdded = 0;
-      let associationsUpdated = 0;
 
       const nativeById = new Map<string, NativeBookmarkRecord>(
         nativeBookmarks.map((item) => [item.nativeBookmarkId, item] as const)
@@ -785,8 +741,20 @@ class BookmarkRepository {
         const input = nativeById.get(nativeId);
         if (!input) continue;
 
+        // Defensive — computeSyncDiff should never offer an
+        // occurrence that already exists for this source.
+        const alreadyLinked = state.bookmarkSources.some(
+          (item) =>
+            item.sourceId === sourceId &&
+            item.nativeBookmarkId === input.nativeBookmarkId
+        );
+
+        if (alreadyLinked) continue;
+
         const normalizedUrl = normalizeBookmarkUrl(input.url);
 
+        // URL is the canonical identity — reuse the existing Timber
+        // bookmark if another browser source already added this URL.
         let bookmark = state.bookmarks.find(
           (item) => item.normalizedUrl === normalizedUrl
         );
@@ -803,72 +771,21 @@ class BookmarkRepository {
 
           state.bookmarks.push(bookmark);
           uniqueAdded++;
-        } else {
-          bookmark.title = input.title || input.url;
-          bookmark.url = input.url;
-          bookmark.updatedAt = now();
         }
 
-        const occurrence = state.bookmarkSources.find(
-          (item) =>
-            item.sourceId === sourceId &&
-            item.nativeBookmarkId === input.nativeBookmarkId
-        );
+        state.bookmarkSources.push({
+          id: createId(),
+          bookmarkId: bookmark.id,
+          sourceId,
+          nativeBookmarkId: input.nativeBookmarkId,
+          title: input.title,
+          parentNativeId: input.parentNativeId,
+          folderPath: [...input.folderPath],
+          index: input.index,
+          dateAdded: input.dateAdded,
+        });
 
-        if (occurrence) {
-          occurrence.bookmarkId = bookmark.id;
-          occurrence.title = input.title;
-          occurrence.parentNativeId = input.parentNativeId;
-          occurrence.folderPath = [...input.folderPath];
-          occurrence.index = input.index;
-          occurrence.dateAdded = input.dateAdded;
-
-          associationsUpdated++;
-        } else {
-          state.bookmarkSources.push({
-            id: createId(),
-            bookmarkId: bookmark.id,
-            sourceId,
-            nativeBookmarkId: input.nativeBookmarkId,
-            title: input.title,
-            parentNativeId: input.parentNativeId,
-            folderPath: [...input.folderPath],
-            index: input.index,
-            dateAdded: input.dateAdded,
-          });
-
-          associationsAdded++;
-        }
-      }
-
-      // Only remove associations (and orphaned canonical bookmarks)
-      // the user explicitly confirmed via the review popup.
-      let associationsRemoved = 0;
-
-      state.bookmarkSources = state.bookmarkSources.filter((item) => {
-        if (item.sourceId !== sourceId) return true;
-        if (!confirmedRemovals.has(item.id)) return true;
-
-        associationsRemoved++;
-        return false;
-      });
-
-      if (confirmedRemovals.size > 0) {
-        const linkedBookmarkIds = new Set(
-          state.bookmarkSources.map((item) => item.bookmarkId)
-        );
-
-        const customPageBookmarkIds = new Set(
-          state.pages
-            .filter((page) => page.type === "custom")
-            .flatMap((page) => page.bookmarkIds ?? [])
-        );
-
-        state.bookmarks = state.bookmarks.filter(
-          (bookmark) =>
-            linkedBookmarkIds.has(bookmark.id) ||
-            customPageBookmarkIds.has(bookmark.id)
-        );
+        associationsAdded++;
       }
 
       source.lastSyncedAt = now();
@@ -877,8 +794,8 @@ class BookmarkRepository {
         scanned: nativeBookmarks.length,
         uniqueAdded,
         associationsAdded,
-        associationsUpdated,
-        associationsRemoved,
+        associationsUpdated: 0,
+        associationsRemoved: 0,
         totalUniqueBookmarks: state.bookmarks.length,
       };
     });

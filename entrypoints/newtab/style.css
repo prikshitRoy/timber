@@ -147,6 +147,10 @@ button:disabled {
   border-top: 1px solid #eee;
   color: #888;
   font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .empty-state {
@@ -281,4 +285,82 @@ button:disabled {
 
 .folder-bookmark-link:hover {
   text-decoration: underline;
+}
+
+.delete-button {
+  background: none;
+  color: #c0392b;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+.delete-button:hover {
+  background: #fdecea;
+}
+
+.folder-bookmark-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.folder-bookmark-row .folder-bookmark-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.timber-folders-section {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background: white;
+}
+
+.timber-folders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.timber-folders-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.timber-folder {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.timber-folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timber-folder-count {
+  margin-left: 8px;
+  color: #999;
+  font-size: 11px;
+}
+
+.timber-folder-empty {
+  color: #999;
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.add-to-folder-select {
+  font-size: 11px;
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #555;
+  max-width: 140px;
 }

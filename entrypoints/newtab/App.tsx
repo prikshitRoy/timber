@@ -10,12 +10,11 @@ import {
 import { bookmarkRepository } from
     "../../src/shared/bookmarks/bookmark-repository";
 
-import type { Bookmark, BrowserSource, BookmarkSource } from "../../src/shared/types/timber";
+import type { Bookmark, BrowserSource, BookmarkSource, BookmarkPage } from "../../src/shared/types/timber";
+import TimberFolders from "./TimberFolders";
+import AddToFolderMenu from "./AddToFolderMenu";
 import { buildNativeFolderTree } from "../../src/shared/bookmarks/bookmark-folder-tree";
 import FolderTree from "./FolderTree";
-
-import type { BookmarkSyncSummary } from
-    "../../src/shared/bookmarks/bookmark.types";
 
 import type {
     BookmarkSyncDiff,
@@ -46,6 +45,7 @@ function App() {
     } | null>(null);
 
     const [sources, setSources] = useState<BrowserSource[]>([]);
+    const [folders, setFolders] = useState<BookmarkPage[]>([]);
     const [bookmarkSources, setBookmarkSources] = useState<BookmarkSource[]>([]);
 
 
@@ -65,6 +65,7 @@ function App() {
 
         setSources(state.sources);
         setBookmarkSources(state.bookmarkSources);
+        setFolders(state.pages.filter((page) => page.type === "custom"));
 
         setBookmarks(
             state.bookmarks.map((bookmark) => ({
@@ -188,10 +189,8 @@ function App() {
 
             setNativeChanged(false);
 
-            const { additions, updates, removals } = result.diff;
-
-            if (additions.length === 0 && updates.length === 0 && removals.length === 0) {
-                setStatus("Timber is already up to date.");
+            if (result.diff.additions.length === 0) {
+                setStatus("Timber already has all your bookmarks.");
                 return;
             }
 
@@ -224,6 +223,90 @@ function App() {
             setLoading(false);
         }
     }
+
+
+
+
+
+
+
+    async function handleDeleteBookmark(bookmarkId: string, title: string) {
+        const confirmed = window.confirm(
+            `Remove "${title}" from Timber? It stays in your browser bookmarks, and will show up again next time you scan.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await bookmarkRepository.deleteBookmark(bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to delete bookmark."
+            );
+        }
+    }
+
+    async function handleCreateFolder() {
+        const name = window.prompt("Folder name?");
+        if (!name || !name.trim()) return;
+
+        try {
+            await bookmarkRepository.createPage(name.trim());
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to create folder.");
+        }
+    }
+
+    async function handleAddBookmarkToFolder(bookmarkId: string, folderId: string) {
+        try {
+            await bookmarkRepository.addBookmarkToPage(folderId, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to add bookmark to folder.");
+        }
+    }
+
+    async function handleCreateFolderAndAdd(bookmarkId: string, name: string) {
+        try {
+            const page = await bookmarkRepository.createPage(name);
+            await bookmarkRepository.addBookmarkToPage(page.id, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to create folder.");
+        }
+    }
+
+    async function handleRemoveBookmarkFromFolder(folderId: string, bookmarkId: string) {
+        try {
+            await bookmarkRepository.removeBookmarkFromPage(folderId, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to remove bookmark from folder.");
+        }
+    }
+
+    async function handleDeleteFolder(folderId: string, name: string) {
+        const confirmed = window.confirm(
+            `Delete folder "${name}"? Bookmarks inside stay in Timber — only the folder is removed.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await bookmarkRepository.deletePage(folderId);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to delete folder.");
+        }
+    }
+
+
+
+
+
+
 
     const filteredBookmarks = useMemo(() => {
         const value = query.trim().toLowerCase();
@@ -311,6 +394,14 @@ function App() {
                         />
                     </section>
 
+                    <TimberFolders
+                        folders={folders}
+                        bookmarksById={bookmarksById}
+                        onCreateFolder={handleCreateFolder}
+                        onRemoveBookmark={handleRemoveBookmarkFromFolder}
+                        onDeleteFolder={handleDeleteFolder}
+                    />
+
                     {query ? (
                         filteredBookmarks.length === 0 ? (
                             <section className="empty-state">
@@ -336,8 +427,25 @@ function App() {
                                         </a>
 
                                         <footer>
-                                            {bookmark.sourceCount} browser
-                                            {bookmark.sourceCount === 1 ? "" : "s"}
+                                            <span>
+                                                {bookmark.sourceCount} browser
+                                                {bookmark.sourceCount === 1 ? "" : "s"}
+                                            </span>
+
+                                            <AddToFolderMenu
+                                                bookmarkId={bookmark.id}
+                                                folders={folders}
+                                                onAdd={handleAddBookmarkToFolder}
+                                                onCreateAndAdd={handleCreateFolderAndAdd}
+                                            />
+
+                                            <button
+                                                type="button"
+                                                className="delete-button"
+                                                onClick={() => handleDeleteBookmark(bookmark.id, bookmark.title)}
+                                            >
+                                                Delete
+                                            </button>
                                         </footer>
                                     </article>
                                 ))}
@@ -356,6 +464,11 @@ function App() {
                                     source={source}
                                     tree={tree}
                                     bookmarksById={bookmarksById}
+                                    onDeleteBookmark={handleDeleteBookmark}
+
+                                    folders={folders}
+                                    onAddToFolder={handleAddBookmarkToFolder}
+                                    onCreateFolderAndAdd={handleCreateFolderAndAdd}
                                 />
                             ))}
                         </div>
