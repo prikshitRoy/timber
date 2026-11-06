@@ -234,9 +234,9 @@ class BookmarkRepository {
   }
 
   // Update canonical bookmark metadata.
-  async updateBookmark(
+    async updateBookmark(
     bookmarkId: string,
-    updates: Partial<Pick<Bookmark, "title">>
+    updates: Partial<Pick<Bookmark, "title" | "url">>
   ): Promise<void> {
     await this.mutate((state) => {
       const bookmark = state.bookmarks.find(
@@ -249,6 +249,11 @@ class BookmarkRepository {
 
       if (updates.title !== undefined) {
         bookmark.title = updates.title;
+      }
+
+      if (updates.url !== undefined) {
+        bookmark.url = updates.url;
+        bookmark.normalizedUrl = normalizeBookmarkUrl(updates.url);
       }
 
       bookmark.updatedAt = now();

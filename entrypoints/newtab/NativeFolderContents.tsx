@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import type { NativeFolderNode } from "../../src/shared/bookmarks/bookmark-folder-tree";
+import KebabMenu from "./KebabMenu";
 
 interface TileBookmark {
     title: string;
@@ -10,6 +11,8 @@ interface NativeFolderContentsProps {
     node: NativeFolderNode;
     bookmarksById: Map<string, TileBookmark>;
     onDeleteBookmark: (bookmarkId: string, title: string) => void;
+    onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
+    onCopyBookmark: (url: string) => void;
 }
 
 function SubFolder(props: NativeFolderContentsProps) {
@@ -39,6 +42,8 @@ export default function NativeFolderContents({
     node,
     bookmarksById,
     onDeleteBookmark,
+    onEditBookmark,
+    onCopyBookmark,
 }: NativeFolderContentsProps) {
     return (
         <>
@@ -57,13 +62,15 @@ export default function NativeFolderContents({
                             {bookmark.title}
                         </a>
 
-                        <button
-                            type="button"
-                            className="delete-button"
-                            onClick={() => onDeleteBookmark(id, bookmark.title)}
-                        >
-                            Delete
-                        </button>
+                        <div className="folder-bookmark-actions">
+                            <KebabMenu
+                                actions={[
+                                    { label: "Edit", onClick: () => onEditBookmark(id, bookmark.title, bookmark.url) },
+                                    { label: "Copy link", onClick: () => onCopyBookmark(bookmark.url) },
+                                    { label: "Delete", danger: true, onClick: () => onDeleteBookmark(id, bookmark.title) },
+                                ]}
+                            />
+                        </div>
                     </div>
                 );
             })}
@@ -74,6 +81,8 @@ export default function NativeFolderContents({
                     node={child}
                     bookmarksById={bookmarksById}
                     onDeleteBookmark={onDeleteBookmark}
+                    onEditBookmark={onEditBookmark}
+                    onCopyBookmark={onCopyBookmark}
                 />
             ))}
         </>

@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import type { RootTile } from "../../src/shared/bookmarks/root-layout";
 import RootTileButton from "./RootTileButton";
 import NativeFolderContents from "./NativeFolderContents";
+import KebabMenu from "./KebabMenu";
 
 interface TileBookmark {
     title: string;
@@ -17,6 +18,8 @@ interface RootGridProps {
     onDeleteFolder: (pageId: string, name: string) => void;
     onRemoveBookmarkFromFolder: (pageId: string, bookmarkId: string) => void;
     onDeleteBookmark: (bookmarkId: string, title: string) => void;
+    onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
+    onCopyBookmark: (url: string) => void;
 }
 
 export default function RootGrid({
@@ -28,6 +31,8 @@ export default function RootGrid({
     onDeleteFolder,
     onRemoveBookmarkFromFolder,
     onDeleteBookmark,
+    onEditBookmark,
+    onCopyBookmark,
 }: RootGridProps) {
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
     const [dragKey, setDragKey] = useState<string | null>(null);
@@ -83,6 +88,8 @@ export default function RootGrid({
                         ]
                         : tile.kind === "link"
                             ? [
+                                { label: "Edit", onClick: () => onEditBookmark(tile.bookmark.id, tile.bookmark.title, tile.bookmark.url) },
+                                { label: "Copy link", onClick: () => onCopyBookmark(tile.bookmark.url) },
                                 { label: "Delete", danger: true, onClick: () => onDeleteBookmark(tile.bookmark.id, tile.bookmark.title) },
                             ]
                             : [];
@@ -127,13 +134,16 @@ export default function RootGrid({
                                                     {bookmark.title}
                                                 </a>
 
-                                                <button
-                                                    type="button"
-                                                    className="delete-button"
-                                                    onClick={() => onRemoveBookmarkFromFolder(tile.page.id, id)}
-                                                >
-                                                    Remove
-                                                </button>
+                                                <div className="folder-bookmark-actions">
+                                                    <KebabMenu
+                                                        actions={[
+                                                            { label: "Edit", onClick: () => onEditBookmark(id, bookmark.title, bookmark.url) },
+                                                            { label: "Copy link", onClick: () => onCopyBookmark(bookmark.url) },
+                                                            { label: "Remove from folder", onClick: () => onRemoveBookmarkFromFolder(tile.page.id, id) },
+                                                            { label: "Delete", danger: true, onClick: () => onDeleteBookmark(id, bookmark.title) },
+                                                        ]}
+                                                    />
+                                                </div>
                                             </div>
                                         );
                                     })
@@ -147,6 +157,8 @@ export default function RootGrid({
                                     node={tile.node}
                                     bookmarksById={bookmarksById}
                                     onDeleteBookmark={onDeleteBookmark}
+                                    onEditBookmark={onEditBookmark}
+                                    onCopyBookmark={onCopyBookmark}
                                 />
                             </div>
                         )}

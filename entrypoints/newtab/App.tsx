@@ -30,6 +30,8 @@ import AddToFolderMenu from "./AddToFolderMenu";
 import AddLinkModal from "./AddLinkModal";
 import SettingsModal from "./SettingsModal";
 import SyncReviewModal from "./SyncReviewModal";
+import KebabMenu from "./KebabMenu";
+import EditBookmarkModal from "./EditBookmarkModal";
 
 interface DashboardBookmark extends Bookmark {
     sourceCount: number;
@@ -60,6 +62,8 @@ function App() {
     const [editMode, setEditMode] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showAddLink, setShowAddLink] = useState(false);
+
+    const [editingBookmark, setEditingBookmark] = useState<{ id: string; title: string; url: string } | null>(null);
 
     async function loadCatalog() {
         const state = await bookmarkRepository.getState();
@@ -351,6 +355,37 @@ function App() {
         }
     }
 
+
+
+    function handleStartEditBookmark(bookmarkId: string, title: string, url: string) {
+        setEditingBookmark({ id: bookmarkId, title, url });
+    }
+
+    async function handleSaveBookmarkEdit(bookmarkId: string, title: string, url: string) {
+        try {
+            await bookmarkRepository.updateBookmark(bookmarkId, { title, url });
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to update link.");
+        } finally {
+            setEditingBookmark(null);
+        }
+    }
+
+    async function handleCopyBookmarkLink(url: string) {
+        try {
+            await navigator.clipboard.writeText(url);
+            setStatus("Link copied to clipboard.");
+        } catch {
+            setError("Failed to copy link.");
+        }
+    }
+
+
+
+
+
+
     const filteredBookmarks = useMemo(() => {
         const value = query.trim().toLowerCase();
 
@@ -471,15 +506,13 @@ function App() {
                                                 onCreateAndAdd={handleCreateFolderAndAdd}
                                             />
 
-                                            <button
-                                                type="button"
-                                                className="delete-button"
-                                                onClick={() =>
-                                                    handleDeleteBookmark(bookmark.id, bookmark.title)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
+                                            <KebabMenu
+                                                actions={[
+                                                    { label: "Edit", onClick: () => handleStartEditBookmark(bookmark.id, bookmark.title, bookmark.url) },
+                                                    { label: "Copy link", onClick: () => handleCopyBookmarkLink(bookmark.url) },
+                                                    { label: "Delete", danger: true, onClick: () => handleDeleteBookmark(bookmark.id, bookmark.title) },
+                                                ]}
+                                            />
                                         </footer>
                                     </article>
                                 ))}
@@ -495,6 +528,8 @@ function App() {
                             onDeleteFolder={handleDeleteFolder}
                             onRemoveBookmarkFromFolder={handleRemoveBookmarkFromFolder}
                             onDeleteBookmark={handleDeleteBookmark}
+                            onEditBookmark={handleStartEditBookmark}
+                            onCopyBookmark={handleCopyBookmarkLink}
                         />
                     )}
                 </>
@@ -532,6 +567,16 @@ function App() {
                 <AddLinkModal
                     onClose={() => setShowAddLink(false)}
                     onCreate={handleCreateLink}
+                />
+            )}
+
+            {editingBookmark && (
+                <EditBookmarkModal
+                    bookmarkId={editingBookmark.id}
+                    initialTitle={editingBookmark.title}
+                    initialUrl={editingBookmark.url}
+                    onClose={() => setEditingBookmark(null)}
+                    onSave={handleSaveBookmarkEdit}
                 />
             )}
 
