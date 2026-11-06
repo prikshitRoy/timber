@@ -489,15 +489,12 @@ function App() {
                         <RootGrid
                             tiles={rootTiles}
                             editMode={editMode}
-                            folders={folders}
                             bookmarksById={bookmarksById}
                             onReorder={handleReorderRoot}
                             onRenameFolder={handleRenameFolder}
                             onDeleteFolder={handleDeleteFolder}
                             onRemoveBookmarkFromFolder={handleRemoveBookmarkFromFolder}
                             onDeleteBookmark={handleDeleteBookmark}
-                            onAddBookmarkToFolder={handleAddBookmarkToFolder}
-                            onCreateFolderAndAdd={handleCreateFolderAndAdd}
                         />
                     )}
                 </>

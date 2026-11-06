@@ -1,8 +1,6 @@
 import { Fragment, useState } from "react";
 import type { RootTile } from "../../src/shared/bookmarks/root-layout";
-import type { BookmarkPage } from "../../src/shared/types/timber";
 import RootTileButton from "./RootTileButton";
-import AddToFolderMenu from "./AddToFolderMenu";
 import NativeFolderContents from "./NativeFolderContents";
 
 interface TileBookmark {
@@ -13,29 +11,23 @@ interface TileBookmark {
 interface RootGridProps {
     tiles: RootTile[];
     editMode: boolean;
-    folders: BookmarkPage[];
     bookmarksById: Map<string, TileBookmark>;
     onReorder: (orderedKeys: string[]) => void;
     onRenameFolder: (pageId: string, currentName: string) => void;
     onDeleteFolder: (pageId: string, name: string) => void;
     onRemoveBookmarkFromFolder: (pageId: string, bookmarkId: string) => void;
     onDeleteBookmark: (bookmarkId: string, title: string) => void;
-    onAddBookmarkToFolder: (bookmarkId: string, folderId: string) => void;
-    onCreateFolderAndAdd: (bookmarkId: string, name: string) => void;
 }
 
 export default function RootGrid({
     tiles,
     editMode,
-    folders,
     bookmarksById,
     onReorder,
     onRenameFolder,
     onDeleteFolder,
     onRemoveBookmarkFromFolder,
     onDeleteBookmark,
-    onAddBookmarkToFolder,
-    onCreateFolderAndAdd,
 }: RootGridProps) {
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
     const [dragKey, setDragKey] = useState<string | null>(null);
@@ -95,16 +87,6 @@ export default function RootGrid({
                             ]
                             : [];
 
-                const extraMenuContent =
-                    tile.kind === "link" ? (
-                        <AddToFolderMenu
-                            bookmarkId={tile.bookmark.id}
-                            folders={folders}
-                            onAdd={onAddBookmarkToFolder}
-                            onCreateAndAdd={onCreateFolderAndAdd}
-                        />
-                    ) : undefined;
-
                 return (
                     <Fragment key={tile.key}>
                         <RootTileButton
@@ -113,7 +95,6 @@ export default function RootGrid({
                             expanded={expanded}
                             onToggleExpand={() => toggleExpand(tile.key)}
                             actions={actions}
-                            extraMenuContent={extraMenuContent}
                             onDragStart={() => setDragKey(tile.key)}
                             onDragOver={(event) => {
                                 if (dragKey && dragKey !== tile.key) event.preventDefault();
@@ -165,10 +146,7 @@ export default function RootGrid({
                                 <NativeFolderContents
                                     node={tile.node}
                                     bookmarksById={bookmarksById}
-                                    folders={folders}
                                     onDeleteBookmark={onDeleteBookmark}
-                                    onAddBookmarkToFolder={onAddBookmarkToFolder}
-                                    onCreateFolderAndAdd={onCreateFolderAndAdd}
                                 />
                             </div>
                         )}
