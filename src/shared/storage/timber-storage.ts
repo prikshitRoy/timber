@@ -73,5 +73,6 @@ export function createInitialState(
     ],
 
     activePageId: allPageId,
+    rootOrder: [],
   };
 }

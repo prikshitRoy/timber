@@ -1,5 +1,5 @@
-
 import { useEffect, useMemo, useState } from "react";
+
 import { browser } from "wxt/browser";
 
 import {
@@ -10,17 +10,25 @@ import {
 import { bookmarkRepository } from
     "../../src/shared/bookmarks/bookmark-repository";
 
-import type { Bookmark, BrowserSource, BookmarkSource, BookmarkPage } from "../../src/shared/types/timber";
-import TimberFolders from "./TimberFolders";
-import AddToFolderMenu from "./AddToFolderMenu";
-import { buildNativeFolderTree } from "../../src/shared/bookmarks/bookmark-folder-tree";
-import FolderTree from "./FolderTree";
+import type {
+    Bookmark,
+    BrowserSource,
+    BookmarkSource,
+    BookmarkPage,
+} from "../../src/shared/types/timber";
 
 import type {
     BookmarkSyncDiff,
     BookmarkSyncSelection,
     NativeBookmarkRecord,
 } from "../../src/shared/bookmarks/bookmark.types";
+
+import { computeRootTiles } from "../../src/shared/bookmarks/root-layout";
+
+import RootGrid from "./RootGrid";
+import AddToFolderMenu from "./AddToFolderMenu";
+import AddLinkModal from "./AddLinkModal";
+import SettingsModal from "./SettingsModal";
 import SyncReviewModal from "./SyncReviewModal";
 
 interface DashboardBookmark extends Bookmark {
@@ -32,6 +40,11 @@ function App() {
     const [loading, setLoading] = useState(false);
 
     const [bookmarks, setBookmarks] = useState<DashboardBookmark[]>([]);
+    const [sources, setSources] = useState<BrowserSource[]>([]);
+    const [bookmarkSources, setBookmarkSources] = useState<BookmarkSource[]>([]);
+    const [folders, setFolders] = useState<BookmarkPage[]>([]);
+    const [rootOrder, setRootOrderState] = useState<string[]>([]);
+
     const [query, setQuery] = useState("");
 
     const [status, setStatus] = useState("Checking bookmark access...");
@@ -44,10 +57,9 @@ function App() {
         diff: BookmarkSyncDiff;
     } | null>(null);
 
-    const [sources, setSources] = useState<BrowserSource[]>([]);
-    const [folders, setFolders] = useState<BookmarkPage[]>([]);
-    const [bookmarkSources, setBookmarkSources] = useState<BookmarkSource[]>([]);
-
+    const [editMode, setEditMode] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showAddLink, setShowAddLink] = useState(false);
 
     async function loadCatalog() {
         const state = await bookmarkRepository.getState();
@@ -61,35 +73,39 @@ function App() {
             );
         }
 
-        setStatus(`${state.bookmarks.length} unique bookmarks`);
-
-        setSources(state.sources);
-        setBookmarkSources(state.bookmarkSources);
-        setFolders(state.pages.filter((page) => page.type === "custom"));
-
         setBookmarks(
             state.bookmarks.map((bookmark) => ({
                 ...bookmark,
                 sourceCount: sourceCounts.get(bookmark.id) ?? 0,
             }))
         );
-    }
 
-    /**
-     * Check whether permission was previously granted.
-     */
+        setSources(state.sources);
+        setBookmarkSources(state.bookmarkSources);
+        setFolders(state.pages.filter((page) => page.type === "custom"));
+        setRootOrderState(state.rootOrder ?? []);
+
+        setStatus(`${state.bookmarks.length} unique bookmarks`);
+    }
 
     useEffect(() => {
         let cancelled = false;
 
-        // Listen for bookmark synchronization notifications
         const handleMessage = (message: unknown) => {
             if (
-                typeof message === "object" &&
-                message !== null &&
-                "type" in message &&
-                message.type === "TIMBER_BOOKMARKS_UPDATED"
+                typeof message !== "object" ||
+                message === null ||
+                !("type" in message)
             ) {
+                return;
+            }
+
+            if (message.type === "TIMBER_BOOKMARKS_CHANGED") {
+                setNativeChanged(true);
+                return;
+            }
+
+            if (message.type === "TIMBER_BOOKMARKS_UPDATED") {
                 void loadCatalog().catch((error) => {
                     console.error("Failed to reload bookmark catalog:", error);
 
@@ -100,7 +116,6 @@ function App() {
             }
         };
 
-        // Register listener when component mounts.
         browser.runtime.onMessage.addListener(handleMessage);
 
         async function initialize() {
@@ -112,14 +127,11 @@ function App() {
                 setConnected(permitted);
 
                 if (!permitted) {
-                    setStatus(
-                        "Connect your browser bookmarks to get started."
-                    );
+                    setStatus("Connect your browser bookmarks to get started.");
                     return;
                 }
 
                 await loadCatalog();
-
             } catch (error) {
                 if (!cancelled) {
                     setError(
@@ -133,17 +145,12 @@ function App() {
 
         void initialize();
 
-        // Cleanup when component unmounts.
         return () => {
             cancelled = true;
-
             browser.runtime.onMessage.removeListener(handleMessage);
         };
     }, []);
 
-    /**
-     * Request bookmark permission from a user click.
-     */
     async function handleConnect() {
         try {
             setLoading(true);
@@ -157,8 +164,6 @@ function App() {
             }
 
             setConnected(true);
-            setStatus("Synchronizing bookmarks...");
-
             await handleScan();
         } catch (error) {
             setError(
@@ -171,17 +176,14 @@ function App() {
         }
     }
 
-    /**
-     * Manually refresh native bookmarks.
-     */
     async function handleScan() {
         try {
             setLoading(true);
             setError("");
 
-            const result = await browser.runtime.sendMessage({
+            const result = (await browser.runtime.sendMessage({
                 type: "TIMBER_SYNC_BOOKMARKS",
-            }) as {
+            })) as {
                 sourceId: string;
                 nativeBookmarks: NativeBookmarkRecord[];
                 diff: BookmarkSyncDiff;
@@ -191,6 +193,7 @@ function App() {
 
             if (result.diff.additions.length === 0) {
                 setStatus("Timber already has all your bookmarks.");
+                await loadCatalog();
                 return;
             }
 
@@ -217,18 +220,14 @@ function App() {
 
             await loadCatalog();
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to apply changes.");
+            setError(
+                error instanceof Error ? error.message : "Failed to apply changes."
+            );
         } finally {
             setPendingSync(null);
             setLoading(false);
         }
     }
-
-
-
-
-
-
 
     async function handleDeleteBookmark(bookmarkId: string, title: string) {
         const confirmed = window.confirm(
@@ -255,35 +254,23 @@ function App() {
             await bookmarkRepository.createPage(name.trim());
             await loadCatalog();
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to create folder.");
+            setError(
+                error instanceof Error ? error.message : "Failed to create folder."
+            );
         }
     }
 
-    async function handleAddBookmarkToFolder(bookmarkId: string, folderId: string) {
-        try {
-            await bookmarkRepository.addBookmarkToPage(folderId, bookmarkId);
-            await loadCatalog();
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to add bookmark to folder.");
-        }
-    }
+    async function handleRenameFolder(pageId: string, currentName: string) {
+        const name = window.prompt("Rename folder", currentName);
+        if (!name || !name.trim() || name.trim() === currentName) return;
 
-    async function handleCreateFolderAndAdd(bookmarkId: string, name: string) {
         try {
-            const page = await bookmarkRepository.createPage(name);
-            await bookmarkRepository.addBookmarkToPage(page.id, bookmarkId);
+            await bookmarkRepository.renamePage(pageId, name.trim());
             await loadCatalog();
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to create folder.");
-        }
-    }
-
-    async function handleRemoveBookmarkFromFolder(folderId: string, bookmarkId: string) {
-        try {
-            await bookmarkRepository.removeBookmarkFromPage(folderId, bookmarkId);
-            await loadCatalog();
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to remove bookmark from folder.");
+            setError(
+                error instanceof Error ? error.message : "Failed to rename folder."
+            );
         }
     }
 
@@ -298,20 +285,76 @@ function App() {
             await bookmarkRepository.deletePage(folderId);
             await loadCatalog();
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to delete folder.");
+            setError(
+                error instanceof Error ? error.message : "Failed to delete folder."
+            );
         }
     }
 
+    async function handleAddBookmarkToFolder(bookmarkId: string, folderId: string) {
+        try {
+            await bookmarkRepository.addBookmarkToPage(folderId, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to add bookmark to folder."
+            );
+        }
+    }
 
+    async function handleCreateFolderAndAdd(bookmarkId: string, name: string) {
+        try {
+            const page = await bookmarkRepository.createPage(name);
+            await bookmarkRepository.addBookmarkToPage(page.id, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to create folder."
+            );
+        }
+    }
 
+    async function handleRemoveBookmarkFromFolder(folderId: string, bookmarkId: string) {
+        try {
+            await bookmarkRepository.removeBookmarkFromPage(folderId, bookmarkId);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to remove bookmark from folder."
+            );
+        }
+    }
 
+    async function handleReorderRoot(order: string[]) {
+        try {
+            await bookmarkRepository.setRootOrder(order);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to save order."
+            );
+        }
+    }
 
-
+    async function handleCreateLink(url: string, title: string) {
+        try {
+            await bookmarkRepository.createManualLink(url, title);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to add link.");
+        } finally {
+            setShowAddLink(false);
+        }
+    }
 
     const filteredBookmarks = useMemo(() => {
         const value = query.trim().toLowerCase();
 
-        if (!value) return bookmarks;
+        if (!value) return [];
 
         return bookmarks.filter(
             (bookmark) =>
@@ -328,23 +371,28 @@ function App() {
         return map;
     }, [bookmarks]);
 
-    const folderTrees = useMemo(
+    const rootTiles = useMemo(
         () =>
-            sources.map((source) => ({
-                source,
-                tree: buildNativeFolderTree(bookmarkSources, source.id),
-            })),
-        [sources, bookmarkSources]
+            computeRootTiles({
+                pages: folders,
+                sources,
+                bookmarkSources,
+                bookmarks,
+                rootOrder,
+            }),
+        [folders, sources, bookmarkSources, bookmarks, rootOrder]
     );
 
     return (
         <main className="timber-dashboard">
-
             <header className="dashboard-header">
-                <div>
-                    <h1>Timber</h1>
-                    <p>Your universal bookmark dashboard</p>
-                </div>
+                <input
+                    type="search"
+                    className="dashboard-search"
+                    placeholder="Search bookmarks..."
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                />
 
                 <div className="header-actions">
                     {connected && nativeChanged && (
@@ -356,6 +404,14 @@ function App() {
                             {loading ? "Scanning..." : "Scan"}
                         </button>
                     )}
+
+                    <button type="button" onClick={() => setShowAddLink(true)}>
+                        + Link
+                    </button>
+
+                    <button type="button" onClick={handleCreateFolder}>
+                        + Folder
+                    </button>
                 </div>
             </header>
 
@@ -379,28 +435,8 @@ function App() {
             ) : (
                 <>
                     <section className="bookmark-toolbar">
-                        <div>
-                            <h2>All Bookmarks</h2>
-                            <span>
-                                {filteredBookmarks.length} bookmarks
-                            </span>
-                        </div>
-
-                        <input
-                            type="search"
-                            placeholder="Search bookmarks..."
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                        />
+                        <span>{bookmarks.length} bookmarks</span>
                     </section>
-
-                    <TimberFolders
-                        folders={folders}
-                        bookmarksById={bookmarksById}
-                        onCreateFolder={handleCreateFolder}
-                        onRemoveBookmark={handleRemoveBookmarkFromFolder}
-                        onDeleteFolder={handleDeleteFolder}
-                    />
 
                     {query ? (
                         filteredBookmarks.length === 0 ? (
@@ -411,10 +447,7 @@ function App() {
                         ) : (
                             <section className="bookmark-grid">
                                 {filteredBookmarks.map((bookmark) => (
-                                    <article
-                                        className="bookmark-card"
-                                        key={bookmark.id}
-                                    >
+                                    <article className="bookmark-card" key={bookmark.id}>
                                         <a
                                             className="bookmark-link"
                                             href={bookmark.url}
@@ -422,7 +455,6 @@ function App() {
                                             rel="noopener noreferrer"
                                         >
                                             <h3>{bookmark.title}</h3>
-
                                             <p>{bookmark.url}</p>
                                         </a>
 
@@ -442,7 +474,9 @@ function App() {
                                             <button
                                                 type="button"
                                                 className="delete-button"
-                                                onClick={() => handleDeleteBookmark(bookmark.id, bookmark.title)}
+                                                onClick={() =>
+                                                    handleDeleteBookmark(bookmark.id, bookmark.title)
+                                                }
                                             >
                                                 Delete
                                             </button>
@@ -451,27 +485,20 @@ function App() {
                                 ))}
                             </section>
                         )
-                    ) : bookmarks.length === 0 ? (
-                        <section className="empty-state">
-                            <h3>No bookmarks found</h3>
-                            <p>Your browser doesn't have any supported web bookmarks yet.</p>
-                        </section>
                     ) : (
-                        <div className="folder-tree-root">
-                            {folderTrees.map(({ source, tree }) => (
-                                <FolderTree
-                                    key={source.id}
-                                    source={source}
-                                    tree={tree}
-                                    bookmarksById={bookmarksById}
-                                    onDeleteBookmark={handleDeleteBookmark}
-
-                                    folders={folders}
-                                    onAddToFolder={handleAddBookmarkToFolder}
-                                    onCreateFolderAndAdd={handleCreateFolderAndAdd}
-                                />
-                            ))}
-                        </div>
+                        <RootGrid
+                            tiles={rootTiles}
+                            editMode={editMode}
+                            folders={folders}
+                            bookmarksById={bookmarksById}
+                            onReorder={handleReorderRoot}
+                            onRenameFolder={handleRenameFolder}
+                            onDeleteFolder={handleDeleteFolder}
+                            onRemoveBookmarkFromFolder={handleRemoveBookmarkFromFolder}
+                            onDeleteBookmark={handleDeleteBookmark}
+                            onAddBookmarkToFolder={handleAddBookmarkToFolder}
+                            onCreateFolderAndAdd={handleCreateFolderAndAdd}
+                        />
                     )}
                 </>
             )}
@@ -479,11 +506,22 @@ function App() {
             <div className="dashboard-status">
                 <span>{status}</span>
 
-                {error && (
-                    <span className="error-message">{error}</span>
-                )}
-            </div>
+                {error && <span className="error-message">{error}</span>}
 
+                <div className="dashboard-footer-actions">
+                    <button
+                        type="button"
+                        className={editMode ? "edit-active" : ""}
+                        onClick={() => setEditMode((value) => !value)}
+                    >
+                        {editMode ? "Done Editing" : "Edit"}
+                    </button>
+
+                    <button type="button" onClick={() => setShowSettings(true)}>
+                        Settings
+                    </button>
+                </div>
+            </div>
 
             {pendingSync && (
                 <SyncReviewModal
@@ -493,6 +531,21 @@ function App() {
                 />
             )}
 
+            {showAddLink && (
+                <AddLinkModal
+                    onClose={() => setShowAddLink(false)}
+                    onCreate={handleCreateLink}
+                />
+            )}
+
+            {showSettings && (
+                <SettingsModal
+                    connected={connected}
+                    loading={loading}
+                    onClose={() => setShowSettings(false)}
+                    onConnect={handleConnect}
+                />
+            )}
         </main>
     );
 }

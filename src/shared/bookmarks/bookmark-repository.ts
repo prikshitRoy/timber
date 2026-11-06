@@ -801,6 +801,42 @@ class BookmarkRepository {
     });
   }
 
+    // Persist the user's drag-and-drop order of root-level tiles.
+  async setRootOrder(order: string[]): Promise<void> {
+    await this.mutate((state) => {
+      state.rootOrder = order;
+    });
+  }
+
+  // Create a bookmark directly in Timber, with no browser-source
+  // occurrence at all — used by the "+ Link" button.
+  async createManualLink(url: string, title: string): Promise<Bookmark> {
+    const normalizedUrl = normalizeBookmarkUrl(url);
+
+    return this.mutate((state) => {
+      let bookmark = state.bookmarks.find(
+        (item) => item.normalizedUrl === normalizedUrl
+      );
+
+      if (bookmark) {
+        return bookmark;
+      }
+
+      bookmark = {
+        id: createId(),
+        url,
+        normalizedUrl,
+        title: title.trim() || url,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+
+      state.bookmarks.push(bookmark);
+
+      return bookmark;
+    });
+  }
+
 }
 
   

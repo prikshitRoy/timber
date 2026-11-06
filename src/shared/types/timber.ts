@@ -65,3 +65,15 @@ export interface TimberState {
 
   activePageId: string;
 }
+
+export interface TimberState {
+  schemaVersion: 2;
+
+  sources: BrowserSource[];
+  bookmarks: Bookmark[];
+  bookmarkSources: BookmarkSource[];
+  pages: BookmarkPage[];
+
+  activePageId: string;
+  rootOrder?: string[]; // NEW — persisted drag order of root-level tiles
+}
