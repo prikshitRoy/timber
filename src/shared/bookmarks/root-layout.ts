@@ -60,14 +60,26 @@ export function computeRootTiles(state: RootLayoutState): RootTile[] {
 
   const standaloneLinkIds = new Set<string>();
 
-  for (const source of state.sources) {
+    for (const source of state.sources) {
     const tree = buildNativeFolderTree(state.bookmarkSources, source.id);
 
-    for (const [folderName, node] of tree.children) {
-      const key = `nf:${source.id}:${folderName}`;
-      tiles.set(key, { kind: "native-folder", key, source, folderName, node });
+    // The browser's own top-level containers ("Bookmarks bar",
+    // "Other bookmarks", "Mobile bookmarks") are just organizational
+    // wrappers — skip rendering them as tiles and surface their
+    // contents directly at the root instead.
+    for (const container of tree.children.values()) {
+      for (const [folderName, node] of container.children) {
+        const key = `nf:${source.id}:${container.name}:${folderName}`;
+        tiles.set(key, { kind: "native-folder", key, source, folderName, node });
+      }
+
+      for (const bookmarkId of container.bookmarkIds) {
+        standaloneLinkIds.add(bookmarkId);
+      }
     }
 
+    // Edge case: a bookmark sitting at the browser root with no
+    // container folder at all. Rare, but keep it visible.
     for (const bookmarkId of tree.bookmarkIds) {
       standaloneLinkIds.add(bookmarkId);
     }
