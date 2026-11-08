@@ -23,7 +23,8 @@ import type {
     NativeBookmarkRecord,
 } from "../../src/shared/bookmarks/bookmark.types";
 
-import { computeRootTiles } from "../../src/shared/bookmarks/root-layout";
+import { computeRootTiles, type RootTile } from "../../src/shared/bookmarks/root-layout";
+import { collectBookmarkIds } from "../../src/shared/bookmarks/bookmark-folder-tree";
 
 import RootGrid from "./RootGrid";
 import AddToFolderMenu from "./AddToFolderMenu";
@@ -32,6 +33,7 @@ import SettingsModal from "./SettingsModal";
 import SyncReviewModal from "./SyncReviewModal";
 import KebabMenu from "./KebabMenu";
 import EditBookmarkModal from "./EditBookmarkModal";
+import EditFolderLinksModal from "./EditFolderLinksModal";
 
 interface DashboardBookmark extends Bookmark {
     sourceCount: number;
@@ -64,6 +66,8 @@ function App() {
     const [showAddLink, setShowAddLink] = useState(false);
 
     const [editingBookmark, setEditingBookmark] = useState<{ id: string; title: string; url: string } | null>(null);
+    const [editingFolderLinksId, setEditingFolderLinksId] = useState<string | null>(null);
+    const [editingNativeFolderKey, setEditingNativeFolderKey] = useState<string | null>(null);
 
     async function loadCatalog() {
         const state = await bookmarkRepository.getState();
@@ -383,6 +387,74 @@ function App() {
 
 
 
+    async function handleDeleteFolderLinks(
+        folderId: string,
+        bookmarkIds: string[],
+        alsoDeleteFolder: boolean
+    ) {
+        try {
+            await bookmarkRepository.deleteBookmarks(bookmarkIds);
+
+            if (alsoDeleteFolder) {
+                await bookmarkRepository.deletePage(folderId);
+                setEditingFolderLinksId(null);
+            }
+
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to delete links."
+            );
+        }
+    }
+
+    async function handleCopyFolderLinks(urls: string[]) {
+        try {
+            await navigator.clipboard.writeText(urls.join("\n"));
+            setStatus(
+                `${urls.length} link${urls.length === 1 ? "" : "s"} copied to clipboard.`
+            );
+        } catch {
+            setError("Failed to copy links.");
+        }
+    }
+
+
+    async function handleDeleteNativeFolderLinks(bookmarkIds: string[]) {
+        try {
+            await bookmarkRepository.deleteBookmarks(bookmarkIds);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to delete links."
+            );
+        }
+    }
+
+
+    async function handleDeleteNativeFolder(folderName: string, bookmarkIds: string[]) {
+        if (bookmarkIds.length === 0) return;
+
+        const confirmed = window.confirm(
+            `Remove "${folderName}" and all ${bookmarkIds.length} link${bookmarkIds.length === 1 ? "" : "s"} inside it from Timber? They stay in your browser bookmarks, and will show up again next time you scan.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await bookmarkRepository.deleteBookmarks(bookmarkIds);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to delete folder."
+            );
+        }
+    }
+
+
+
+
+
 
 
 
@@ -417,6 +489,17 @@ function App() {
             }),
         [folders, sources, bookmarkSources, bookmarks, rootOrder]
     );
+
+    const editingFolder = editingFolderLinksId
+        ? folders.find((folder) => folder.id === editingFolderLinksId) ?? null
+        : null;
+
+    const editingNativeFolderTile = editingNativeFolderKey
+        ? (rootTiles.find(
+            (tile): tile is Extract<RootTile, { kind: "native-folder" }> =>
+                tile.kind === "native-folder" && tile.key === editingNativeFolderKey
+        ) ?? null)
+        : null;
 
     return (
         <main className="timber-dashboard">
@@ -530,6 +613,9 @@ function App() {
                             onDeleteBookmark={handleDeleteBookmark}
                             onEditBookmark={handleStartEditBookmark}
                             onCopyBookmark={handleCopyBookmarkLink}
+                            onEditFolderLinks={setEditingFolderLinksId}
+                            onEditNativeFolderLinks={setEditingNativeFolderKey}
+                            onDeleteNativeFolder={handleDeleteNativeFolder}
                         />
                     )}
                 </>
@@ -577,6 +663,33 @@ function App() {
                     initialUrl={editingBookmark.url}
                     onClose={() => setEditingBookmark(null)}
                     onSave={handleSaveBookmarkEdit}
+                />
+            )}
+
+            {editingFolder && (
+                <EditFolderLinksModal
+                    folderName={editingFolder.name}
+                    bookmarkIds={editingFolder.bookmarkIds ?? []}
+                    bookmarksById={bookmarksById}
+                    onClose={() => setEditingFolderLinksId(null)}
+                    onCopySelected={handleCopyFolderLinks}
+                    onDeleteSelected={(bookmarkIds, alsoDeleteFolder) =>
+                        handleDeleteFolderLinks(editingFolder.id, bookmarkIds, alsoDeleteFolder)
+                    }
+                />
+            )}
+
+            {editingNativeFolderTile && (
+                <EditFolderLinksModal
+                    folderName={editingNativeFolderTile.folderName}
+                    bookmarkIds={collectBookmarkIds(editingNativeFolderTile.node)}
+                    bookmarksById={bookmarksById}
+                    onClose={() => setEditingNativeFolderKey(null)}
+                    onCopySelected={handleCopyFolderLinks}
+                    onDeleteSelected={(bookmarkIds) =>
+                        handleDeleteNativeFolderLinks(bookmarkIds)
+                    }
+                    allowFolderDeletion={false}
                 />
             )}
 

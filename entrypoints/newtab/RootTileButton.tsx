@@ -13,7 +13,6 @@ interface RootTileButtonProps {
     expanded: boolean;
     onToggleExpand: () => void;
     actions: MenuAction[];
-    extraMenuContent?: React.ReactNode;
     onDragStart: () => void;
     onDragOver: (event: React.DragEvent) => void;
     onDrop: (event: React.DragEvent) => void;
@@ -43,7 +42,6 @@ export default function RootTileButton({
     expanded,
     onToggleExpand,
     actions,
-    extraMenuContent,
     onDragStart,
     onDragOver,
     onDrop,
@@ -98,19 +96,21 @@ export default function RootTileButton({
                 {count !== null && <span className="root-tile-count">{count}</span>}
             </button>
 
-            {(actions.length > 0 || extraMenuContent) && (
+            {actions.length > 0 && (
                 <div className="root-tile-menu" ref={menuRef}>
                     <button
                         type="button"
                         className="root-tile-kebab"
-                        onClick={() => setMenuOpen((value) => !value)}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpen((value) => !value);
+                        }}
                     >
                         ⋮
                     </button>
 
                     {menuOpen && (
                         <div className="root-tile-menu-popover">
-                            {extraMenuContent}
                             {actions.map((action) => (
                                 <button
                                     type="button"

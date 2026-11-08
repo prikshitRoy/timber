@@ -327,6 +327,32 @@ class BookmarkRepository {
     });
   }
 
+  // Delete several canonical bookmarks in one atomic operation —
+  // used by the folder "Edit links" bulk delete action.
+  async deleteBookmarks(bookmarkIds: string[]): Promise<void> {
+    const idSet = new Set(bookmarkIds);
+
+    await this.mutate((state) => {
+      state.bookmarks = state.bookmarks.filter(
+        (item) => !idSet.has(item.id)
+      );
+
+      state.bookmarkSources = state.bookmarkSources.filter(
+        (item) => !idSet.has(item.bookmarkId)
+      );
+
+      for (const page of state.pages) {
+        if (page.type === "custom") {
+          page.bookmarkIds = page.bookmarkIds?.filter(
+            (id) => !idSet.has(id)
+          );
+
+          page.updatedAt = now();
+        }
+      }
+    });
+  }
+
   // Get all pages.
   async getPages(): Promise<BookmarkPage[]> {
     const state = await this.read();

@@ -45,3 +45,19 @@ export function buildNativeFolderTree(
 
   return root;
 }
+
+
+
+// Recursively flatten every bookmark ID under a folder node,
+// including ones nested inside sub-folders — used by the
+// "Edit links" bulk-selection popup.
+export function collectBookmarkIds(node: NativeFolderNode): string[] {
+  const ids = [...node.bookmarkIds];
+
+  for (const child of node.children.values()) {
+    ids.push(...collectBookmarkIds(child));
+  }
+
+  return ids;
+}
+

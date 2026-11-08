@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import type { RootTile } from "../../src/shared/bookmarks/root-layout";
+import { collectBookmarkIds } from "../../src/shared/bookmarks/bookmark-folder-tree";
 import RootTileButton from "./RootTileButton";
 import NativeFolderContents from "./NativeFolderContents";
 import KebabMenu from "./KebabMenu";
@@ -20,6 +21,9 @@ interface RootGridProps {
     onDeleteBookmark: (bookmarkId: string, title: string) => void;
     onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
     onCopyBookmark: (url: string) => void;
+    onEditFolderLinks: (pageId: string) => void;
+    onEditNativeFolderLinks: (tileKey: string) => void;
+    onDeleteNativeFolder: (folderName: string, bookmarkIds: string[]) => void;
 }
 
 export default function RootGrid({
@@ -33,6 +37,9 @@ export default function RootGrid({
     onDeleteBookmark,
     onEditBookmark,
     onCopyBookmark,
+    onEditFolderLinks,
+    onEditNativeFolderLinks,
+    onDeleteNativeFolder,
 }: RootGridProps) {
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
     const [dragKey, setDragKey] = useState<string | null>(null);
@@ -84,6 +91,7 @@ export default function RootGrid({
                     tile.kind === "timber-folder"
                         ? [
                             { label: "Rename", onClick: () => onRenameFolder(tile.page.id, tile.page.name) },
+                            { label: "Edit links", onClick: () => onEditFolderLinks(tile.page.id) },
                             { label: "Delete folder", danger: true, onClick: () => onDeleteFolder(tile.page.id, tile.page.name) },
                         ]
                         : tile.kind === "link"
@@ -92,7 +100,17 @@ export default function RootGrid({
                                 { label: "Copy link", onClick: () => onCopyBookmark(tile.bookmark.url) },
                                 { label: "Delete", danger: true, onClick: () => onDeleteBookmark(tile.bookmark.id, tile.bookmark.title) },
                             ]
-                            : [];
+                            : tile.kind === "native-folder"
+                                ? [
+                                    { label: "Edit links", onClick: () => onEditNativeFolderLinks(tile.key) },
+                                    {
+                                        label: "Delete folder",
+                                        danger: true,
+                                        onClick: () =>
+                                            onDeleteNativeFolder(tile.folderName, collectBookmarkIds(tile.node)),
+                                    },
+                                ]
+                                : [];
 
                 return (
                     <Fragment key={tile.key}>
