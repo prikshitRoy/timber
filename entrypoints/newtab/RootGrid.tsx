@@ -1,9 +1,9 @@
 import { Fragment, useState } from "react";
 import type { RootTile } from "../../src/shared/bookmarks/root-layout";
-import { collectBookmarkIds } from "../../src/shared/bookmarks/bookmark-folder-tree";
+import type { BookmarkPage } from "../../src/shared/types/timber";
 import RootTileButton from "./RootTileButton";
 import NativeFolderContents from "./NativeFolderContents";
-import KebabMenu from "./KebabMenu";
+import TimberFolderContents, { type TimberFolderHandlers } from "./TimberFolderContents";
 
 interface TileBookmark {
     title: string;
@@ -13,7 +13,9 @@ interface TileBookmark {
 interface RootGridProps {
     tiles: RootTile[];
     editMode: boolean;
+    folders: BookmarkPage[];
     bookmarksById: Map<string, TileBookmark>;
+    shadowPages: Record<string, string>;
     onReorder: (orderedKeys: string[]) => void;
     onRenameFolder: (pageId: string, currentName: string) => void;
     onDeleteFolder: (pageId: string, name: string) => void;
@@ -22,14 +24,20 @@ interface RootGridProps {
     onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
     onCopyBookmark: (url: string) => void;
     onEditFolderLinks: (pageId: string) => void;
-    onEditNativeFolderLinks: (tileKey: string) => void;
-    onDeleteNativeFolder: (folderName: string, bookmarkIds: string[]) => void;
+    onEditNativeFolderLinks: (key: string) => void;
+    onDeleteNativeFolder: (label: string, bookmarkIds: string[]) => void;
+    onAddLinkToFolder: (pageId: string) => void;
+    onAddSubFolder: (parentId: string) => void;
+    onAddLinkToNativeFolder: (key: string, label: string) => void;
+    onAddSubFolderToNativeFolder: (key: string, label: string) => void;
 }
 
 export default function RootGrid({
     tiles,
     editMode,
+    folders,
     bookmarksById,
+    shadowPages,
     onReorder,
     onRenameFolder,
     onDeleteFolder,
@@ -40,9 +48,25 @@ export default function RootGrid({
     onEditFolderLinks,
     onEditNativeFolderLinks,
     onDeleteNativeFolder,
+    onAddLinkToFolder,
+    onAddSubFolder,
+    onAddLinkToNativeFolder,
+    onAddSubFolderToNativeFolder,
 }: RootGridProps) {
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
     const [dragKey, setDragKey] = useState<string | null>(null);
+
+    const timberHandlers: TimberFolderHandlers = {
+        onDeleteBookmark,
+        onEditBookmark,
+        onCopyBookmark,
+        onRemoveBookmarkFromFolder,
+        onRenameFolder,
+        onDeleteFolder,
+        onEditFolderLinks,
+        onAddLinkToFolder,
+        onAddSubFolder,
+    };
 
     function toggleExpand(key: string) {
         setExpandedKeys((current) => {
@@ -92,6 +116,8 @@ export default function RootGrid({
                         ? [
                             { label: "Rename", onClick: () => onRenameFolder(tile.page.id, tile.page.name) },
                             { label: "Edit links", onClick: () => onEditFolderLinks(tile.page.id) },
+                            { label: "Add link", onClick: () => onAddLinkToFolder(tile.page.id) },
+                            { label: "Add folder", onClick: () => onAddSubFolder(tile.page.id) },
                             { label: "Delete folder", danger: true, onClick: () => onDeleteFolder(tile.page.id, tile.page.name) },
                         ]
                         : tile.kind === "link"
@@ -103,12 +129,9 @@ export default function RootGrid({
                             : tile.kind === "native-folder"
                                 ? [
                                     { label: "Edit links", onClick: () => onEditNativeFolderLinks(tile.key) },
-                                    {
-                                        label: "Delete folder",
-                                        danger: true,
-                                        onClick: () =>
-                                            onDeleteNativeFolder(tile.folderName, collectBookmarkIds(tile.node)),
-                                    },
+                                    { label: "Add link", onClick: () => onAddLinkToNativeFolder(tile.key, tile.folderName) },
+                                    { label: "Add folder", onClick: () => onAddSubFolderToNativeFolder(tile.key, tile.folderName) },
+                                    { label: "Delete folder", danger: true, onClick: () => onDeleteNativeFolder(tile.folderName, tile.node.bookmarkIds) },
                                 ]
                                 : [];
 
@@ -132,40 +155,13 @@ export default function RootGrid({
 
                         {expanded && tile.kind === "timber-folder" && (
                             <div className="root-expanded-panel">
-                                {(tile.page.bookmarkIds ?? []).length === 0 ? (
-                                    <p className="timber-folder-empty">
-                                        No bookmarks yet — use "Add to folder" on any link.
-                                    </p>
-                                ) : (
-                                    (tile.page.bookmarkIds ?? []).map((id) => {
-                                        const bookmark = bookmarksById.get(id);
-                                        if (!bookmark) return null;
-
-                                        return (
-                                            <div className="folder-bookmark-row" key={id}>
-                                                <a
-                                                    className="folder-bookmark-link"
-                                                    href={bookmark.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    {bookmark.title}
-                                                </a>
-
-                                                <div className="folder-bookmark-actions">
-                                                    <KebabMenu
-                                                        actions={[
-                                                            { label: "Edit", onClick: () => onEditBookmark(id, bookmark.title, bookmark.url) },
-                                                            { label: "Copy link", onClick: () => onCopyBookmark(bookmark.url) },
-                                                            { label: "Remove from folder", onClick: () => onRemoveBookmarkFromFolder(tile.page.id, id) },
-                                                            { label: "Delete", danger: true, onClick: () => onDeleteBookmark(id, bookmark.title) },
-                                                        ]}
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
+                                <TimberFolderContents
+                                    folderId={tile.page.id}
+                                    bookmarkIds={tile.page.bookmarkIds ?? []}
+                                    folders={folders}
+                                    bookmarksById={bookmarksById}
+                                    {...timberHandlers}
+                                />
                             </div>
                         )}
 
@@ -173,10 +169,18 @@ export default function RootGrid({
                             <div className="root-expanded-panel">
                                 <NativeFolderContents
                                     node={tile.node}
+                                    sourceId={tile.source.id}
                                     bookmarksById={bookmarksById}
+                                    folders={folders}
+                                    shadowPages={shadowPages}
                                     onDeleteBookmark={onDeleteBookmark}
                                     onEditBookmark={onEditBookmark}
                                     onCopyBookmark={onCopyBookmark}
+                                    onEditNativeFolderLinks={onEditNativeFolderLinks}
+                                    onDeleteNativeFolder={onDeleteNativeFolder}
+                                    onAddLinkToNativeFolder={onAddLinkToNativeFolder}
+                                    onAddSubFolderToNativeFolder={onAddSubFolderToNativeFolder}
+                                    timberHandlers={timberHandlers}
                                 />
                             </div>
                         )}

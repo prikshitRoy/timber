@@ -23,8 +23,7 @@ import type {
     NativeBookmarkRecord,
 } from "../../src/shared/bookmarks/bookmark.types";
 
-import { computeRootTiles, type RootTile } from "../../src/shared/bookmarks/root-layout";
-import { collectBookmarkIds } from "../../src/shared/bookmarks/bookmark-folder-tree";
+import { computeRootTiles, computeNativeFolderLookup } from "../../src/shared/bookmarks/root-layout";
 
 import RootGrid from "./RootGrid";
 import AddToFolderMenu from "./AddToFolderMenu";
@@ -64,6 +63,8 @@ function App() {
     const [editMode, setEditMode] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showAddLink, setShowAddLink] = useState(false);
+    const [addLinkTarget, setAddLinkTarget] = useState<| { kind: "folder"; pageId: string } | { kind: "native"; key: string; label: string } | null>(null);
+    const [shadowPages, setShadowPages] = useState<Record<string, string>>({});
 
     const [editingBookmark, setEditingBookmark] = useState<{ id: string; title: string; url: string } | null>(null);
     const [editingFolderLinksId, setEditingFolderLinksId] = useState<string | null>(null);
@@ -92,7 +93,7 @@ function App() {
         setBookmarkSources(state.bookmarkSources);
         setFolders(state.pages.filter((page) => page.type === "custom"));
         setRootOrderState(state.rootOrder ?? []);
-
+        setShadowPages(state.nativeFolderShadowPages ?? {});
         setStatus(`${state.bookmarks.length} unique bookmarks`);
     }
 
@@ -268,6 +269,40 @@ function App() {
         }
     }
 
+    async function handleAddSubFolder(parentId: string) {
+        const name = window.prompt("Folder name?");
+        if (!name || !name.trim()) return;
+
+        try {
+            await bookmarkRepository.createPage(name.trim(), parentId);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to create folder."
+            );
+        }
+    }
+
+
+    function handleAddLinkToNativeFolder(nativeKey: string, label: string) {
+        setAddLinkTarget({ kind: "native", key: nativeKey, label });
+        setShowAddLink(true);
+    }
+
+    async function handleAddSubFolderToNativeFolder(nativeKey: string, label: string) {
+        const name = window.prompt("Folder name?");
+        if (!name || !name.trim()) return;
+
+        try {
+            const shadow = await bookmarkRepository.getOrCreateNativeFolderShadowPage(nativeKey, label);
+            await bookmarkRepository.createPage(name.trim(), shadow.id);
+            await loadCatalog();
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to create folder.");
+        }
+    }
+
+
     async function handleRenameFolder(pageId: string, currentName: string) {
         const name = window.prompt("Rename folder", currentName);
         if (!name || !name.trim() || name.trim() === currentName) return;
@@ -350,12 +385,24 @@ function App() {
 
     async function handleCreateLink(url: string, title: string) {
         try {
-            await bookmarkRepository.createManualLink(url, title);
+            const bookmark = await bookmarkRepository.createManualLink(url, title);
+
+            if (addLinkTarget?.kind === "folder") {
+                await bookmarkRepository.addBookmarkToPage(addLinkTarget.pageId, bookmark.id);
+            } else if (addLinkTarget?.kind === "native") {
+                const shadow = await bookmarkRepository.getOrCreateNativeFolderShadowPage(
+                    addLinkTarget.key,
+                    addLinkTarget.label
+                );
+                await bookmarkRepository.addBookmarkToPage(shadow.id, bookmark.id);
+            }
+
             await loadCatalog();
         } catch (error) {
             setError(error instanceof Error ? error.message : "Failed to add link.");
         } finally {
             setShowAddLink(false);
+            setAddLinkTarget(null);
         }
     }
 
@@ -504,15 +551,17 @@ function App() {
         [folders, sources, bookmarkSources, bookmarks, rootOrder]
     );
 
+    const nativeFolderLookup = useMemo(
+        () => computeNativeFolderLookup({ sources, bookmarkSources }),
+        [sources, bookmarkSources]
+    );
+
     const editingFolder = editingFolderLinksId
         ? folders.find((folder) => folder.id === editingFolderLinksId) ?? null
         : null;
 
     const editingNativeFolderTile = editingNativeFolderKey
-        ? (rootTiles.find(
-            (tile): tile is Extract<RootTile, { kind: "native-folder" }> =>
-                tile.kind === "native-folder" && tile.key === editingNativeFolderKey
-        ) ?? null)
+        ? nativeFolderLookup.get(editingNativeFolderKey) ?? null
         : null;
 
     return (
@@ -537,7 +586,13 @@ function App() {
                         </button>
                     )}
 
-                    <button type="button" onClick={() => setShowAddLink(true)}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setAddLinkTarget(null);
+                            setShowAddLink(true);
+                        }}
+                    >
                         + Link
                     </button>
 
@@ -619,7 +674,9 @@ function App() {
                         <RootGrid
                             tiles={rootTiles}
                             editMode={editMode}
+                            folders={folders}
                             bookmarksById={bookmarksById}
+                            shadowPages={shadowPages}
                             onReorder={handleReorderRoot}
                             onRenameFolder={handleRenameFolder}
                             onDeleteFolder={handleDeleteFolder}
@@ -630,6 +687,13 @@ function App() {
                             onEditFolderLinks={setEditingFolderLinksId}
                             onEditNativeFolderLinks={setEditingNativeFolderKey}
                             onDeleteNativeFolder={handleDeleteNativeFolder}
+                            onAddLinkToFolder={(folderId) => {
+                                setAddLinkTarget({ kind: "folder", pageId: folderId });
+                                setShowAddLink(true);
+                            }}
+                            onAddSubFolder={handleAddSubFolder}
+                            onAddLinkToNativeFolder={handleAddLinkToNativeFolder}
+                            onAddSubFolderToNativeFolder={handleAddSubFolderToNativeFolder}
                         />
                     )}
                 </>
@@ -665,7 +729,17 @@ function App() {
 
             {showAddLink && (
                 <AddLinkModal
-                    onClose={() => setShowAddLink(false)}
+                    targetFolderName={
+                        addLinkTarget?.kind === "folder"
+                            ? folders.find((folder) => folder.id === addLinkTarget.pageId)?.name
+                            : addLinkTarget?.kind === "native"
+                                ? addLinkTarget.label
+                                : undefined
+                    }
+                    onClose={() => {
+                        setShowAddLink(false);
+                        setAddLinkTarget(null);
+                    }}
                     onCreate={handleCreateLink}
                 />
             )}
@@ -696,8 +770,8 @@ function App() {
 
             {editingNativeFolderTile && (
                 <EditFolderLinksModal
-                    folderName={editingNativeFolderTile.folderName}
-                    bookmarkIds={collectBookmarkIds(editingNativeFolderTile.node)}
+                    folderName={editingNativeFolderTile.label}
+                    bookmarkIds={editingNativeFolderTile.node.bookmarkIds}
                     bookmarksById={bookmarksById}
                     onClose={() => setEditingNativeFolderKey(null)}
                     onCopySelected={handleCopyFolderLinks}

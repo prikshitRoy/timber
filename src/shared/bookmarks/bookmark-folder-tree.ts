@@ -61,3 +61,10 @@ export function collectBookmarkIds(node: NativeFolderNode): string[] {
   return ids;
 }
 
+
+// A stable, source-scoped identifier for any node in the native
+// folder tree, at any depth — used to key shadow pages and to look
+// up a node for the "Edit links"/"Add link"/"Add folder" actions.
+export function nativeFolderKey(sourceId: string, node: NativeFolderNode): string {
+  return `${sourceId}::${node.path.join("/")}`;
+}

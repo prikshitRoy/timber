@@ -55,6 +55,7 @@ export interface BookmarkPage {
   updatedAt: number;
 }
 
+/** 
 export interface TimberState {
   schemaVersion: 2;
 
@@ -65,6 +66,7 @@ export interface TimberState {
 
   activePageId: string;
 }
+*/
 
 export interface TimberState {
   schemaVersion: 2;
@@ -75,5 +77,6 @@ export interface TimberState {
   pages: BookmarkPage[];
 
   activePageId: string;
-  rootOrder?: string[]; // NEW — persisted drag order of root-level tiles
+  rootOrder?: string[];
+  nativeFolderShadowPages?: Record<string, string>; // NEW — nativeFolderKey -> shadow BookmarkPage id
 }

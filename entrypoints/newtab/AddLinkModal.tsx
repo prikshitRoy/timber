@@ -1,11 +1,12 @@
 import { useState } from "react";
 
 interface AddLinkModalProps {
+    targetFolderName?: string;
     onClose: () => void;
     onCreate: (url: string, title: string) => void;
 }
 
-export default function AddLinkModal({ onClose, onCreate }: AddLinkModalProps) {
+export default function AddLinkModal({ targetFolderName, onClose, onCreate }: AddLinkModalProps) {
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");
     const [error, setError] = useState("");
@@ -28,7 +29,7 @@ export default function AddLinkModal({ onClose, onCreate }: AddLinkModalProps) {
                 onClick={(event) => event.stopPropagation()}
                 onSubmit={handleSubmit}
             >
-                <h2>Add a link</h2>
+                <h2>{targetFolderName ? `Add a link to ${targetFolderName}` : "Add a link"}</h2>
 
                 <label className="add-link-field">
                     URL

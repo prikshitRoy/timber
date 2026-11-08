@@ -422,6 +422,45 @@ class BookmarkRepository {
     );
   }
 
+
+
+  // Get-or-create the Timber folder "behind" a native browser
+  // folder — where links/sub-folders added via that folder's
+  // "Add link"/"Add folder" actions actually live.
+  async getOrCreateNativeFolderShadowPage(
+    nativeFolderKey: string,
+    folderLabel: string
+  ): Promise<BookmarkPage> {
+    return this.mutate((state) => {
+      state.nativeFolderShadowPages ??= {};
+
+      const existingId = state.nativeFolderShadowPages[nativeFolderKey];
+      const existing = existingId
+        ? state.pages.find((item) => item.id === existingId)
+        : undefined;
+
+      if (existing) {
+        return existing;
+      }
+
+      const page: BookmarkPage = {
+        id: createId(),
+        name: folderLabel,
+        type: "custom",
+        bookmarkIds: [],
+        createdAt: now(),
+        updatedAt: now(),
+      };
+
+      state.pages.push(page);
+      state.nativeFolderShadowPages[nativeFolderKey] = page.id;
+
+      return page;
+    });
+  }
+
+
+
   // Rename a page.
   async renamePage(
     pageId: string,
