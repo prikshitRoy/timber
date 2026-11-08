@@ -432,6 +432,20 @@ function App() {
     }
 
 
+    async function handleSaveFolderLinkEdits(
+        updates: { id: string; title: string; url: string }[]
+    ) {
+        try {
+            await bookmarkRepository.updateBookmarks(updates);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to save link edits."
+            );
+        }
+    }
+
+
     async function handleDeleteNativeFolder(folderName: string, bookmarkIds: string[]) {
         if (bookmarkIds.length === 0) return;
 
@@ -676,6 +690,7 @@ function App() {
                     onDeleteSelected={(bookmarkIds, alsoDeleteFolder) =>
                         handleDeleteFolderLinks(editingFolder.id, bookmarkIds, alsoDeleteFolder)
                     }
+                    onSaveEdits={handleSaveFolderLinkEdits}
                 />
             )}
 
@@ -689,6 +704,7 @@ function App() {
                     onDeleteSelected={(bookmarkIds) =>
                         handleDeleteNativeFolderLinks(bookmarkIds)
                     }
+                    onSaveEdits={handleSaveFolderLinkEdits}
                     allowFolderDeletion={false}
                 />
             )}

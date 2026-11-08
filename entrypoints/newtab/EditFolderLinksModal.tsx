@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import KebabMenu from "./KebabMenu";
 
 interface FolderBookmark {
     title: string;
@@ -12,7 +13,13 @@ interface EditFolderLinksModalProps {
     onClose: () => void;
     onCopySelected: (urls: string[]) => void;
     onDeleteSelected: (bookmarkIds: string[], alsoDeleteFolder: boolean) => void;
+    onSaveEdits: (updates: { id: string; title: string; url: string }[]) => void;
     allowFolderDeletion?: boolean;
+}
+
+interface LinkEdit {
+    title: string;
+    url: string;
 }
 
 export default function EditFolderLinksModal({
@@ -22,9 +29,61 @@ export default function EditFolderLinksModal({
     onClose,
     onCopySelected,
     onDeleteSelected,
+    onSaveEdits,
     allowFolderDeletion = true,
 }: EditFolderLinksModalProps) {
     const [selected, setSelected] = useState<Set<string>>(new Set());
+
+    const [edits, setEdits] = useState<Map<string, LinkEdit>>(
+        () =>
+            new Map(
+                bookmarkIds.map((id) => [
+                    id,
+                    {
+                        title: bookmarksById.get(id)?.title ?? "",
+                        url: bookmarksById.get(id)?.url ?? "",
+                    },
+                ])
+            )
+    );
+
+    // Re-sync when links are added/removed (e.g. after a delete),
+    // preserving any edits still in progress for links that remain.
+    useEffect(() => {
+        setEdits((current) => {
+            const next = new Map<string, LinkEdit>();
+
+            for (const id of bookmarkIds) {
+                next.set(
+                    id,
+                    current.get(id) ?? {
+                        title: bookmarksById.get(id)?.title ?? "",
+                        url: bookmarksById.get(id)?.url ?? "",
+                    }
+                );
+            }
+
+            return next;
+        });
+
+        setSelected((current) => {
+            const next = new Set<string>();
+            for (const id of bookmarkIds) {
+                if (current.has(id)) next.add(id);
+            }
+            return next;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bookmarkIds.join(",")]);
+
+    function updateField(id: string, field: "title" | "url", value: string) {
+        setEdits((current) => {
+            const next = new Map(current);
+            const existing = next.get(id) ?? { title: "", url: "" };
+            next.set(id, { ...existing, [field]: value });
+            return next;
+        });
+    }
 
     function toggle(id: string) {
         setSelected((current) => {
@@ -40,19 +99,10 @@ export default function EditFolderLinksModal({
         );
     }
 
-    function handleCopy() {
-        const urls = bookmarkIds
-            .filter((id) => selected.has(id))
-            .map((id) => bookmarksById.get(id)?.url)
-            .filter((url): url is string => Boolean(url));
+    function confirmAndDelete(ids: string[]) {
+        if (ids.length === 0) return;
 
-        if (urls.length > 0) onCopySelected(urls);
-    }
-
-    function handleDelete() {
-        if (selected.size === 0) return;
-
-        const deletingAll = selected.size === bookmarkIds.length;
+        const deletingAll = ids.length === bookmarkIds.length;
         let alsoDeleteFolder = false;
 
         if (allowFolderDeletion && deletingAll) {
@@ -61,19 +111,44 @@ export default function EditFolderLinksModal({
             );
         } else {
             const confirmed = window.confirm(
-                `Delete ${selected.size} selected link${selected.size === 1 ? "" : "s"} from Timber?`
+                `Delete ${ids.length} selected link${ids.length === 1 ? "" : "s"} from Timber?`
             );
             if (!confirmed) return;
         }
 
-        onDeleteSelected(Array.from(selected), alsoDeleteFolder);
-        setSelected(new Set());
+        onDeleteSelected(ids, alsoDeleteFolder);
+
+        setSelected((current) => {
+            const next = new Set(current);
+            for (const id of ids) next.delete(id);
+            return next;
+        });
+    }
+
+    function handleCopySelected() {
+        const urls = Array.from(selected)
+            .map((id) => edits.get(id)?.url)
+            .filter((url): url is string => Boolean(url && url.trim()));
+
+        if (urls.length > 0) onCopySelected(urls);
+    }
+
+    function handleSave() {
+        const updates = Array.from(edits.entries())
+            .filter(([, edit]) => edit.url.trim())
+            .map(([id, edit]) => ({
+                id,
+                title: edit.title.trim() || edit.url.trim(),
+                url: edit.url.trim(),
+            }));
+
+        if (updates.length > 0) onSaveEdits(updates);
     }
 
     return (
         <div className="sync-review-overlay" onClick={onClose}>
             <div
-                className="sync-review-modal"
+                className="sync-review-modal edit-links-modal"
                 onClick={(event) => event.stopPropagation()}
             >
                 <h2>Edit links — {folderName}</h2>
@@ -93,47 +168,87 @@ export default function EditFolderLinksModal({
 
                         <section>
                             {bookmarkIds.map((id) => {
-                                const bookmark = bookmarksById.get(id);
-                                if (!bookmark) return null;
+                                const edit = edits.get(id);
+                                if (!edit) return null;
 
                                 return (
-                                    <label className="edit-links-row" key={id}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.has(id)}
-                                            onChange={() => toggle(id)}
-                                        />
-                                        <span className="edit-links-title">{bookmark.title}</span>
-                                    </label>
+                                    <div className="edit-link-card" key={id}>
+                                        <div className="edit-link-row-top">
+                                            <input
+                                                type="checkbox"
+                                                checked={selected.has(id)}
+                                                onChange={() => toggle(id)}
+                                            />
+
+                                            <input
+                                                type="text"
+                                                className="edit-link-title-input"
+                                                value={edit.title}
+                                                onChange={(event) =>
+                                                    updateField(id, "title", event.target.value)
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="edit-link-row-bottom">
+                                            <span className="edit-link-url-label">URL:</span>
+
+                                            <input
+                                                type="text"
+                                                className="edit-link-url-input"
+                                                value={edit.url}
+                                                onChange={(event) =>
+                                                    updateField(id, "url", event.target.value)
+                                                }
+                                            />
+
+                                            <KebabMenu
+                                                actions={[
+                                                    {
+                                                        label: "Copy",
+                                                        onClick: () =>
+                                                            edit.url.trim() && onCopySelected([edit.url.trim()]),
+                                                    },
+                                                    {
+                                                        label: "Delete",
+                                                        danger: true,
+                                                        onClick: () => confirmAndDelete([id]),
+                                                    },
+                                                ]}
+                                            />
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </section>
                     </>
                 )}
 
-                <footer className="timber-folder-modal-footer">
+                <footer className="edit-links-footer">
+                    <button
+                        type="button"
+                        disabled={selected.size === 0}
+                        onClick={handleCopySelected}
+                    >
+                        Copy Selected
+                    </button>
+
+                    <button
+                        type="button"
+                        className="delete-button"
+                        disabled={selected.size === 0}
+                        onClick={() => confirmAndDelete(Array.from(selected))}
+                    >
+                        Delete selected
+                    </button>
+
+                    <button type="button" className="save-button" onClick={handleSave}>
+                        Save
+                    </button>
+
                     <button type="button" onClick={onClose}>
                         Close
                     </button>
-
-                    <div className="edit-links-actions">
-                        <button
-                            type="button"
-                            disabled={selected.size === 0}
-                            onClick={handleCopy}
-                        >
-                            Copy selected
-                        </button>
-
-                        <button
-                            type="button"
-                            className="delete-button"
-                            disabled={selected.size === 0}
-                            onClick={handleDelete}
-                        >
-                            Delete selected
-                        </button>
-                    </div>
                 </footer>
             </div>
         </div>

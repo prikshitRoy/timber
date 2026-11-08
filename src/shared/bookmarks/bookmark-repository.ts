@@ -260,6 +260,27 @@ class BookmarkRepository {
     });
   }
 
+  // Save title/URL edits for several bookmarks at once — used by
+  // the "Edit links" popup's Save button.
+  async updateBookmarks(
+    updates: { id: string; title: string; url: string }[]
+  ): Promise<void> {
+    await this.mutate((state) => {
+      for (const update of updates) {
+        const bookmark = state.bookmarks.find(
+          (item) => item.id === update.id
+        );
+
+        if (!bookmark) continue;
+
+        bookmark.title = update.title;
+        bookmark.url = update.url;
+        bookmark.normalizedUrl = normalizeBookmarkUrl(update.url);
+        bookmark.updatedAt = now();
+      }
+    });
+  }
+
   // Remove one native browser occurrence.
   async removeNativeBookmark(
     sourceId: string,
