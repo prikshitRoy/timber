@@ -47,7 +47,7 @@ interface SubFolderTileProps extends TimberFolderHandlers {
 
 // A nested Timber folder — same tile language as the root grid
 // (chevron, name, count, kebab), draggable among its siblings and
-// expanding into its own merged, sortable grid row.
+// expanding into its own merged, sortable, grid row.
 function SubFolderTile({
     folder,
     folders,
