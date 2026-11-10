@@ -1,23 +1,9 @@
-import type {
-  TimberState,
-  BrowserSource,
-  BookmarkPage,
-  Bookmark,
-} from "../types/timber";
-import { buildNativeFolderTree, nativeFolderKey, type NativeFolderNode } from "./bookmark-folder-tree";
+import type { TimberState, BookmarkPage, Bookmark } from "../types/timber";
 
-export interface RootTimberFolderTile {
-  kind: "timber-folder";
+export interface RootFolderTile {
+  kind: "folder";
   key: string;
   page: BookmarkPage;
-}
-
-export interface RootNativeFolderTile {
-  kind: "native-folder";
-  key: string;
-  source: BrowserSource;
-  folderName: string;
-  node: NativeFolderNode;
 }
 
 export interface RootLinkTile {
@@ -26,73 +12,42 @@ export interface RootLinkTile {
   bookmark: Bookmark;
 }
 
-export type RootTile = RootTimberFolderTile | RootNativeFolderTile | RootLinkTile;
+export type RootTile = RootFolderTile | RootLinkTile;
 
-type RootLayoutState = Pick<
-  TimberState,
-  "pages" | "sources" | "bookmarkSources" | "bookmarks" | "rootOrder"
->;
+type RootLayoutState = Pick<TimberState, "pages" | "bookmarks" | "rootOrder">;
 
 function tileLabel(tile: RootTile): string {
-  if (tile.kind === "timber-folder") return tile.page.name;
-  if (tile.kind === "native-folder") return tile.folderName;
-  return tile.bookmark.title;
+  return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
 }
 
 /**
- * Build every root-level tile that currently exists — Timber
- * folders, top-level native folders per source, and standalone
- * root-level links (native bookmarks with no folder, or bookmarks
- * added manually via "+ Link") — then order them using the
- * persisted rootOrder, appending anything newly discovered at the
- * end (alphabetically, for a stable default).
+ * Build every root-level tile — top-level Timber folders and
+ * standalone links (bookmarks not filed into any folder) — then
+ * order them using the persisted rootOrder, appending anything newly
+ * discovered at the end (alphabetically, for a stable default).
  */
 export function computeRootTiles(state: RootLayoutState): RootTile[] {
   const tiles = new Map<string, RootTile>();
 
   for (const page of state.pages) {
     if (page.type !== "custom") continue;
-    if (page.parentId) continue; // Flat layout only.
+    if (page.parentId) continue; // Only top-level folders sit at root.
 
     const key = `tf:${page.id}`;
-    tiles.set(key, { kind: "timber-folder", key, page });
+    tiles.set(key, { kind: "folder", key, page });
   }
 
-  const standaloneLinkIds = new Set<string>();
+  const foldered = new Set<string>();
 
-    for (const source of state.sources) {
-    const tree = buildNativeFolderTree(state.bookmarkSources, source.id);
-
-    // The browser's own top-level containers ("Bookmarks bar",
-    // "Other bookmarks", "Mobile bookmarks") are just organizational
-    // wrappers — skip rendering them as tiles and surface their
-    // contents directly at the root instead.
-    for (const container of tree.children.values()) {
-      for (const [folderName, node] of container.children) {
-        const key = nativeFolderKey(source.id, node);
-        tiles.set(key, { kind: "native-folder", key, source, folderName, node });
-      }
-
-      for (const bookmarkId of container.bookmarkIds) {
-        standaloneLinkIds.add(bookmarkId);
-      }
-    }
-
-    // Edge case: a bookmark sitting at the browser root with no
-    // container folder at all. Rare, but keep it visible.
-    for (const bookmarkId of tree.bookmarkIds) {
-      standaloneLinkIds.add(bookmarkId);
+  for (const page of state.pages) {
+    if (page.type !== "custom") continue;
+    for (const id of page.bookmarkIds ?? []) {
+      foldered.add(id);
     }
   }
-
-  const linkedElsewhere = new Set(
-    state.bookmarkSources.map((item) => item.bookmarkId)
-  );
 
   for (const bookmark of state.bookmarks) {
-    // Standalone = a root-level native bookmark, or one with no
-    // browser-source occurrence at all (manually added).
-    if (standaloneLinkIds.has(bookmark.id) || !linkedElsewhere.has(bookmark.id)) {
+    if (!foldered.has(bookmark.id)) {
       const key = `lk:${bookmark.id}`;
       tiles.set(key, { kind: "link", key, bookmark });
     }
@@ -118,46 +73,3 @@ export function computeRootTiles(state: RootLayoutState): RootTile[] {
 
   return ordered;
 }
-
-
-export interface NativeFolderLookup {
-  sourceId: string;
-  node: NativeFolderNode;
-  label: string;
-}
-
-type NativeFolderLookupState = Pick<TimberState, "sources" | "bookmarkSources">;
-
-// Every native folder at every depth, keyed the same way tiles and
-// shadow pages are — lets "Edit links"/"Add link"/"Add folder" work
-// on a folder regardless of how deeply nested it is.
-export function computeNativeFolderLookup(
-  state: NativeFolderLookupState
-): Map<string, NativeFolderLookup> {
-  const lookup = new Map<string, NativeFolderLookup>();
-
-  function walk(sourceId: string, node: NativeFolderNode) {
-    for (const child of node.children.values()) {
-      lookup.set(nativeFolderKey(sourceId, child), {
-        sourceId,
-        node: child,
-        label: child.name,
-      });
-
-      walk(sourceId, child);
-    }
-  }
-
-  for (const source of state.sources) {
-    const tree = buildNativeFolderTree(state.bookmarkSources, source.id);
-
-    // Containers ("Bookmarks bar", "Other bookmarks"...) stay
-    // unaddressable — same flattening computeRootTiles applies.
-    for (const container of tree.children.values()) {
-      walk(source.id, container);
-    }
-  }
-
-  return lookup;
-}
-

@@ -23,7 +23,7 @@ import type {
     NativeBookmarkRecord,
 } from "../../src/shared/bookmarks/bookmark.types";
 
-import { computeRootTiles, computeNativeFolderLookup } from "../../src/shared/bookmarks/root-layout";
+import { computeRootTiles } from "../../src/shared/bookmarks/root-layout";
 
 import RootGrid from "./RootGrid";
 import AddToFolderMenu from "./AddToFolderMenu";
@@ -63,12 +63,13 @@ function App() {
     const [editMode, setEditMode] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showAddLink, setShowAddLink] = useState(false);
-    const [addLinkTarget, setAddLinkTarget] = useState<| { kind: "folder"; pageId: string } | { kind: "native"; key: string; label: string } | null>(null);
-    const [shadowPages, setShadowPages] = useState<Record<string, string>>({});
+    const [addLinkTargetFolderId, setAddLinkTargetFolderId] = useState<string | null>(null);
 
-    const [editingBookmark, setEditingBookmark] = useState<{ id: string; title: string; url: string } | null>(null);
+    const [editingBookmark, setEditingBookmark] = useState<
+        { id: string; title: string; url: string } | null
+    >(null);
+
     const [editingFolderLinksId, setEditingFolderLinksId] = useState<string | null>(null);
-    const [editingNativeFolderKey, setEditingNativeFolderKey] = useState<string | null>(null);
 
     async function loadCatalog() {
         const state = await bookmarkRepository.getState();
@@ -93,7 +94,7 @@ function App() {
         setBookmarkSources(state.bookmarkSources);
         setFolders(state.pages.filter((page) => page.type === "custom"));
         setRootOrderState(state.rootOrder ?? []);
-        setShadowPages(state.nativeFolderShadowPages ?? {});
+
         setStatus(`${state.bookmarks.length} unique bookmarks`);
     }
 
@@ -283,26 +284,6 @@ function App() {
         }
     }
 
-
-    function handleAddLinkToNativeFolder(nativeKey: string, label: string) {
-        setAddLinkTarget({ kind: "native", key: nativeKey, label });
-        setShowAddLink(true);
-    }
-
-    async function handleAddSubFolderToNativeFolder(nativeKey: string, label: string) {
-        const name = window.prompt("Folder name?");
-        if (!name || !name.trim()) return;
-
-        try {
-            const shadow = await bookmarkRepository.getOrCreateNativeFolderShadowPage(nativeKey, label);
-            await bookmarkRepository.createPage(name.trim(), shadow.id);
-            await loadCatalog();
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Failed to create folder.");
-        }
-    }
-
-
     async function handleRenameFolder(pageId: string, currentName: string) {
         const name = window.prompt("Rename folder", currentName);
         if (!name || !name.trim() || name.trim() === currentName) return;
@@ -319,7 +300,7 @@ function App() {
 
     async function handleDeleteFolder(folderId: string, name: string) {
         const confirmed = window.confirm(
-            `Delete folder "${name}"? Bookmarks inside stay in Timber — only the folder is removed.`
+            `Delete folder "${name}"? This also deletes every bookmark and sub-folder inside it. They stay in your browser bookmarks if they came from there, and will show up again next time you scan.`
         );
 
         if (!confirmed) return;
@@ -387,14 +368,8 @@ function App() {
         try {
             const bookmark = await bookmarkRepository.createManualLink(url, title);
 
-            if (addLinkTarget?.kind === "folder") {
-                await bookmarkRepository.addBookmarkToPage(addLinkTarget.pageId, bookmark.id);
-            } else if (addLinkTarget?.kind === "native") {
-                const shadow = await bookmarkRepository.getOrCreateNativeFolderShadowPage(
-                    addLinkTarget.key,
-                    addLinkTarget.label
-                );
-                await bookmarkRepository.addBookmarkToPage(shadow.id, bookmark.id);
+            if (addLinkTargetFolderId) {
+                await bookmarkRepository.addBookmarkToPage(addLinkTargetFolderId, bookmark.id);
             }
 
             await loadCatalog();
@@ -402,11 +377,9 @@ function App() {
             setError(error instanceof Error ? error.message : "Failed to add link.");
         } finally {
             setShowAddLink(false);
-            setAddLinkTarget(null);
+            setAddLinkTargetFolderId(null);
         }
     }
-
-
 
     function handleStartEditBookmark(bookmarkId: string, title: string, url: string) {
         setEditingBookmark({ id: bookmarkId, title, url });
@@ -431,8 +404,6 @@ function App() {
             setError("Failed to copy link.");
         }
     }
-
-
 
     async function handleDeleteFolderLinks(
         folderId: string,
@@ -466,19 +437,6 @@ function App() {
         }
     }
 
-
-    async function handleDeleteNativeFolderLinks(bookmarkIds: string[]) {
-        try {
-            await bookmarkRepository.deleteBookmarks(bookmarkIds);
-            await loadCatalog();
-        } catch (error) {
-            setError(
-                error instanceof Error ? error.message : "Failed to delete links."
-            );
-        }
-    }
-
-
     async function handleSaveFolderLinkEdits(
         updates: { id: string; title: string; url: string }[]
     ) {
@@ -491,33 +449,6 @@ function App() {
             );
         }
     }
-
-
-    async function handleDeleteNativeFolder(folderName: string, bookmarkIds: string[]) {
-        if (bookmarkIds.length === 0) return;
-
-        const confirmed = window.confirm(
-            `Remove "${folderName}" and all ${bookmarkIds.length} link${bookmarkIds.length === 1 ? "" : "s"} inside it from Timber? They stay in your browser bookmarks, and will show up again next time you scan.`
-        );
-
-        if (!confirmed) return;
-
-        try {
-            await bookmarkRepository.deleteBookmarks(bookmarkIds);
-            await loadCatalog();
-        } catch (error) {
-            setError(
-                error instanceof Error ? error.message : "Failed to delete folder."
-            );
-        }
-    }
-
-
-
-
-
-
-
 
     const filteredBookmarks = useMemo(() => {
         const value = query.trim().toLowerCase();
@@ -543,25 +474,14 @@ function App() {
         () =>
             computeRootTiles({
                 pages: folders,
-                sources,
-                bookmarkSources,
                 bookmarks,
                 rootOrder,
             }),
-        [folders, sources, bookmarkSources, bookmarks, rootOrder]
-    );
-
-    const nativeFolderLookup = useMemo(
-        () => computeNativeFolderLookup({ sources, bookmarkSources }),
-        [sources, bookmarkSources]
+        [folders, bookmarks, rootOrder]
     );
 
     const editingFolder = editingFolderLinksId
         ? folders.find((folder) => folder.id === editingFolderLinksId) ?? null
-        : null;
-
-    const editingNativeFolderTile = editingNativeFolderKey
-        ? nativeFolderLookup.get(editingNativeFolderKey) ?? null
         : null;
 
     return (
@@ -589,7 +509,7 @@ function App() {
                     <button
                         type="button"
                         onClick={() => {
-                            setAddLinkTarget(null);
+                            setAddLinkTargetFolderId(null);
                             setShowAddLink(true);
                         }}
                     >
@@ -676,7 +596,6 @@ function App() {
                             editMode={editMode}
                             folders={folders}
                             bookmarksById={bookmarksById}
-                            shadowPages={shadowPages}
                             onReorder={handleReorderRoot}
                             onRenameFolder={handleRenameFolder}
                             onDeleteFolder={handleDeleteFolder}
@@ -685,15 +604,11 @@ function App() {
                             onEditBookmark={handleStartEditBookmark}
                             onCopyBookmark={handleCopyBookmarkLink}
                             onEditFolderLinks={setEditingFolderLinksId}
-                            onEditNativeFolderLinks={setEditingNativeFolderKey}
-                            onDeleteNativeFolder={handleDeleteNativeFolder}
                             onAddLinkToFolder={(folderId) => {
-                                setAddLinkTarget({ kind: "folder", pageId: folderId });
+                                setAddLinkTargetFolderId(folderId);
                                 setShowAddLink(true);
                             }}
                             onAddSubFolder={handleAddSubFolder}
-                            onAddLinkToNativeFolder={handleAddLinkToNativeFolder}
-                            onAddSubFolderToNativeFolder={handleAddSubFolderToNativeFolder}
                         />
                     )}
                 </>
@@ -730,15 +645,13 @@ function App() {
             {showAddLink && (
                 <AddLinkModal
                     targetFolderName={
-                        addLinkTarget?.kind === "folder"
-                            ? folders.find((folder) => folder.id === addLinkTarget.pageId)?.name
-                            : addLinkTarget?.kind === "native"
-                                ? addLinkTarget.label
-                                : undefined
+                        addLinkTargetFolderId
+                            ? folders.find((folder) => folder.id === addLinkTargetFolderId)?.name
+                            : undefined
                     }
                     onClose={() => {
                         setShowAddLink(false);
-                        setAddLinkTarget(null);
+                        setAddLinkTargetFolderId(null);
                     }}
                     onCreate={handleCreateLink}
                 />
@@ -765,21 +678,6 @@ function App() {
                         handleDeleteFolderLinks(editingFolder.id, bookmarkIds, alsoDeleteFolder)
                     }
                     onSaveEdits={handleSaveFolderLinkEdits}
-                />
-            )}
-
-            {editingNativeFolderTile && (
-                <EditFolderLinksModal
-                    folderName={editingNativeFolderTile.label}
-                    bookmarkIds={editingNativeFolderTile.node.bookmarkIds}
-                    bookmarksById={bookmarksById}
-                    onClose={() => setEditingNativeFolderKey(null)}
-                    onCopySelected={handleCopyFolderLinks}
-                    onDeleteSelected={(bookmarkIds) =>
-                        handleDeleteNativeFolderLinks(bookmarkIds)
-                    }
-                    onSaveEdits={handleSaveFolderLinkEdits}
-                    allowFolderDeletion={false}
                 />
             )}
 

@@ -21,6 +21,8 @@ import type {
 } from "./bookmark.types";
 
 import { normalizeBookmarkUrl } from "./bookmark-normalizer";
+import { findOrCreateFolderChainInState, stripBrowserContainer } from "./folder-chain";
+import { migrateFoldersFromPaths } from "./bookmark-folder-migration";
 
 const now = () => Date.now();
 
@@ -39,7 +41,6 @@ interface NativeBookmarkInput {
 class BookmarkRepository {
   private writeQueue: Promise<void> = Promise.resolve();
 
-  // Serialize writes within this JavaScript context.
   private async mutate<T>(
     callback: (state: TimberState) => T | Promise<T>
   ): Promise<T> {
@@ -65,7 +66,23 @@ class BookmarkRepository {
     return operation;
   }
 
+  private async ensureFoldersMigrated(): Promise<void> {
+    const snapshot = await loadState();
+
+    if (!snapshot || snapshot.foldersMigrated) {
+      return;
+    }
+
+    await this.mutate((state) => {
+      if (state.foldersMigrated) return;
+
+      migrateFoldersFromPaths(state);
+      state.foldersMigrated = true;
+    });
+  }
+
   private async read(): Promise<TimberState> {
+    await this.ensureFoldersMigrated();
     await this.writeQueue;
 
     const state = await loadState();
@@ -77,33 +94,33 @@ class BookmarkRepository {
     return state;
   }
 
-  // Initialize Timber for the current browser.
-  
-    async initialize(browserKind: BrowserKind): Promise<TimberState> {
+  async initialize(browserKind: BrowserKind): Promise<TimberState> {
     const operation = this.writeQueue.then(async () => {
-        const existing = await loadState();
+      const existing = await loadState();
 
-        if (existing) {
+      if (existing) {
         return existing;
-        }
+      }
 
-        const initialState = createInitialState(browserKind);
+      const initialState = createInitialState(browserKind);
 
-        await saveState(initialState);
+      await saveState(initialState);
 
-        return initialState;
+      return initialState;
     });
 
     this.writeQueue = operation.then(
-        () => undefined,
-        () => undefined
+      () => undefined,
+      () => undefined
     );
 
-    return operation;
-    }
+    await operation;
 
+    // Existing installs from before folders were unified may still
+    // need the one-time migration — read() runs it if so.
+    return this.read();
+  }
 
-  // Register an additional browser source.
   async registerSource(
     browserKind: BrowserKind,
     name: string
@@ -131,7 +148,6 @@ class BookmarkRepository {
     });
   }
 
-  // Add or update a bookmark from a browser.
   async upsertNativeBookmark(
     input: NativeBookmarkInput
   ): Promise<Bookmark> {
@@ -146,7 +162,6 @@ class BookmarkRepository {
         throw new Error("Browser source not found.");
       }
 
-      // Find an existing unique bookmark.
       let bookmark = state.bookmarks.find(
         (item) => item.normalizedUrl === normalizedUrl
       );
@@ -164,7 +179,6 @@ class BookmarkRepository {
         state.bookmarks.push(bookmark);
       }
 
-      // Identify the native occurrence.
       const sourceBookmark = state.bookmarkSources.find(
         (item) =>
           item.sourceId === input.sourceId &&
@@ -198,17 +212,12 @@ class BookmarkRepository {
     });
   }
 
-  // Get every unique bookmark.
   async getAllBookmarks(): Promise<Bookmark[]> {
     const state = await this.read();
-
     return state.bookmarks;
   }
 
-  // Get bookmarks belonging to a browser source.
-  async getBookmarksBySource(
-    sourceId: string
-  ): Promise<Bookmark[]> {
+  async getBookmarksBySource(sourceId: string): Promise<Bookmark[]> {
     const state = await this.read();
 
     const bookmarkIds = new Set(
@@ -217,15 +226,10 @@ class BookmarkRepository {
         .map((item) => item.bookmarkId)
     );
 
-    return state.bookmarks.filter(
-      (bookmark) => bookmarkIds.has(bookmark.id)
-    );
+    return state.bookmarks.filter((bookmark) => bookmarkIds.has(bookmark.id));
   }
 
-  // Get the browser sources containing a bookmark.
-  async getBookmarkSources(
-    bookmarkId: string
-  ): Promise<BookmarkSource[]> {
+  async getBookmarkSources(bookmarkId: string): Promise<BookmarkSource[]> {
     const state = await this.read();
 
     return state.bookmarkSources.filter(
@@ -233,15 +237,12 @@ class BookmarkRepository {
     );
   }
 
-  // Update canonical bookmark metadata.
-    async updateBookmark(
+  async updateBookmark(
     bookmarkId: string,
     updates: Partial<Pick<Bookmark, "title" | "url">>
   ): Promise<void> {
     await this.mutate((state) => {
-      const bookmark = state.bookmarks.find(
-        (item) => item.id === bookmarkId
-      );
+      const bookmark = state.bookmarks.find((item) => item.id === bookmarkId);
 
       if (!bookmark) {
         throw new Error("Bookmark not found.");
@@ -260,17 +261,12 @@ class BookmarkRepository {
     });
   }
 
-  // Save title/URL edits for several bookmarks at once — used by
-  // the "Edit links" popup's Save button.
   async updateBookmarks(
     updates: { id: string; title: string; url: string }[]
   ): Promise<void> {
     await this.mutate((state) => {
       for (const update of updates) {
-        const bookmark = state.bookmarks.find(
-          (item) => item.id === update.id
-        );
-
+        const bookmark = state.bookmarks.find((item) => item.id === update.id);
         if (!bookmark) continue;
 
         bookmark.title = update.title;
@@ -281,51 +277,41 @@ class BookmarkRepository {
     });
   }
 
-  // Remove one native browser occurrence.
   async removeNativeBookmark(
     sourceId: string,
     nativeBookmarkId: string
-    ): Promise<void> {
+  ): Promise<void> {
     await this.mutate((state) => {
-        const occurrenceIndex = state.bookmarkSources.findIndex(
+      const occurrenceIndex = state.bookmarkSources.findIndex(
         (item) =>
-            item.sourceId === sourceId &&
-            item.nativeBookmarkId === nativeBookmarkId
-        );
+          item.sourceId === sourceId &&
+          item.nativeBookmarkId === nativeBookmarkId
+      );
 
-        if (occurrenceIndex === -1) return;
+      if (occurrenceIndex === -1) return;
 
-        const [removed] = state.bookmarkSources.splice(
-        occurrenceIndex,
-        1
-        );
+      const [removed] = state.bookmarkSources.splice(occurrenceIndex, 1);
 
-        // TypeScript safety check
-        if (!removed) return;
+      if (!removed) return;
 
-        // Preserve the canonical bookmark if another browser
-        // still contains it.
-        const hasOtherSources = state.bookmarkSources.some(
+      const hasOtherSources = state.bookmarkSources.some(
         (item) => item.bookmarkId === removed.bookmarkId
-        );
+      );
 
-        // Preserve it if a custom page still references it.
-        const usedByPage = state.pages.some(
+      const usedByPage = state.pages.some(
         (page) =>
-            page.type === "custom" &&
-            page.bookmarkIds?.includes(removed.bookmarkId)
-        );
+          page.type === "custom" &&
+          page.bookmarkIds?.includes(removed.bookmarkId)
+      );
 
-        // Remove the canonical bookmark only when nobody references it.
-        if (!hasOtherSources && !usedByPage) {
+      if (!hasOtherSources && !usedByPage) {
         state.bookmarks = state.bookmarks.filter(
-            (item) => item.id !== removed.bookmarkId
+          (item) => item.id !== removed.bookmarkId
         );
-        }
+      }
     });
-    }
+  }
 
-  // Delete a canonical bookmark everywhere.
   async deleteBookmark(bookmarkId: string): Promise<void> {
     await this.mutate((state) => {
       state.bookmarks = state.bookmarks.filter(
@@ -348,15 +334,11 @@ class BookmarkRepository {
     });
   }
 
-  // Delete several canonical bookmarks in one atomic operation —
-  // used by the folder "Edit links" bulk delete action.
   async deleteBookmarks(bookmarkIds: string[]): Promise<void> {
     const idSet = new Set(bookmarkIds);
 
     await this.mutate((state) => {
-      state.bookmarks = state.bookmarks.filter(
-        (item) => !idSet.has(item.id)
-      );
+      state.bookmarks = state.bookmarks.filter((item) => !idSet.has(item.id));
 
       state.bookmarkSources = state.bookmarkSources.filter(
         (item) => !idSet.has(item.bookmarkId)
@@ -364,24 +346,18 @@ class BookmarkRepository {
 
       for (const page of state.pages) {
         if (page.type === "custom") {
-          page.bookmarkIds = page.bookmarkIds?.filter(
-            (id) => !idSet.has(id)
-          );
-
+          page.bookmarkIds = page.bookmarkIds?.filter((id) => !idSet.has(id));
           page.updatedAt = now();
         }
       }
     });
   }
 
-  // Get all pages.
   async getPages(): Promise<BookmarkPage[]> {
     const state = await this.read();
-
     return state.pages;
   }
 
-  // Create a custom page.
   async createPage(name: string, parentId?: string): Promise<BookmarkPage> {
     return this.mutate((state) => {
       if (parentId) {
@@ -412,8 +388,6 @@ class BookmarkRepository {
     });
   }
 
-  // Timber-created folders/pages nested under a parent
-  // (omit parentId for top-level custom pages/folders).
   async getChildPages(parentId?: string): Promise<BookmarkPage[]> {
     const state = await this.read();
 
@@ -422,54 +396,16 @@ class BookmarkRepository {
     );
   }
 
-
-
-  // Get-or-create the Timber folder "behind" a native browser
-  // folder — where links/sub-folders added via that folder's
-  // "Add link"/"Add folder" actions actually live.
-  async getOrCreateNativeFolderShadowPage(
-    nativeFolderKey: string,
-    folderLabel: string
-  ): Promise<BookmarkPage> {
-    return this.mutate((state) => {
-      state.nativeFolderShadowPages ??= {};
-
-      const existingId = state.nativeFolderShadowPages[nativeFolderKey];
-      const existing = existingId
-        ? state.pages.find((item) => item.id === existingId)
-        : undefined;
-
-      if (existing) {
-        return existing;
-      }
-
-      const page: BookmarkPage = {
-        id: createId(),
-        name: folderLabel,
-        type: "custom",
-        bookmarkIds: [],
-        createdAt: now(),
-        updatedAt: now(),
-      };
-
-      state.pages.push(page);
-      state.nativeFolderShadowPages[nativeFolderKey] = page.id;
-
-      return page;
-    });
+  // Find (or create) a folder chain by name path — the same
+  // merge-by-name-across-browsers logic Scan uses for auto-placement,
+  // exposed for any other caller that needs it.
+  async findOrCreateFolderChain(folderPath: string[]): Promise<BookmarkPage | null> {
+    return this.mutate((state) => findOrCreateFolderChainInState(state, folderPath));
   }
 
-
-
-  // Rename a page.
-  async renamePage(
-    pageId: string,
-    name: string
-  ): Promise<void> {
+  async renamePage(pageId: string, name: string): Promise<void> {
     await this.mutate((state) => {
-      const page = state.pages.find(
-        (item) => item.id === pageId
-      );
+      const page = state.pages.find((item) => item.id === pageId);
 
       if (!page) {
         throw new Error("Page not found.");
@@ -484,15 +420,9 @@ class BookmarkRepository {
     });
   }
 
-  // Add a bookmark reference to a custom page.
-  async addBookmarkToPage(
-    pageId: string,
-    bookmarkId: string
-  ): Promise<void> {
+  async addBookmarkToPage(pageId: string, bookmarkId: string): Promise<void> {
     await this.mutate((state) => {
-      const page = state.pages.find(
-        (item) => item.id === pageId
-      );
+      const page = state.pages.find((item) => item.id === pageId);
 
       const bookmarkExists = state.bookmarks.some(
         (item) => item.id === bookmarkId
@@ -516,113 +446,137 @@ class BookmarkRepository {
     });
   }
 
-  // Remove a bookmark reference without deleting the bookmark.
-  async removeBookmarkFromPage(
-    pageId: string,
-    bookmarkId: string
-  ): Promise<void> {
+  async removeBookmarkFromPage(pageId: string, bookmarkId: string): Promise<void> {
     await this.mutate((state) => {
-      const page = state.pages.find(
-        (item) => item.id === pageId
-      );
+      const page = state.pages.find((item) => item.id === pageId);
 
       if (!page || page.type !== "custom") {
         throw new Error("Custom page not found.");
       }
 
-      page.bookmarkIds = page.bookmarkIds?.filter(
-        (id) => id !== bookmarkId
-      );
-
+      page.bookmarkIds = page.bookmarkIds?.filter((id) => id !== bookmarkId);
       page.updatedAt = now();
     });
   }
 
-  // Delete a custom page.
+  // Delete a folder AND everything inside it — its own bookmarks,
+  // every nested sub-folder at any depth, and their bookmarks too.
+  // Deleted bookmarks are soft-deleted (same as deleteBookmark): they
+  // stay in the real browser if they came from there, and reappear
+  // next time you Scan.
   async deletePage(pageId: string): Promise<void> {
     await this.mutate((state) => {
-      const page = state.pages.find(
-        (item) => item.id === pageId
-      );
+      const page = state.pages.find((item) => item.id === pageId);
 
       if (!page || page.type !== "custom") {
         throw new Error("Only custom pages can be deleted.");
       }
 
-      // Move any nested folders up a level instead of orphaning them.
-      for (const child of state.pages) {
-        if (child.type === "custom" && child.parentId === pageId) {
-          child.parentId = page.parentId;
-          child.updatedAt = now();
+      const toDelete = new Set<string>([pageId]);
+      let grew = true;
+
+      while (grew) {
+        grew = false;
+
+        for (const candidate of state.pages) {
+          if (
+            candidate.type === "custom" &&
+            candidate.parentId &&
+            toDelete.has(candidate.parentId) &&
+            !toDelete.has(candidate.id)
+          ) {
+            toDelete.add(candidate.id);
+            grew = true;
+          }
         }
       }
 
-      state.pages = state.pages.filter(
-        (item) => item.id !== pageId
+      const bookmarkIdsToDelete = new Set<string>();
+
+      for (const deletedId of toDelete) {
+        const deletedPage = state.pages.find((item) => item.id === deletedId);
+        for (const id of deletedPage?.bookmarkIds ?? []) {
+          bookmarkIdsToDelete.add(id);
+        }
+      }
+
+      state.bookmarks = state.bookmarks.filter(
+        (item) => !bookmarkIdsToDelete.has(item.id)
       );
 
-      if (state.activePageId === pageId) {
-        state.activePageId = state.pages.find(
-          (item) => item.type === "all"
-        )!.id;
+      state.bookmarkSources = state.bookmarkSources.filter(
+        (item) => !bookmarkIdsToDelete.has(item.bookmarkId)
+      );
+
+      state.pages = state.pages.filter((item) => !toDelete.has(item.id));
+
+      // A surviving folder may still reference a deleted bookmark —
+      // bookmarks can live in more than one folder (tag-like model).
+      for (const remaining of state.pages) {
+        if (remaining.type === "custom" && remaining.bookmarkIds) {
+          const filtered = remaining.bookmarkIds.filter(
+            (id) => !bookmarkIdsToDelete.has(id)
+          );
+
+          if (filtered.length !== remaining.bookmarkIds.length) {
+            remaining.bookmarkIds = filtered;
+            remaining.updatedAt = now();
+          }
+        }
+      }
+
+      if (state.activePageId && toDelete.has(state.activePageId)) {
+        const fallback = state.pages.find((item) => item.type === "all");
+        if (fallback) state.activePageId = fallback.id;
       }
     });
   }
 
-  // Read the entire database.
   async getState(): Promise<TimberState> {
     return this.read();
   }
-  
-  // page-based bookmark retrieval
-    async getBookmarksForPage(pageId: string): Promise<Bookmark[]> {
+
+  async getBookmarksForPage(pageId: string): Promise<Bookmark[]> {
     const state = await this.read();
 
-    const page = state.pages.find(
-        (item) => item.id === pageId
-    );
+    const page = state.pages.find((item) => item.id === pageId);
 
     if (!page) {
-        throw new Error("Page not found.");
+      throw new Error("Page not found.");
     }
 
     switch (page.type) {
-        case "all":
+      case "all":
         return state.bookmarks;
 
-        case "source": {
+      case "source": {
         if (!page.sourceId) return [];
 
         const ids = new Set(
-            state.bookmarkSources
+          state.bookmarkSources
             .filter((item) => item.sourceId === page.sourceId)
             .map((item) => item.bookmarkId)
         );
 
-        return state.bookmarks.filter(
-            (bookmark) => ids.has(bookmark.id)
-        );
-        }
+        return state.bookmarks.filter((bookmark) => ids.has(bookmark.id));
+      }
 
-        case "custom": {
+      case "custom": {
         const ids = new Set(page.bookmarkIds ?? []);
-
-        return state.bookmarks.filter(
-            (bookmark) => ids.has(bookmark.id)
-        );
-        }
+        return state.bookmarks.filter((bookmark) => ids.has(bookmark.id));
+      }
     }
-    }
+  }
 
-  // Create canonical bookmark(New URL), Reuse canonical ID(Same URL in another browser), Update source association(Existing bookmark moved or renamed), Remove stale association(Native bookmark deleted)
+  // Legacy full-replace sync — unused by the product flow (kept only
+  // for bookmark-repository.test.ts). Scan uses computeSyncDiff /
+  // applySyncDiff instead.
   async syncNativeBookmarks(
     sourceId: string,
     nativeBookmarks: NativeBookmarkRecord[]
   ): Promise<BookmarkSyncSummary> {
     return this.mutate((state) => {
-      const source = state.sources.find(
-        (item) => item.id === sourceId
-      );
+      const source = state.sources.find((item) => item.id === sourceId);
 
       if (!source) {
         throw new Error("Browser source not found.");
@@ -635,21 +589,15 @@ class BookmarkRepository {
       let associationsUpdated = 0;
 
       for (const input of nativeBookmarks) {
-        // Ignore duplicate native IDs in an unexpected tree response.
-        if (seenNativeIds.has(input.nativeBookmarkId)) {
-          continue;
-        }
-
+        if (seenNativeIds.has(input.nativeBookmarkId)) continue;
         seenNativeIds.add(input.nativeBookmarkId);
 
         const normalizedUrl = normalizeBookmarkUrl(input.url);
 
-        // Find the canonical bookmark.
         let bookmark = state.bookmarks.find(
           (item) => item.normalizedUrl === normalizedUrl
         );
 
-        // Create it only when it doesn't already exist.
         if (!bookmark) {
           bookmark = {
             id: createId(),
@@ -661,11 +609,8 @@ class BookmarkRepository {
           };
 
           state.bookmarks.push(bookmark);
-
           uniqueAdded++;
         } else {
-          // When a URL exists in only one source, keep its
-          // canonical title synchronized with that source.
           const existingSourceCount = state.bookmarkSources.filter(
             (item) => item.bookmarkId === bookmark!.id
           ).length;
@@ -677,7 +622,6 @@ class BookmarkRepository {
           }
         }
 
-        // Find this bookmark's occurrence in the current browser.
         const occurrence = state.bookmarkSources.find(
           (item) =>
             item.sourceId === sourceId &&
@@ -717,12 +661,10 @@ class BookmarkRepository {
           };
 
           state.bookmarkSources.push(newOccurrence);
-
           associationsAdded++;
         }
       }
 
-      // Remove associations that no longer exist in this browser.
       const previousAssociationCount = state.bookmarkSources.length;
 
       state.bookmarkSources = state.bookmarkSources.filter(
@@ -734,8 +676,6 @@ class BookmarkRepository {
       const associationsRemoved =
         previousAssociationCount - state.bookmarkSources.length;
 
-      // Keep canonical records that are still referenced
-      // by a browser source or a custom page.
       const linkedBookmarkIds = new Set(
         state.bookmarkSources.map((item) => item.bookmarkId)
       );
@@ -765,9 +705,6 @@ class BookmarkRepository {
     });
   }
 
-
-  // Compare native bookmarks against Timber's catalog without
-  // changing anything — used to drive the scan review popup.
   async computeSyncDiff(
     sourceId: string,
     nativeBookmarks: NativeBookmarkRecord[]
@@ -780,9 +717,6 @@ class BookmarkRepository {
       throw new Error("Browser source not found.");
     }
 
-    // A native bookmark is "new" only if Timber has no occurrence
-    // linking it, for this source, already. Title/folder changes on
-    // bookmarks Timber already has are intentionally ignored.
     const existingNativeIds = new Set(
       state.bookmarkSources
         .filter((item) => item.sourceId === sourceId)
@@ -804,9 +738,6 @@ class BookmarkRepository {
     return { sourceId, additions };
   }
 
-  // Apply only the parts of a diff the user approved. Removals are
-  // never applied unless their bookmarkSourceId is explicitly listed
-  // in selection.confirmedRemovalIds.
   async applySyncDiff(
     sourceId: string,
     nativeBookmarks: NativeBookmarkRecord[],
@@ -832,8 +763,6 @@ class BookmarkRepository {
         const input = nativeById.get(nativeId);
         if (!input) continue;
 
-        // Defensive — computeSyncDiff should never offer an
-        // occurrence that already exists for this source.
         const alreadyLinked = state.bookmarkSources.some(
           (item) =>
             item.sourceId === sourceId &&
@@ -844,8 +773,6 @@ class BookmarkRepository {
 
         const normalizedUrl = normalizeBookmarkUrl(input.url);
 
-        // URL is the canonical identity — reuse the existing Timber
-        // bookmark if another browser source already added this URL.
         let bookmark = state.bookmarks.find(
           (item) => item.normalizedUrl === normalizedUrl
         );
@@ -876,6 +803,21 @@ class BookmarkRepository {
           dateAdded: input.dateAdded,
         });
 
+        // Auto-place into the matching Timber folder chain — merged
+        // by name across browsers, container segment stripped.
+        const folder = findOrCreateFolderChainInState(
+          state,
+          stripBrowserContainer(input.folderPath)
+        );
+
+        if (folder) {
+          folder.bookmarkIds ??= [];
+          if (!folder.bookmarkIds.includes(bookmark.id)) {
+            folder.bookmarkIds.push(bookmark.id);
+            folder.updatedAt = now();
+          }
+        }
+
         associationsAdded++;
       }
 
@@ -892,15 +834,12 @@ class BookmarkRepository {
     });
   }
 
-    // Persist the user's drag-and-drop order of root-level tiles.
   async setRootOrder(order: string[]): Promise<void> {
     await this.mutate((state) => {
       state.rootOrder = order;
     });
   }
 
-  // Create a bookmark directly in Timber, with no browser-source
-  // occurrence at all — used by the "+ Link" button.
   async createManualLink(url: string, title: string): Promise<Bookmark> {
     const normalizedUrl = normalizeBookmarkUrl(url);
 
@@ -927,9 +866,6 @@ class BookmarkRepository {
       return bookmark;
     });
   }
-
 }
-
-  
 
 export const bookmarkRepository = new BookmarkRepository();

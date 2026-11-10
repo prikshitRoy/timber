@@ -74,6 +74,6 @@ export function createInitialState(
 
     activePageId: allPageId,
     rootOrder: [],
-    nativeFolderShadowPages: {},
+    foldersMigrated: true,
   };
 }

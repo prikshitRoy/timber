@@ -13,6 +13,7 @@ interface RootTileButtonProps {
     expanded: boolean;
     onToggleExpand: () => void;
     actions: MenuAction[];
+    childFolderCount?: number;
     onDragStart: () => void;
     onDragOver: (event: React.DragEvent) => void;
     onDrop: (event: React.DragEvent) => void;
@@ -23,17 +24,12 @@ function tileIcon(tile: RootTile): string {
 }
 
 function tileLabel(tile: RootTile): string {
-    if (tile.kind === "timber-folder") return tile.page.name;
-    if (tile.kind === "native-folder") return tile.folderName;
-    return tile.bookmark.title;
+    return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
 }
 
-function tileCount(tile: RootTile): number | null {
-    if (tile.kind === "timber-folder") return (tile.page.bookmarkIds ?? []).length;
-    if (tile.kind === "native-folder") {
-        return tile.node.bookmarkIds.length + tile.node.children.size;
-    }
-    return null;
+function tileCount(tile: RootTile, childFolderCount: number): number | null {
+    if (tile.kind !== "folder") return null;
+    return (tile.page.bookmarkIds ?? []).length + childFolderCount;
 }
 
 export default function RootTileButton({
@@ -42,6 +38,7 @@ export default function RootTileButton({
     expanded,
     onToggleExpand,
     actions,
+    childFolderCount = 0,
     onDragStart,
     onDragOver,
     onDrop,
@@ -63,7 +60,7 @@ export default function RootTileButton({
     }, [menuOpen]);
 
     const isExpandable = tile.kind !== "link";
-    const count = tileCount(tile);
+    const count = tileCount(tile, childFolderCount);
 
     return (
         <div
@@ -101,10 +98,7 @@ export default function RootTileButton({
                     <button
                         type="button"
                         className="root-tile-kebab"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            setMenuOpen((value) => !value);
-                        }}
+                        onClick={() => setMenuOpen((value) => !value)}
                     >
                         ⋮
                     </button>

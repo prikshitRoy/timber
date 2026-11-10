@@ -78,5 +78,5 @@ export interface TimberState {
 
   activePageId: string;
   rootOrder?: string[];
-  nativeFolderShadowPages?: Record<string, string>; // NEW — nativeFolderKey -> shadow BookmarkPage id
+  foldersMigrated?: boolean; // one-time flag — see bookmark-folder-migration.ts
 }
