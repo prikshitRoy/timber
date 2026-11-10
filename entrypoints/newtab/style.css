@@ -733,11 +733,16 @@ button:disabled {
 
 .root-tile,
 .folder-bookmark-row {
-  transition: transform 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.root-tile--drop-target,
-.folder-bookmark-row--drop-target {
-  outline: 2px dashed #2d6cdf;
-  outline-offset: -2px;
+.root-tile--dragging,
+.folder-bookmark-row--dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  transform: scale(1.04);
+  border: 2px dashed #2d6cdf;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  background: white;
 }

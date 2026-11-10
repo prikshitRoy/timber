@@ -1,27 +1,18 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface DragHandlers {
-    onDragStart: () => void;
-    onDragOver: (event: React.DragEvent) => void;
-    onDragLeave: () => void;
-    onDrop: (event: React.DragEvent) => void;
-    onDragEnd: () => void;
-    isDragging: boolean;
-    isDropTarget: boolean;
-}
+const DRAG_THRESHOLD_PX = 4;
 
 /**
- * Shared drag-and-drop-to-reorder logic, used by every level that
- * supports custom sort (root grid, and every folder's contents at
- * any nesting depth).
+ * Pointer-based (not native HTML5 drag-and-drop) drag-to-reorder.
  *
- * The dragged tile's own position is never moved mid-drag — only a
- * drop-target highlight is shown on whatever tile you're currently
- * hovering over. Moving the actively-dragged element's DOM node
- * during dragover is a well-known way to make browsers silently
- * cancel the native drag (no "drop" event ever fires), so the real
- * reorder is computed once, from the original order, only at the
- * moment of an actual drop.
+ * Native HTML5 DnD cancels its own drag session the instant the
+ * dragged element's DOM position changes — which is exactly what a
+ * live "everything shifts to make room" preview needs to do, so
+ * native DnD can never reliably support that kind of preview.
+ * Pointer events sidestep this entirely: there's no native drag
+ * session to break, so the dragged tile is free to move within the
+ * live order as the pointer moves, giving a true full-list preview —
+ * used identically by root and every nested folder level.
  */
 export function useTileDragReorder<T>(
     items: T[],
@@ -29,67 +20,116 @@ export function useTileDragReorder<T>(
     onReorder: (orderedKeys: string[]) => void | Promise<void>
 ) {
     const [dragKey, setDragKey] = useState<string | null>(null);
-    const [hoverKey, setHoverKey] = useState<string | null>(null);
+    const [previewOrder, setPreviewOrder] = useState<string[] | null>(null);
 
-    function handleDragStart(key: string) {
-        setDragKey(key);
-        setHoverKey(null);
-    }
+    const stateRef = useRef({
+        dragKey: null as string | null,
+        startX: 0,
+        startY: 0,
+        moved: false,
+        order: [] as string[],
+    });
 
-    function handleDragOver(key: string) {
-        if (!dragKey || dragKey === key) return;
-        setHoverKey(key);
-    }
+    const baseOrder = items.map(getKey);
+    const byKey = new Map(items.map((item) => [getKey(item), item] as const));
 
-    function handleDragLeave(key: string) {
-        setHoverKey((current) => (current === key ? null : current));
-    }
+    const activeOrder = previewOrder ?? baseOrder;
+    const orderedItems = activeOrder
+        .map((key) => byKey.get(key))
+        .filter((item): item is T => item !== undefined);
 
-    function finishDrag() {
-        setDragKey(null);
-        setHoverKey(null);
-    }
+    const handlePointerMove = useCallback((event: PointerEvent) => {
+        const s = stateRef.current;
+        if (!s.dragKey) return;
 
-    function handleDrop(targetKey: string) {
-        if (!dragKey || dragKey === targetKey) {
-            finishDrag();
+        if (!s.moved) {
+            const dx = event.clientX - s.startX;
+            const dy = event.clientY - s.startY;
+            if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+            s.moved = true;
+        }
+
+        const target = document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>("[data-tile-key]");
+
+        const overKey = target?.getAttribute("data-tile-key");
+        if (!overKey || overKey === s.dragKey || !s.order.includes(overKey)) {
             return;
         }
 
-        const keys = items.map(getKey);
-        const fromIndex = keys.indexOf(dragKey);
-        const toIndex = keys.indexOf(targetKey);
+        const fromIndex = s.order.indexOf(s.dragKey);
+        const toIndex = s.order.indexOf(overKey);
+        if (fromIndex === toIndex) return;
 
-        finishDrag();
-
-        if (fromIndex === -1 || toIndex === -1) return;
-
-        const next = [...keys];
+        const next = [...s.order];
         next.splice(fromIndex, 1);
-        next.splice(toIndex, 0, dragKey);
+        next.splice(toIndex, 0, s.dragKey);
 
-        void onReorder(next);
-    }
+        s.order = next;
+        setPreviewOrder(next);
+    }, []);
 
-    function getDragHandlers(key: string): DragHandlers {
-        return {
-            onDragStart: () => handleDragStart(key),
-            onDragOver: (event) => {
-                if (dragKey && dragKey !== key) {
-                    event.preventDefault();
-                    handleDragOver(key);
-                }
-            },
-            onDragLeave: () => handleDragLeave(key),
-            onDrop: (event) => {
+    const handlePointerUp = useCallback(() => {
+        const s = stateRef.current;
+
+        document.removeEventListener("pointermove", handlePointerMove);
+        document.body.style.userSelect = "";
+
+        if (s.moved && s.dragKey) {
+            // The browser fires a plain "click" right after pointerup
+            // for this same gesture — swallow it once so dropping a
+            // tile doesn't also trigger its button/link's own click.
+            const suppressClick = (event: MouseEvent) => {
+                event.stopPropagation();
                 event.preventDefault();
-                handleDrop(key);
-            },
-            onDragEnd: finishDrag,
-            isDragging: dragKey === key,
-            isDropTarget: hoverKey === key && dragKey !== key,
-        };
-    }
+            };
+            window.addEventListener("click", suppressClick, {
+                capture: true,
+                once: true,
+            });
 
-    return { getDragHandlers };
+            void onReorder(s.order);
+        }
+
+        s.dragKey = null;
+        s.moved = false;
+        setDragKey(null);
+        setPreviewOrder(null);
+    }, [handlePointerMove, onReorder]);
+
+    const getPointerDownHandler = useCallback(
+        (key: string) => (event: React.PointerEvent<HTMLElement>) => {
+            if (event.button !== 0) return;
+
+            stateRef.current = {
+                dragKey: key,
+                startX: event.clientX,
+                startY: event.clientY,
+                moved: false,
+                order: items.map(getKey),
+            };
+
+            setDragKey(key);
+
+            document.addEventListener("pointermove", handlePointerMove);
+            document.addEventListener("pointerup", handlePointerUp, { once: true });
+            document.body.style.userSelect = "none";
+        },
+        [items, getKey, handlePointerMove, handlePointerUp]
+    );
+
+    useEffect(() => {
+        return () => {
+            document.removeEventListener("pointermove", handlePointerMove);
+            document.removeEventListener("pointerup", handlePointerUp);
+            document.body.style.userSelect = "";
+        };
+    }, [handlePointerMove, handlePointerUp]);
+
+    return {
+        orderedItems,
+        isDragging: (key: string) => dragKey === key,
+        getPointerDownHandler,
+    };
 }

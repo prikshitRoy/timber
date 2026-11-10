@@ -14,13 +14,8 @@ interface RootTileButtonProps {
     onToggleExpand: () => void;
     actions: MenuAction[];
     childFolderCount?: number;
-    onDragStart: () => void;
-    onDragOver: (event: React.DragEvent) => void;
-    onDragLeave: () => void;
-    onDrop: (event: React.DragEvent) => void;
-    onDragEnd: () => void;
     isDragging: boolean;
-    isDropTarget: boolean;
+    onPointerDown?: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 function tileIcon(tile: RootTile): string {
@@ -43,13 +38,8 @@ export default function RootTileButton({
     onToggleExpand,
     actions,
     childFolderCount = 0,
-    onDragStart,
-    onDragOver,
-    onDragLeave,
-    onDrop,
-    onDragEnd,
     isDragging,
-    isDropTarget,
+    onPointerDown,
 }: RootTileButtonProps) {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -74,7 +64,6 @@ export default function RootTileButton({
         "root-tile",
         editMode && "root-tile--edit",
         isDragging && "root-tile--dragging",
-        isDropTarget && "root-tile--drop-target",
     ]
         .filter(Boolean)
         .join(" ");
@@ -82,12 +71,8 @@ export default function RootTileButton({
     return (
         <div
             className={className}
-            draggable={editMode}
-            onDragStart={onDragStart}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            onDragEnd={onDragEnd}
+            data-tile-key={tile.key}
+            onPointerDown={onPointerDown}
         >
             {isExpandable ? (
                 <button type="button" className="root-tile-chevron" onClick={onToggleExpand}>

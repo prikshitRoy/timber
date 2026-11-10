@@ -49,11 +49,11 @@ export default function RootGrid({
 }: RootGridProps) {
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
-    const { getDragHandlers } = useTileDragReorder(
-        tiles,
-        (tile) => tile.key,
-        onReorder
-    );
+    const {
+        orderedItems: orderedTiles,
+        isDragging,
+        getPointerDownHandler,
+    } = useTileDragReorder(tiles, (tile) => tile.key, onReorder);
 
     const folderHandlers: TimberFolderHandlers = {
         onDeleteBookmark,
@@ -101,7 +101,7 @@ export default function RootGrid({
             />
 
             <div className="root-grid">
-                {tiles.map((tile) => {
+                {orderedTiles.map((tile) => {
                     const expanded = expandedKeys.has(tile.key);
 
                     const childFolderCount =
@@ -133,7 +133,8 @@ export default function RootGrid({
                                 onToggleExpand={() => toggleExpand(tile.key)}
                                 actions={actions}
                                 childFolderCount={childFolderCount}
-                                {...getDragHandlers(tile.key)}
+                                isDragging={isDragging(tile.key)}
+                                onPointerDown={editMode ? getPointerDownHandler(tile.key) : undefined}
                             />
 
                             {expanded && tile.kind === "folder" && (

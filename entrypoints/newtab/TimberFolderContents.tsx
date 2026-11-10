@@ -41,15 +41,8 @@ interface SubFolderTileProps extends TimberFolderHandlers {
     editMode: boolean;
     folders: BookmarkPage[];
     bookmarksById: Map<string, TileBookmark>;
-    dragHandlers: {
-        onDragStart: () => void;
-        onDragOver: (event: React.DragEvent) => void;
-        onDragLeave: () => void;
-        onDrop: (event: React.DragEvent) => void;
-        onDragEnd: () => void;
-        isDragging: boolean;
-        isDropTarget: boolean;
-    };
+    isDragging: boolean;
+    onPointerDown?: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 // A nested Timber folder — same tile language as the root grid
@@ -60,22 +53,27 @@ function SubFolderTile({
     folders,
     bookmarksById,
     editMode,
-    dragHandlers,
+    isDragging,
+    onPointerDown,
     ...handlers
 }: SubFolderTileProps) {
     const [collapsed, setCollapsed] = useState(true);
     const bookmarkCount = (folder.bookmarkIds ?? []).length;
 
+    const className = [
+        "root-tile",
+        editMode && "root-tile--edit",
+        isDragging && "root-tile--dragging",
+    ]
+        .filter(Boolean)
+        .join(" ");
+
     return (
         <Fragment>
             <div
-                className={`root-tile${editMode ? " root-tile--edit" : ""}${dragHandlers.isDragging ? " root-tile--dragging" : ""}${dragHandlers.isDropTarget ? " root-tile--drop-target" : ""}`}
-                draggable={editMode}
-                onDragStart={dragHandlers.onDragStart}
-                onDragOver={dragHandlers.onDragOver}
-                onDragLeave={dragHandlers.onDragLeave}
-                onDrop={dragHandlers.onDrop}
-                onDragEnd={dragHandlers.onDragEnd}
+                className={className}
+                data-tile-key={`sf:${folder.id}`}
+                onPointerDown={onPointerDown}
             >
                 <button
                     type="button"
@@ -152,7 +150,11 @@ export default function TimberFolderContents({
 
     const storedOrderItems = applyStoredOrder(items, childOrder);
 
-    const { getDragHandlers } = useTileDragReorder(
+    const {
+        orderedItems,
+        isDragging,
+        getPointerDownHandler,
+    } = useTileDragReorder(
         storedOrderItems,
         (item) => item.key,
         (order) => handlers.onReorderFolderChildren(folderId, order)
@@ -182,29 +184,32 @@ export default function TimberFolderContents({
                 onSortDesc={() => handleSort("desc")}
             />
 
-            {storedOrderItems.map((item) => {
+            {orderedItems.map((item) => {
                 if (item.kind === "bookmark") {
                     const bookmark = bookmarksById.get(item.id);
                     if (!bookmark) return null;
 
-                    const bookmarkDrag = getDragHandlers(item.key);
+                    const className = [
+                        "folder-bookmark-row",
+                        editMode && "folder-bookmark-row--edit",
+                        isDragging(item.key) && "folder-bookmark-row--dragging",
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
 
                     return (
                         <div
-                            className={`folder-bookmark-row${editMode ? " folder-bookmark-row--edit" : ""}${bookmarkDrag.isDragging ? " folder-bookmark-row--dragging" : ""}${bookmarkDrag.isDropTarget ? " folder-bookmark-row--drop-target" : ""}`}
+                            className={className}
                             key={item.key}
-                            draggable={editMode}
-                            onDragStart={bookmarkDrag.onDragStart}
-                            onDragOver={bookmarkDrag.onDragOver}
-                            onDragLeave={bookmarkDrag.onDragLeave}
-                            onDrop={bookmarkDrag.onDrop}
-                            onDragEnd={bookmarkDrag.onDragEnd}
+                            data-tile-key={item.key}
+                            onPointerDown={editMode ? getPointerDownHandler(item.key) : undefined}
                         >
                             <a
                                 className="folder-bookmark-link"
                                 href={bookmark.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                draggable={false}
                             >
                                 {bookmark.title}
                             </a>
@@ -230,7 +235,8 @@ export default function TimberFolderContents({
                         editMode={editMode}
                         folders={folders}
                         bookmarksById={bookmarksById}
-                        dragHandlers={getDragHandlers(item.key)}
+                        isDragging={isDragging(item.key)}
+                        onPointerDown={editMode ? getPointerDownHandler(item.key) : undefined}
                         {...handlers}
                     />
                 );
