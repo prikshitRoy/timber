@@ -44,7 +44,11 @@ interface SubFolderTileProps extends TimberFolderHandlers {
     dragHandlers: {
         onDragStart: () => void;
         onDragOver: (event: React.DragEvent) => void;
+        onDragLeave: () => void;
         onDrop: (event: React.DragEvent) => void;
+        onDragEnd: () => void;
+        isDragging: boolean;
+        isDropTarget: boolean;
     };
 }
 
@@ -65,9 +69,13 @@ function SubFolderTile({
     return (
         <Fragment>
             <div
-                className={`root-tile${editMode ? " root-tile--edit" : ""}`}
+                className={`root-tile${editMode ? " root-tile--edit" : ""}${dragHandlers.isDragging ? " root-tile--dragging" : ""}${dragHandlers.isDropTarget ? " root-tile--drop-target" : ""}`}
                 draggable={editMode}
-                {...dragHandlers}
+                onDragStart={dragHandlers.onDragStart}
+                onDragOver={dragHandlers.onDragOver}
+                onDragLeave={dragHandlers.onDragLeave}
+                onDrop={dragHandlers.onDrop}
+                onDragEnd={dragHandlers.onDragEnd}
             >
                 <button
                     type="button"
@@ -142,14 +150,15 @@ export default function TimberFolderContents({
 
     const items: ChildItem[] = [...bookmarkItems, ...folderItems];
 
-    const orderedItems = applyStoredOrder(items, childOrder);
+    const storedOrderItems = applyStoredOrder(items, childOrder);
 
     const { getDragHandlers } = useTileDragReorder(
-        orderedItems.map((item) => item.key),
+        storedOrderItems,
+        (item) => item.key,
         (order) => handlers.onReorderFolderChildren(folderId, order)
     );
 
-    if (orderedItems.length === 0) {
+    if (items.length === 0) {
         return (
             <p className="timber-folder-empty">
                 No bookmarks or folders yet — use this folder's "Add link" or "Add
@@ -173,17 +182,23 @@ export default function TimberFolderContents({
                 onSortDesc={() => handleSort("desc")}
             />
 
-            {orderedItems.map((item) => {
+            {storedOrderItems.map((item) => {
                 if (item.kind === "bookmark") {
                     const bookmark = bookmarksById.get(item.id);
                     if (!bookmark) return null;
 
+                    const bookmarkDrag = getDragHandlers(item.key);
+
                     return (
                         <div
-                            className={`folder-bookmark-row${editMode ? " folder-bookmark-row--edit" : ""}`}
+                            className={`folder-bookmark-row${editMode ? " folder-bookmark-row--edit" : ""}${bookmarkDrag.isDragging ? " folder-bookmark-row--dragging" : ""}${bookmarkDrag.isDropTarget ? " folder-bookmark-row--drop-target" : ""}`}
                             key={item.key}
                             draggable={editMode}
-                            {...getDragHandlers(item.key)}
+                            onDragStart={bookmarkDrag.onDragStart}
+                            onDragOver={bookmarkDrag.onDragOver}
+                            onDragLeave={bookmarkDrag.onDragLeave}
+                            onDrop={bookmarkDrag.onDrop}
+                            onDragEnd={bookmarkDrag.onDragEnd}
                         >
                             <a
                                 className="folder-bookmark-link"

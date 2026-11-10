@@ -725,3 +725,19 @@ button:disabled {
   cursor: grab;
   border-style: dashed;
 }
+
+.root-tile--dragging,
+.folder-bookmark-row--dragging {
+  opacity: 0.35;
+}
+
+.root-tile,
+.folder-bookmark-row {
+  transition: transform 0.12s ease;
+}
+
+.root-tile--drop-target,
+.folder-bookmark-row--drop-target {
+  outline: 2px dashed #2d6cdf;
+  outline-offset: -2px;
+}

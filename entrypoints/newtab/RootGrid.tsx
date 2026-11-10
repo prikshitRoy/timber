@@ -50,7 +50,8 @@ export default function RootGrid({
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
     const { getDragHandlers } = useTileDragReorder(
-        tiles.map((tile) => tile.key),
+        tiles,
+        (tile) => tile.key,
         onReorder
     );
 
