@@ -50,6 +50,7 @@ export interface BookmarkPage {
   sourceId?: string;
   bookmarkIds?: string[];
   parentId?: string; // lets custom pages nest as Timber folders
+  childOrder?: string[]; // custom drag/A-Z order of this folder's direct bookmarks + sub-folders
 
   createdAt: number;
   updatedAt: number;

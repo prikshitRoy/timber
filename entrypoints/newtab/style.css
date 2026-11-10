@@ -702,3 +702,26 @@ button:disabled {
 .save-button:hover {
   background: #156139;
 }
+
+.sort-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sort-controls button {
+  font-size: 11px;
+  padding: 5px 10px;
+  background: #eee;
+  color: #444;
+}
+
+.sort-controls button:hover {
+  background: #e0e0e0;
+}
+
+.folder-bookmark-row--edit {
+  cursor: grab;
+  border-style: dashed;
+}

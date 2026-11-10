@@ -459,6 +459,23 @@ class BookmarkRepository {
     });
   }
 
+  // Save a folder's custom drag/A-Z order for its direct children
+  // (bookmarks and sub-folders mixed together, keyed "bk:<id>" /
+  // "sf:<id>") — used by TimberFolderContents' sort toolbar + drag.
+  async setFolderChildOrder(folderId: string, order: string[]): Promise<void> {
+    await this.mutate((state) => {
+      const page = state.pages.find((item) => item.id === folderId);
+
+      if (!page || page.type !== "custom") {
+        throw new Error("Custom page not found.");
+      }
+
+      page.childOrder = order;
+      page.updatedAt = now();
+    });
+  }
+  
+
   // Delete a folder AND everything inside it — its own bookmarks,
   // every nested sub-folder at any depth, and their bookmarks too.
   // Deleted bookmarks are soft-deleted (same as deleteBookmark): they

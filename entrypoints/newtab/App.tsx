@@ -364,6 +364,17 @@ function App() {
         }
     }
 
+    async function handleReorderFolderChildren(folderId: string, order: string[]) {
+        try {
+            await bookmarkRepository.setFolderChildOrder(folderId, order);
+            await loadCatalog();
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to save folder order."
+            );
+        }
+    }
+
     async function handleCreateLink(url: string, title: string) {
         try {
             const bookmark = await bookmarkRepository.createManualLink(url, title);
@@ -609,6 +620,7 @@ function App() {
                                 setShowAddLink(true);
                             }}
                             onAddSubFolder={handleAddSubFolder}
+                            onReorderFolderChildren={handleReorderFolderChildren}
                         />
                     )}
                 </>

@@ -1,4 +1,5 @@
 import type { TimberState, BookmarkPage, Bookmark } from "../types/timber";
+import { applyStoredOrder, type OrderableItem } from "./tile-ordering";
 
 export interface RootFolderTile {
   kind: "folder";
@@ -16,22 +17,16 @@ export type RootTile = RootFolderTile | RootLinkTile;
 
 type RootLayoutState = Pick<TimberState, "pages" | "bookmarks" | "rootOrder">;
 
-function tileLabel(tile: RootTile): string {
+export function tileLabel(tile: RootTile): string {
   return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
 }
 
-/**
- * Build every root-level tile — top-level Timber folders and
- * standalone links (bookmarks not filed into any folder) — then
- * order them using the persisted rootOrder, appending anything newly
- * discovered at the end (alphabetically, for a stable default).
- */
 export function computeRootTiles(state: RootLayoutState): RootTile[] {
   const tiles = new Map<string, RootTile>();
 
   for (const page of state.pages) {
     if (page.type !== "custom") continue;
-    if (page.parentId) continue; // Only top-level folders sit at root.
+    if (page.parentId) continue;
 
     const key = `tf:${page.id}`;
     tiles.set(key, { kind: "folder", key, page });
@@ -53,23 +48,16 @@ export function computeRootTiles(state: RootLayoutState): RootTile[] {
     }
   }
 
-  const storedOrder = state.rootOrder ?? [];
-  const ordered: RootTile[] = [];
-  const seen = new Set<string>();
+  const items = Array.from(tiles.values()).map((tile) => ({
+    key: tile.key,
+    label: tileLabel(tile),
+    tile,
+  }));
 
-  for (const key of storedOrder) {
-    const tile = tiles.get(key);
-    if (tile) {
-      ordered.push(tile);
-      seen.add(key);
-    }
-  }
+  const ordered: (OrderableItem & { tile: RootTile })[] = applyStoredOrder(
+    items,
+    state.rootOrder
+  );
 
-  const remaining = Array.from(tiles.values())
-    .filter((tile) => !seen.has(tile.key))
-    .sort((a, b) => tileLabel(a).localeCompare(tileLabel(b)));
-
-  ordered.push(...remaining);
-
-  return ordered;
+  return ordered.map((item) => item.tile);
 }
