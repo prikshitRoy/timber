@@ -33,6 +33,15 @@ import SyncReviewModal from "./SyncReviewModal";
 import KebabMenu from "./KebabMenu";
 import EditBookmarkModal from "./EditBookmarkModal";
 import EditFolderLinksModal from "./EditFolderLinksModal";
+import { detectBrowser } from "../../src/shared/browser/browser-info";
+import { readNativeBookmarkTree } from "../../src/shared/bookmarks/bookmark-tree-reader";
+import {
+    createBackup,
+    parseBackup,
+    dropStaleNativeLinks,
+} from "../../src/shared/backup/timber-backup";
+import { exportBookmarksHtml } from "../../src/shared/backup/bookmarks-html";
+import { downloadTextFile, backupFileName } from "../../src/shared/backup/download-file";
 
 interface DashboardBookmark extends Bookmark {
     sourceCount: number;
@@ -136,12 +145,22 @@ function App() {
 
                 setConnected(permitted);
 
-                if (!permitted) {
-                    setStatus("Connect your browser bookmarks to get started.");
-                    return;
+                // Timber's own data (imported backups, manual links) is
+                // usable without browser bookmark access, so load it
+                // whenever it exists. A fresh install has none yet.
+                let loaded = false;
+
+                try {
+                    await loadCatalog();
+                    loaded = true;
+                } catch {
+                    // Not initialized yet, so there's nothing to show.
                 }
 
-                await loadCatalog();
+                if (!permitted && !loaded) {
+                    setStatus("Connect your browser bookmarks to get started.");
+                }
+
             } catch (error) {
                 if (!cancelled) {
                     setError(
@@ -461,6 +480,102 @@ function App() {
         }
     }
 
+
+    async function handleExportBackup() {
+        try {
+            const state = await bookmarkRepository.getState();
+
+            downloadTextFile(
+                backupFileName("json"),
+                JSON.stringify(createBackup(state), null, 2),
+                "application/json"
+            );
+
+            setStatus("Backup exported.");
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to export backup."
+            );
+        }
+    }
+
+    async function handleExportHtml() {
+        try {
+            const state = await bookmarkRepository.getState();
+
+            downloadTextFile(
+                backupFileName("html"),
+                exportBookmarksHtml(state),
+                "text/html"
+            );
+
+            setStatus("Bookmarks exported as HTML.");
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to export bookmarks."
+            );
+        }
+    }
+
+    async function handleImportBackup(file: File, mode: "merge" | "replace") {
+        try {
+            setError("");
+
+            const { state: imported, skippedBookmarks } = parseBackup(
+                await file.text()
+            );
+
+            const skippedNote =
+                skippedBookmarks > 0
+                    ? ` (${skippedBookmarks} invalid link${skippedBookmarks === 1 ? "" : "s"} skipped)`
+                    : "";
+
+            const browserKind = await detectBrowser();
+
+            if (mode === "replace") {
+                const confirmed = window.confirm(
+                    "Replace ALL current Timber data with this backup? This can't be undone. If you might need your current data, export a backup of it first."
+                );
+
+                if (!confirmed) return;
+
+                let liveNative: Map<string, number | undefined> | null = null;
+
+                if (await hasBookmarkPermission()) {
+                    const native = await readNativeBookmarkTree();
+
+                    liveNative = new Map<string, number | undefined>(
+                        native.map((item) => [item.nativeBookmarkId, item.dateAdded] as const)
+                    );
+                }
+
+                dropStaleNativeLinks(imported, browserKind, liveNative);
+
+                await bookmarkRepository.replaceState(imported);
+                await loadCatalog();
+
+                setStatus(
+                    `Backup restored: ${imported.bookmarks.length} bookmarks${skippedNote}.`
+                );
+                return;
+            }
+
+            await bookmarkRepository.initialize(browserKind);
+
+            const summary = await bookmarkRepository.mergeBackup(imported);
+            await loadCatalog();
+
+            setStatus(
+                `Backup merged: ${summary.bookmarksAdded} new bookmark${summary.bookmarksAdded === 1 ? "" : "s"}, ${summary.foldersAdded} new folder${summary.foldersAdded === 1 ? "" : "s"}${skippedNote}.`
+            );
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Failed to import backup."
+            );
+        }
+    }
+
+
     const filteredBookmarks = useMemo(() => {
         const value = query.trim().toLowerCase();
 
@@ -494,6 +609,8 @@ function App() {
     const editingFolder = editingFolderLinksId
         ? folders.find((folder) => folder.id === editingFolderLinksId) ?? null
         : null;
+
+    const hasLocalData = bookmarks.length > 0 || folders.length > 0;
 
     return (
         <main className="timber-dashboard">
@@ -533,7 +650,7 @@ function App() {
                 </div>
             </header>
 
-            {!connected ? (
+            {!connected && !hasLocalData ? (
                 <section className="connect-section">
                     <h2>Connect your bookmarks</h2>
 
@@ -699,6 +816,9 @@ function App() {
                     loading={loading}
                     onClose={() => setShowSettings(false)}
                     onConnect={handleConnect}
+                    onExportBackup={handleExportBackup}
+                    onExportHtml={handleExportHtml}
+                    onImportBackup={handleImportBackup}
                 />
             )}
         </main>

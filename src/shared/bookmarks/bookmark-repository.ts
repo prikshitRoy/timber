@@ -23,6 +23,7 @@ import type {
 import { normalizeBookmarkUrl } from "./bookmark-normalizer";
 import { findOrCreateFolderChainInState, stripBrowserContainer } from "./folder-chain";
 import { migrateFoldersFromPaths } from "./bookmark-folder-migration";
+import { mergeBackupIntoState, type MergeSummary } from "../backup/timber-backup";
 
 const now = () => Date.now();
 
@@ -856,6 +857,28 @@ class BookmarkRepository {
       state.rootOrder = order;
     });
   }
+
+
+  // Replace everything with an already-sanitized backup (full restore).
+  async replaceState(next: TimberState): Promise<void> {
+    const operation = this.writeQueue.then(async () => {
+      await saveState(next);
+    });
+
+    this.writeQueue = operation.then(
+      () => undefined,
+      () => undefined
+    );
+
+    return operation;
+  }
+
+  // Merge an already-sanitized backup into current data. Nothing
+  // existing is overwritten or removed.
+  async mergeBackup(imported: TimberState): Promise<MergeSummary> {
+    return this.mutate((state) => mergeBackupIntoState(state, imported));
+  }
+
 
   async createManualLink(url: string, title: string): Promise<Bookmark> {
     const normalizedUrl = normalizeBookmarkUrl(url);

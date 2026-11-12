@@ -746,3 +746,28 @@ button:disabled {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
   background: white;
 }
+
+.sync-review-modal section + section {
+  margin-top: 20px;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.settings-import {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.settings-radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
