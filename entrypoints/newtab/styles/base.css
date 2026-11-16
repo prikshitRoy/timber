@@ -10,62 +10,72 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f8f9fa;
-  color: #222;
-  font-family: Arial, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
 button {
-  border: none;
-  border-radius: 8px;
-  padding: 11px 17px;
-  background: #222;
-  color: white;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 10px 16px;
+  background: var(--bg-btn-primary);
+  color: var(--text-btn-primary);
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease;
 }
 
 button:hover {
-  background: #444;
+  background: var(--bg-btn-primary-hover);
 }
 
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .timber-dashboard {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 36px 28px;
 }
 
 .error-message {
-  color: #c0392b;
+  color: var(--danger-text);
 }
 
 .delete-button {
-  background: none;
-  color: #c0392b;
-  padding: 4px 8px;
-  font-size: 11px;
-  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 8px;
 }
 
 .delete-button:hover {
-  background: #fdecea;
+  background: var(--danger-bg-hover);
 }
 
 .save-button {
-  background: #1a7a4c;
+  background: var(--success-bg);
+  color: #ffffff;
 }
 
 .save-button:hover {
-  background: #156139;
+  background: var(--success-bg-hover);
 }
 
 @media (max-width: 600px) {

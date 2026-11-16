@@ -1,12 +1,13 @@
 /**
  * Styles for modal overlays, SyncReviewModal, AddLinkModal, EditBookmarkModal,
- * EditFolderLinksModal, and SettingsModal.
+ * EditFolderLinksModal, DeleteBookmarkModal, and SettingsModal.
  */
 
 .sync-review-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-backdrop);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,13 +15,26 @@
 }
 
 .sync-review-modal {
-  background: white;
-  border-radius: 10px;
+  background: var(--bg-modal);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--shadow-popover);
   padding: 24px;
-  max-width: 480px;
-  width: 90%;
-  max-height: 80vh;
+  max-width: 520px;
+  width: 92%;
+  max-height: 84vh;
   overflow-y: auto;
+}
+
+.sync-review-modal h2 {
+  margin-top: 0;
+}
+
+.sync-review-modal p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .sync-review-modal label {
@@ -42,23 +56,28 @@
   justify-content: space-between;
 }
 
-.sync-review-modal section + section {
-  margin-top: 20px;
+.sync-review-modal section + section,
+.settings-section + .settings-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .add-link-field {
   display: block;
   margin: 10px 0;
   font-size: 12px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .add-link-field input {
   display: block;
   width: 100%;
   margin-top: 4px;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
+  padding: 9px 12px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
 }
 
@@ -69,28 +88,8 @@
   padding: 6px 0;
   font-size: 12px;
   font-weight: 600;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 6px;
-}
-
-.edit-links-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 2px;
-  font-size: 13px;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.edit-links-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.edit-links-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .edit-links-modal {
@@ -102,7 +101,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px;
-  border: 1px solid #eee;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   margin-bottom: 8px;
 }
@@ -121,12 +121,13 @@
   padding: 4px 2px;
   font-size: 13px;
   font-weight: 600;
+  color: var(--text-primary);
   background: transparent;
 }
 
 .edit-link-title-input:focus {
   outline: none;
-  border-bottom-color: #888;
+  border-bottom-color: var(--accent-primary);
 }
 
 .edit-link-row-bottom {
@@ -138,23 +139,24 @@
 
 .edit-link-url-label {
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .edit-link-url-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid #ddd;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 12px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .edit-link-url-input:focus {
   outline: none;
-  border-color: #888;
+  border-color: var(--accent-primary);
 }
 
 .edit-links-footer {
@@ -185,9 +187,67 @@
   font-size: 13px;
 }
 
+.theme-selector {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  margin: 8px 0 14px;
+}
+
+.theme-option-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  border-radius: 7px;
+}
+
+.theme-option-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.theme-option-btn--active {
+  background: var(--bg-btn-primary);
+  color: var(--text-btn-primary);
+}
+
+.background-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.background-settings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.background-url-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.background-url-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
 .delete-bookmark-description {
   font-size: 13px;
-  color: #444;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin: 10px 0 16px;
 }
@@ -213,28 +273,28 @@
 }
 
 .delete-instance-button {
-  background: #f3f4f6;
-  color: #222;
-  border: 1px solid #d1d5db;
+  background: var(--bg-btn-secondary);
+  color: var(--text-btn-secondary);
+  border: 1px solid var(--border-subtle);
 }
 
 .delete-instance-button:hover {
-  background: #e5e7eb;
+  background: var(--bg-btn-secondary-hover);
 }
 
 .delete-all-duplicates-button {
-  background: #fdecea;
-  color: #c0392b;
-  border: 1px solid #f5c6cb;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
 }
 
 .delete-all-duplicates-button:hover {
-  background: #f9d6d2;
+  background: var(--danger-bg-hover);
 }
 
 .delete-instance-button span,
 .delete-all-duplicates-button span {
   font-weight: 400;
   font-size: 11.5px;
-  color: #666;
+  color: var(--text-secondary);
 }

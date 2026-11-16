@@ -15,6 +15,7 @@ import DashboardHeader from "./components/DashboardHeader";
 import DeleteBookmarkModal from "./components/DeleteBookmarkModal";
 import SearchResultsGrid from "./components/SearchResultsGrid";
 import { useBackupActions } from "./hooks/useBackupActions";
+import { useAppearance } from "./hooks/useAppearance";
 import { useBookmarkAndFolderActions } from "./hooks/useBookmarkAndFolderActions";
 import { useBookmarkSync } from "./hooks/useBookmarkSync";
 import { useDashboardCatalog } from "./hooks/useDashboardCatalog";
@@ -75,6 +76,8 @@ function App() {
     setError,
   });
 
+  const appearance = useAppearance(setError);
+
   const [query, setQuery] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -115,7 +118,15 @@ function App() {
   }
 
   return (
-    <main className="timber-dashboard">
+    <>
+      {appearance.backgroundImage && (
+        <div
+          className="timber-bg-layer"
+          style={{ backgroundImage: `url("${appearance.backgroundImage}")` }}
+        />
+      )}
+
+      <main className="timber-dashboard">
       <DashboardHeader
         query={query}
         onQueryChange={setQuery}
@@ -269,14 +280,21 @@ function App() {
         <SettingsModal
           connected={connected}
           loading={loading}
+          themeMode={appearance.themeMode}
+          backgroundImage={appearance.backgroundImage}
           onClose={() => setShowSettings(false)}
           onConnect={handleConnect}
+          onSetThemeMode={appearance.onSetThemeMode}
+          onSetBackgroundImageFile={appearance.onSetBackgroundImageFile}
+          onSetBackgroundImageUrl={appearance.onSetBackgroundImageUrl}
+          onClearBackgroundImage={appearance.onClearBackgroundImage}
           onExportBackup={backupActions.handleExportBackup}
           onExportHtml={backupActions.handleExportHtml}
           onImportBackup={backupActions.handleImportBackup}
         />
       )}
     </main>
+    </>
   );
 }
 

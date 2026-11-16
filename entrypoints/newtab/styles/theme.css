@@ -1,0 +1,104 @@
+/**
+ * Design tokens (CSS custom properties) for Light theme, Dark theme,
+ * and translucent frosted-glass surfaces when a background image is active.
+ */
+
+:root,
+[data-theme="light"] {
+  --bg-page: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f8fafc;
+  --bg-surface-hover: #eff3f8;
+  --bg-modal: #ffffff;
+  --bg-input: #ffffff;
+  --bg-btn-primary: #18181b;
+  --bg-btn-primary-hover: #27272a;
+  --text-btn-primary: #ffffff;
+  --bg-btn-secondary: #eef1f5;
+  --bg-btn-secondary-hover: #e2e7ee;
+  --text-btn-secondary: #27272a;
+  --text-primary: #18181b;
+  --text-secondary: #4b5563;
+  --text-muted: #71717a;
+  --border-subtle: #e4e7ec;
+  --border-strong: #cbd5e1;
+  --accent-primary: #2563eb;
+  --accent-primary-hover: #1d4ed8;
+  --danger-text: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-bg-hover: #fee2e2;
+  --success-bg: #15803d;
+  --success-bg-hover: #166534;
+  --shadow-card: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.14);
+  --overlay-backdrop: rgba(15, 23, 42, 0.5);
+  --surface-blur: none;
+}
+
+[data-theme="dark"] {
+  --bg-page: #0f1117;
+  --bg-surface: #181b23;
+  --bg-surface-subtle: #1e222d;
+  --bg-surface-hover: #262b38;
+  --bg-modal: #181b23;
+  --bg-input: #14171f;
+  --bg-btn-primary: #3b82f6;
+  --bg-btn-primary-hover: #2563eb;
+  --text-btn-primary: #ffffff;
+  --bg-btn-secondary: #252a37;
+  --bg-btn-secondary-hover: #303748;
+  --text-btn-secondary: #e4e4e7;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-subtle: #272c3a;
+  --border-strong: #3f475a;
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #60a5fa;
+  --danger-text: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.14);
+  --danger-border: rgba(239, 68, 68, 0.32);
+  --danger-bg-hover: rgba(239, 68, 68, 0.24);
+  --success-bg: #16a34a;
+  --success-bg-hover: #15803d;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-popover: 0 10px 28px rgba(0, 0, 0, 0.55);
+  --overlay-backdrop: rgba(0, 0, 0, 0.68);
+  --surface-blur: none;
+}
+
+/* Frosted-glass surface overrides when a custom background image is active */
+[data-has-bg="true"][data-theme="light"] {
+  --bg-surface: rgba(255, 255, 255, 0.82);
+  --bg-surface-subtle: rgba(248, 250, 252, 0.78);
+  --bg-surface-hover: rgba(255, 255, 255, 0.94);
+  --bg-input: rgba(255, 255, 255, 0.86);
+  --border-subtle: rgba(255, 255, 255, 0.55);
+  --surface-blur: blur(14px);
+}
+
+[data-has-bg="true"][data-theme="dark"] {
+  --bg-surface: rgba(24, 27, 35, 0.78);
+  --bg-surface-subtle: rgba(30, 34, 45, 0.75);
+  --bg-surface-hover: rgba(38, 43, 56, 0.9);
+  --bg-input: rgba(20, 23, 31, 0.82);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --surface-blur: blur(14px);
+}
+
+.timber-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.timber-bg-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+}

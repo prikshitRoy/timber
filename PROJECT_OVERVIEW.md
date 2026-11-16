@@ -103,6 +103,8 @@ Status key: **Done** | **In progress** | **Planned**
 | Feature                                                                                         | Status |
 | ----------------------------------------------------------------------------------------------- | ------ |
 | New Tab dashboard (`entrypoints/newtab/`) with modular hooks, components, and stylesheets       | Done   |
+| Light, Dark, and System Default themes (`src/shared/appearance/` + `theme.css`)                 | Done   |
+| Custom New Tab background image (file upload or URL) with frosted-glass surface styling         | Done   |
 | Background service worker (`entrypoints/background.ts`) with typed runtime message guards       | Done   |
 | Extension toolbar popup (`entrypoints/popup/`)                                                  | Planned (placeholder) |
 | In-page content script (`entrypoints/content.ts`)                                               | Planned (placeholder) |
@@ -140,6 +142,7 @@ src/
   assets/
     tailwind.css               # Tailwind CSS v4 entry point
   shared/
+    appearance/                # Theme mode ("system", "light", "dark") and background image persistence
     backup/                    # JSON backup creation, validation, parsing, merging, and HTML export
     bookmarks/                 # Bookmark normalizer, native tree reader, layout, ordering, and repository
       operations/              # Pure state mutation functions (bookmarks, folders, sync)
@@ -167,6 +170,7 @@ yarn zip:firefox    # package only Firefox extension into a zip archive
 
 ## 8. Changelog
 
+- **2026-11-17:** Added Light, Dark, and System Default theme modes, custom New Tab background image support (file upload and image URL) with frosted-glass surfaces, and `appearance.test.ts` unit tests.
 - **2026-11-17:** Added duplicate link deletion dialog (`Delete only this instance` vs. `Delete all duplicates`) and updated Scan diff/apply logic to check folder/root placements so identical links in different browser folders and new browser folders always sync into Timber without altering Timber-only folders or links.
 - **2026-11-17:** Modularized `bookmark-repository`, `timber-backup`, `entrypoints/newtab/App.tsx`, and `style.css`; added typed runtime message guards; fixed `rootBookmarkIds` backup merge bug; added `node:test` unit test suites and project documentation.
 

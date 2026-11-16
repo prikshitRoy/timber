@@ -10,6 +10,7 @@ Timber is a cross-browser New Tab bookmark dashboard extension for Chrome, Brave
 - **Nestable Folders & Bulk Editing:** Create folders and sub-folders at any depth, file bookmarks into multiple folders, and bulk-edit, copy, or delete folder links.
 - **Custom Drag-and-Drop & A–Z Ordering:** Switch into **Edit** mode to drag tiles into any order, or sort folders and links A–Z / Z–A at both the root level and inside every folder.
 - **Portable JSON Backups & HTML Export:** Export full JSON backups (with non-destructive **Merge** or full **Replace** restore modes) or standard Netscape `.html` bookmark files.
+- **Light, Dark & System Themes + Custom Backgrounds:** Follows your OS color scheme by default (or switch manually between **Light** and **Dark**), and lets you upload or link a custom background image with frosted-glass tiles.
 - **Offline-First Local Storage:** Works immediately with manual links or imported backups even before granting browser bookmark permissions.
 
 ## Tech Stack

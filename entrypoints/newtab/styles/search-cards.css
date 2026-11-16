@@ -13,15 +13,18 @@
 
 .bookmark-card {
   min-width: 0;
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   padding: 18px;
-  transition: border-color 0.2s;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--surface-blur);
+  transition: border-color 0.2s, transform 0.15s ease;
 }
 
 .bookmark-card:hover {
-  border-color: #aaa;
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .bookmark-link {
@@ -33,21 +36,22 @@
 .bookmark-link h3 {
   margin: 0 0 10px;
   font-size: 15px;
+  color: var(--text-primary);
 }
 
 .bookmark-link p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #888;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .bookmark-card footer {
   margin-top: 18px;
   padding-top: 12px;
-  border-top: 1px solid #eee;
-  color: #888;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
   font-size: 11px;
   display: flex;
   align-items: center;
@@ -61,15 +65,15 @@
 }
 
 .empty-state p {
-  color: #888;
+  color: var(--text-muted);
 }
 
 .add-to-folder-select {
   font-size: 11px;
   padding: 4px 6px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
-  background: white;
-  color: #555;
+  background: var(--bg-input);
+  color: var(--text-secondary);
   max-width: 140px;
 }

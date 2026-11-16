@@ -2,6 +2,7 @@
  * Public stylesheet entry point for the Timber New Tab dashboard.
  */
 
+@import "./styles/theme.css";
 @import "./styles/base.css";
 @import "./styles/header-footer.css";
 @import "./styles/search-cards.css";
