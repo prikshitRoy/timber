@@ -1,25 +1,45 @@
 
+/**
+ * Low-level persistence adapter for reading, writing, and initializing
+ * TimberState in browser.storage.local.
+ */
+
 import { browser } from "wxt/browser";
 
-import type {
-  BrowserKind,
-  TimberState,
+import { getBrowserDisplayName } from "@/src/shared/browser/browser-info";
+import {
+  TIMBER_SCHEMA_VERSION,
+  type BrowserKind,
+  type TimberState,
 } from "@/src/shared/types/timber";
 
+// Key under which the entire Timber catalog state is stored in browser.storage.local.
 const STORAGE_KEY = "timber.state.v2";
 
+// Default page title for the built-in all-bookmarks view.
+const ALL_BOOKMARKS_PAGE_NAME = "All Bookmarks";
+
+/**
+ * Load the persisted Timber catalog state from browser.storage.local, or null if not yet initialized.
+ */
 export async function loadState(): Promise<TimberState | null> {
   const result = await browser.storage.local.get(STORAGE_KEY);
 
   return (result[STORAGE_KEY] as TimberState | undefined) ?? null;
 }
 
+/**
+ * Persist the complete Timber catalog state to browser.storage.local.
+ */
 export async function saveState(state: TimberState): Promise<void> {
   await browser.storage.local.set({
     [STORAGE_KEY]: state,
   });
 }
 
+/**
+ * Build a fresh initial TimberState seeded with a default source and built-in pages for the current browser.
+ */
 export function createInitialState(
   browserKind: BrowserKind
 ): TimberState {
@@ -29,17 +49,10 @@ export function createInitialState(
   const allPageId = crypto.randomUUID();
   const sourcePageId = crypto.randomUUID();
 
-  const browserName: Record<BrowserKind, string> = {
-    brave: "Brave",
-    firefox: "Firefox",
-    chromium: "Chromium",
-    unknown: "Browser",
-  };
-
-  const name = browserName[browserKind];
+  const name = getBrowserDisplayName(browserKind);
 
   return {
-    schemaVersion: 2,
+    schemaVersion: TIMBER_SCHEMA_VERSION,
 
     sources: [
       {
@@ -57,7 +70,7 @@ export function createInitialState(
     pages: [
       {
         id: allPageId,
-        name: "All Bookmarks",
+        name: ALL_BOOKMARKS_PAGE_NAME,
         type: "all",
         createdAt: now,
         updatedAt: now,

@@ -1,15 +1,25 @@
 
+/**
+ * Core domain types and persisted state schema for the Timber bookmark catalog.
+ */
+
+// Current persisted storage schema version for TimberState.
+export const TIMBER_SCHEMA_VERSION = 2 as const;
+
+// Supported browser families that Timber can detect and sync with.
 export type BrowserKind =
   | "brave"
   | "firefox"
   | "chromium"
   | "unknown";
 
+// Discriminator for Timber pages: built-in views ("all", "source") vs user/synced folders ("custom").
 export type BookmarkPageType =
   | "all"
   | "source"
   | "custom";
 
+// Represents a connected browser profile that contributes native bookmarks to Timber.
 export interface BrowserSource {
   id: string;
   browser: BrowserKind;
@@ -18,6 +28,7 @@ export interface BrowserSource {
   lastSyncedAt?: number;
 }
 
+// Canonical, deduplicated bookmark record identified by its normalized URL.
 export interface Bookmark {
   id: string;
   url: string;
@@ -27,6 +38,7 @@ export interface Bookmark {
   updatedAt: number;
 }
 
+// Links a canonical Bookmark to a specific native browser bookmark node and its original folder path.
 export interface BookmarkSource {
   id: string;
   bookmarkId: string;
@@ -42,6 +54,7 @@ export interface BookmarkSource {
   dateAdded?: number;
 }
 
+// Represents either a built-in catalog view ("all", "source") or a nestable Timber folder ("custom").
 export interface BookmarkPage {
   id: string;
   name: string;
@@ -49,15 +62,16 @@ export interface BookmarkPage {
 
   sourceId?: string;
   bookmarkIds?: string[];
-  parentId?: string; // lets custom pages nest as Timber folders
-  childOrder?: string[]; // custom drag/A-Z order of this folder's direct bookmarks + sub-folders
+  parentId?: string; // Parent custom page ID when nested inside another Timber folder.
+  childOrder?: string[]; // Custom drag or A-Z order of direct children ("bk:<id>" and "sf:<id>").
 
   createdAt: number;
   updatedAt: number;
 }
 
+// Top-level state persisted in browser.storage.local and exported in Timber backup files.
 export interface TimberState {
-  schemaVersion: 2;
+  schemaVersion: typeof TIMBER_SCHEMA_VERSION;
 
   sources: BrowserSource[];
   bookmarks: Bookmark[];
@@ -66,6 +80,6 @@ export interface TimberState {
 
   activePageId: string;
   rootOrder?: string[];
-  rootBookmarkIds?: string[]; // bookmarks explicitly placed on the root grid
-  foldersMigrated?: boolean; // one-time flag — see bookmark-folder-migration.ts
+  rootBookmarkIds?: string[]; // Bookmarks explicitly placed on the root grid even if also in a folder.
+  foldersMigrated?: boolean; // One-time flag indicating folderPath strings were migrated to custom pages.
 }

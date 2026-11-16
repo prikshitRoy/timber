@@ -1,3 +1,7 @@
+/**
+ * Browser environment detection and display-name lookup helpers.
+ */
+
 import type { BrowserKind } from "../types/timber";
 
 declare global {
@@ -8,14 +12,31 @@ declare global {
   }
 }
 
-// Verify browser detection
+// Human-readable label for each supported browser kind.
+const BROWSER_DISPLAY_NAMES: Record<BrowserKind, string> = {
+  brave: "Brave",
+  firefox: "Firefox",
+  chromium: "Chromium",
+  unknown: "Browser",
+};
+
+/**
+ * Return the human-readable display name for a detected browser kind.
+ */
+export function getBrowserDisplayName(kind: BrowserKind): string {
+  return BROWSER_DISPLAY_NAMES[kind];
+}
+
+/**
+ * Detect which browser family is currently running the extension.
+ */
 export async function detectBrowser(): Promise<BrowserKind> {
-  // WXT knows which browser target is being built.
+  // WXT injects build-target flags so Firefox builds can be identified immediately.
   if (import.meta.env.FIREFOX) {
     return "firefox";
   }
 
-  // Brave uses WXT's Chrome target, so detect it separately.
+  // Brave shares the Chromium build target, so probe its navigator.brave API first.
   try {
     if (
       typeof navigator !== "undefined" &&
@@ -24,7 +45,7 @@ export async function detectBrowser(): Promise<BrowserKind> {
       return "brave";
     }
   } catch {
-    // Continue with the build-target fallback.
+    // Fall back to the general Chromium target if the Brave probe fails.
   }
 
   if (import.meta.env.CHROME) {
