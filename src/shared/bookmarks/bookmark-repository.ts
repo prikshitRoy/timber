@@ -55,6 +55,7 @@ import {
 import {
   applySyncDiffInState,
   computeSyncDiffInState,
+  ensureNativeFoldersInState,
   syncNativeBookmarksInState,
 } from "./operations/sync-mutations";
 
@@ -406,6 +407,15 @@ class BookmarkRepository {
   ): Promise<BookmarkSyncSummary> {
     return this.mutate((state) =>
       applySyncDiffInState(state, sourceId, nativeBookmarks, selection)
+    );
+  }
+
+  /**
+   * Ensure all native browser folder paths exist in Timber without touching Timber-only folders.
+   */
+  async ensureNativeFolders(nativeFolderPaths: string[][]): Promise<number> {
+    return this.mutate((state) =>
+      ensureNativeFoldersInState(state, nativeFolderPaths)
     );
   }
 

@@ -19,6 +19,7 @@ export {
 
 export { readNativeBookmarkTree } from "./bookmark-tree-reader";
 export {
+  findFolderChainInState,
   findOrCreateFolderChainInState,
   stripBrowserContainer,
 } from "./folder-chain";

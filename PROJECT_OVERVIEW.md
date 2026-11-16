@@ -57,6 +57,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Background bookmark change listener (`TIMBER_BOOKMARKS_CHANGED` badge in header)                | Done   |
 | Interactive Scan diff calculation and `SyncReviewModal` checklist                               | Done   |
 | Automatic folder-chain creation and cross-browser folder merging by name on Scan import         | Done   |
+| Placement-aware Scan diff (syncs duplicate URLs across different browser folders & new folders) | Done   |
 
 ### 4.3 Unified folders and root layout
 
@@ -84,6 +85,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Single bookmark title/URL editing (`EditBookmarkModal`) and clipboard link copying              | Done   |
 | Quick folder filing dropdown (`AddToFolderMenu`) on search result cards                         | Done   |
 | Bulk folder link editor (`EditFolderLinksModal`) with multi-select copy, delete, and inline edit | Done  |
+| Duplicate link deletion dialog (`DeleteBookmarkModal`: delete only this instance vs. all copies)| Done   |
 | Live search filtering by bookmark title or URL                                                  | Done   |
 
 ### 4.6 Backup, restore, and HTML export
@@ -164,6 +166,7 @@ yarn zip            # package extension into a distributable zip archive
 
 ## 8. Changelog
 
+- **2026-11-17:** Added duplicate link deletion dialog (`Delete only this instance` vs. `Delete all duplicates`) and updated Scan diff/apply logic to check folder/root placements so identical links in different browser folders and new browser folders always sync into Timber without altering Timber-only folders or links.
 - **2026-11-17:** Modularized `bookmark-repository`, `timber-backup`, `entrypoints/newtab/App.tsx`, and `style.css`; added typed runtime message guards; fixed `rootBookmarkIds` backup merge bug; added `node:test` unit test suites and project documentation.
 
 ---

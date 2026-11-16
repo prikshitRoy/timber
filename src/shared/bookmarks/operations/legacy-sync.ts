@@ -2,9 +2,9 @@
  * Full-replace native bookmark synchronization helpers (retained for repository API compatibility).
  */
 
-import type { BookmarkSource, TimberState } from "../../types/timber";
-import { normalizeBookmarkUrl } from "../bookmark-normalizer";
-import type { BookmarkSyncSummary, NativeBookmarkRecord } from "../bookmark.types";
+import type { BookmarkSource, TimberState } from "../../types/timber.ts";
+import { normalizeBookmarkUrl } from "../bookmark-normalizer.ts";
+import type { BookmarkSyncSummary, NativeBookmarkRecord } from "../bookmark.types.ts";
 
 const now = () => Date.now();
 const createId = () => crypto.randomUUID();

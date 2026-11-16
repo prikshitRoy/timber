@@ -17,6 +17,38 @@ export function stripBrowserContainer(folderPath: string[]): string[] {
 }
 
 /**
+ * Find an existing chain of nested custom folders matching `folderPath` by name and parent without creating any.
+ */
+export function findFolderChainInState(
+  state: FolderChainState,
+  folderPath: string[]
+): BookmarkPage | null {
+  let parentId: string | undefined;
+  let current: BookmarkPage | null = null;
+
+  for (const rawName of folderPath) {
+    const name = rawName.trim();
+    if (!name) continue;
+
+    const folder = state.pages.find(
+      (page) =>
+        page.type === "custom" &&
+        page.parentId === parentId &&
+        page.name === name
+    );
+
+    if (!folder) {
+      return null;
+    }
+
+    parentId = folder.id;
+    current = folder;
+  }
+
+  return current;
+}
+
+/**
  * Find or create a chain of nested custom folders matching `folderPath` by name and parent.
  */
 export function findOrCreateFolderChainInState(

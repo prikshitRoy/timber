@@ -8,11 +8,22 @@ import type {
     BookmarkSyncDiff,
     BookmarkSyncSelection,
 } from "../../src/shared/bookmarks/bookmark.types";
+import { stripBrowserContainer } from "../../src/shared/bookmarks/folder-chain";
 
 interface SyncReviewModalProps {
     diff: BookmarkSyncDiff;
     onCancel: () => void;
     onApply: (selection: BookmarkSyncSelection) => void;
+}
+
+/**
+ * Format the target Timber folder path for display next to a scanned bookmark in the review modal.
+ */
+function formatTargetFolderLabel(folderPath: string[]): string {
+    const stripped = stripBrowserContainer(folderPath)
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+    return stripped.length > 0 ? stripped.join(" / ") : "Root";
 }
 
 /**
@@ -44,7 +55,12 @@ function SyncReviewModal({ diff, onCancel, onApply }: SyncReviewModalProps) {
                                 checked={accepted.has(item.native.nativeBookmarkId)}
                                 onChange={() => toggleAccepted(item.native.nativeBookmarkId)}
                             />
-                            {item.native.title}
+                            <span>
+                                {item.native.title}{" "}
+                                <small style={{ color: "#888" }}>
+                                    ({formatTargetFolderLabel(item.native.folderPath)})
+                                </small>
+                            </span>
                         </label>
                     ))}
                 </section>

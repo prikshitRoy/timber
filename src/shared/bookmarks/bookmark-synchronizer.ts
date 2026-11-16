@@ -6,7 +6,10 @@
 import { browser } from "wxt/browser";
 import { detectBrowser, getBrowserDisplayName } from "../browser/browser-info";
 import { bookmarkRepository } from "./bookmark-repository";
-import { readNativeBookmarkTree } from "./bookmark-tree-reader";
+import {
+  readNativeBookmarkTree,
+  readNativeFolderPaths,
+} from "./bookmark-tree-reader";
 import type { BrowserSource } from "../types/timber";
 import type {
   BookmarkSyncSummary,
@@ -75,7 +78,13 @@ export async function computeCurrentBrowserSyncDiff(): Promise<{
   diff: BookmarkSyncDiff;
 }> {
   const source = await ensureCurrentBrowserSource();
-  const nativeBookmarks = await readNativeBookmarkTree();
+  const [nativeBookmarks, nativeFolderPaths] = await Promise.all([
+    readNativeBookmarkTree(),
+    readNativeFolderPaths(),
+  ]);
+
+  // Create any new browser folders immediately while leaving Timber's own folders untouched.
+  await bookmarkRepository.ensureNativeFolders(nativeFolderPaths);
 
   const diff = await bookmarkRepository.computeSyncDiff(
     source.id,

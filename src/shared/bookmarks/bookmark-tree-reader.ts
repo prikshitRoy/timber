@@ -66,3 +66,38 @@ export async function readNativeBookmarkTree():
 
   return flattenBookmarkTree(tree);
 }
+
+/**
+ * Recursively collect all folder paths from the native browser bookmark tree.
+ */
+function collectFolderPaths(
+  nodes: NativeTreeNode[],
+  folderPath: string[] = [],
+  paths: string[][] = []
+): string[][] {
+  for (const node of nodes) {
+    if (node.url) continue;
+
+    const nextFolderPath = node.title
+      ? [...folderPath, node.title]
+      : folderPath;
+
+    if (nextFolderPath.length > 1) {
+      paths.push(nextFolderPath);
+    }
+
+    if (node.children?.length) {
+      collectFolderPaths(node.children, nextFolderPath, paths);
+    }
+  }
+
+  return paths;
+}
+
+/**
+ * Read all native folder paths (including empty folders) from the current browser's bookmark tree.
+ */
+export async function readNativeFolderPaths(): Promise<string[][]> {
+  const tree = await browser.bookmarks.getTree();
+  return collectFolderPaths(tree);
+}
