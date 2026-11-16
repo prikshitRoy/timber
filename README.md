@@ -137,7 +137,8 @@ All scripts defined in `package.json`:
 | `yarn build`         | Build production bundle for Chrome (`wxt build -b chrome --mv3`)            |
 | `yarn build:brave`   | Build production bundle for Brave (`wxt build -b chrome --mv3`)             |
 | `yarn build:firefox` | Build production bundle for Firefox (`wxt build -b firefox`)                |
-| `yarn zip`           | Package Chrome MV3 build into a `.zip` file (`wxt zip -b chrome --mv3`)     |
+| `yarn zip`           | Package both Chrome MV3 and Firefox builds into `.zip` files (`wxt zip -b chrome --mv3 && wxt zip -b firefox`) |
+| `yarn zip:chrome`    | Package Chrome MV3 build into a `.zip` file (`wxt zip -b chrome --mv3`)     |
 | `yarn zip:brave`     | Package Brave MV3 build into a `.zip` file (`wxt zip -b chrome --mv3`)      |
 | `yarn zip:firefox`   | Package Firefox build into a `.zip` file (`wxt zip -b firefox`)             |
 | `yarn compile`       | Run TypeScript compiler type check without emitting files (`tsc --noEmit`)  |

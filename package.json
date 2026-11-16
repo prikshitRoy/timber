@@ -13,7 +13,8 @@
     "build:brave": "wxt build -b chrome --mv3",
     "build:firefox": "wxt build -b firefox",
 
-    "zip": "wxt zip -b chrome --mv3",
+    "zip": "wxt zip -b chrome --mv3 && wxt zip -b firefox",
+    "zip:chrome": "wxt zip -b chrome --mv3",
     "zip:brave": "wxt zip -b chrome --mv3",
     "zip:firefox": "wxt zip -b firefox",
 

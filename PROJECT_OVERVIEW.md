@@ -161,7 +161,8 @@ yarn dev:brave      # run development build for Brave (MV3)
 yarn dev:firefox    # run development build in Firefox
 yarn build          # build production extension for Chrome (MV3)
 yarn build:firefox  # build production extension for Firefox
-yarn zip            # package extension into a distributable zip archive
+yarn zip            # package both Chrome (MV3) and Firefox extensions into zip archives
+yarn zip:firefox    # package only Firefox extension into a zip archive
 ```
 
 ## 8. Changelog
