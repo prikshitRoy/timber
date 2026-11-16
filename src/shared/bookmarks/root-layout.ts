@@ -15,7 +15,10 @@ export interface RootLinkTile {
 
 export type RootTile = RootFolderTile | RootLinkTile;
 
-type RootLayoutState = Pick<TimberState, "pages" | "bookmarks" | "rootOrder">;
+type RootLayoutState = Pick<
+  TimberState,
+  "pages" | "bookmarks" | "rootOrder" | "rootBookmarkIds"
+>;
 
 export function tileLabel(tile: RootTile): string {
   return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
@@ -41,8 +44,11 @@ export function computeRootTiles(state: RootLayoutState): RootTile[] {
     }
   }
 
+  // Show bookmarks that are unfoldered OR explicitly added to the root grid
+  const rootBookmarkIds = new Set<string>(state.rootBookmarkIds ?? []);
+
   for (const bookmark of state.bookmarks) {
-    if (!foldered.has(bookmark.id)) {
+    if (!foldered.has(bookmark.id) || rootBookmarkIds.has(bookmark.id)) {
       const key = `lk:${bookmark.id}`;
       tiles.set(key, { kind: "link", key, bookmark });
     }

@@ -74,6 +74,7 @@ export function createInitialState(
 
     activePageId: allPageId,
     rootOrder: [],
+    rootBookmarkIds: [],
     foldersMigrated: true,
   };
 }

@@ -313,7 +313,7 @@ class BookmarkRepository {
     });
   }
 
-  async deleteBookmark(bookmarkId: string): Promise<void> {
+async deleteBookmark(bookmarkId: string): Promise<void> {
     await this.mutate((state) => {
       state.bookmarks = state.bookmarks.filter(
         (item) => item.id !== bookmarkId
@@ -322,6 +322,12 @@ class BookmarkRepository {
       state.bookmarkSources = state.bookmarkSources.filter(
         (item) => item.bookmarkId !== bookmarkId
       );
+
+      if (state.rootBookmarkIds) {
+        state.rootBookmarkIds = state.rootBookmarkIds.filter(
+          (id) => id !== bookmarkId
+        );
+      }
 
       for (const page of state.pages) {
         if (page.type === "custom") {
@@ -344,6 +350,12 @@ class BookmarkRepository {
       state.bookmarkSources = state.bookmarkSources.filter(
         (item) => !idSet.has(item.bookmarkId)
       );
+
+      if (state.rootBookmarkIds) {
+        state.rootBookmarkIds = state.rootBookmarkIds.filter(
+          (id) => !idSet.has(id)
+        );
+      }
 
       for (const page of state.pages) {
         if (page.type === "custom") {
@@ -525,6 +537,12 @@ class BookmarkRepository {
       state.bookmarkSources = state.bookmarkSources.filter(
         (item) => !bookmarkIdsToDelete.has(item.bookmarkId)
       );
+
+      if (state.rootBookmarkIds) {
+        state.rootBookmarkIds = state.rootBookmarkIds.filter(
+          (id) => !bookmarkIdsToDelete.has(id)
+        );
+      }
 
       state.pages = state.pages.filter((item) => !toDelete.has(item.id));
 
@@ -906,6 +924,28 @@ class BookmarkRepository {
       return bookmark;
     });
   }
+
+
+  // Record that a bookmark belongs on the root grid so it remains
+  // visible at root even if it also lives inside a custom folder.
+  async addBookmarkToRoot(bookmarkId: string): Promise<void> {
+    await this.mutate((state) => {
+      const bookmarkExists = state.bookmarks.some(
+        (item) => item.id === bookmarkId
+      );
+
+      if (!bookmarkExists) {
+        throw new Error("Bookmark not found.");
+      }
+
+      state.rootBookmarkIds ??= [];
+
+      if (!state.rootBookmarkIds.includes(bookmarkId)) {
+        state.rootBookmarkIds.push(bookmarkId);
+      }
+    });
+  }
+  
 }
 
 export const bookmarkRepository = new BookmarkRepository();

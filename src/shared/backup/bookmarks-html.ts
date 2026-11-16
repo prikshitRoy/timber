@@ -89,6 +89,7 @@ export function exportBookmarksHtml(state: TimberState): string {
     pages: state.pages,
     bookmarks: state.bookmarks,
     rootOrder: state.rootOrder,
+    rootBookmarkIds: state.rootBookmarkIds,
   });
 
   let body = "";

@@ -56,19 +56,6 @@ export interface BookmarkPage {
   updatedAt: number;
 }
 
-/** 
-export interface TimberState {
-  schemaVersion: 2;
-
-  sources: BrowserSource[];
-  bookmarks: Bookmark[];
-  bookmarkSources: BookmarkSource[];
-  pages: BookmarkPage[];
-
-  activePageId: string;
-}
-*/
-
 export interface TimberState {
   schemaVersion: 2;
 
@@ -79,5 +66,6 @@ export interface TimberState {
 
   activePageId: string;
   rootOrder?: string[];
+  rootBookmarkIds?: string[]; // bookmarks explicitly placed on the root grid
   foldersMigrated?: boolean; // one-time flag — see bookmark-folder-migration.ts
 }

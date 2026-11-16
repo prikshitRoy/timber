@@ -1,8 +1,8 @@
-
 import { detectBrowser } from "../browser/browser-info";
 
 import { bookmarkRepository } from "./bookmark-repository";
 import { normalizeBookmarkUrl } from "./bookmark-normalizer";
+import { computeRootTiles } from "./root-layout";
 
 export async function runBookmarkRepositoryTest() {
   console.log("Starting Timber repository tests...");
@@ -99,6 +99,24 @@ export async function runBookmarkRepositoryTest() {
     }
 
     console.log("PASS: Native bookmark association");
+
+    // Test 7: Adding a link to root when it already exists in a custom folder
+    // keeps it visible in computeRootTiles.
+    await bookmarkRepository.addBookmarkToRoot(github.id);
+
+    const stateAfterRootAdd = await bookmarkRepository.getState();
+    const rootTiles = computeRootTiles(stateAfterRootAdd);
+    const hasRootLinkTile = rootTiles.some(
+      (tile) => tile.kind === "link" && tile.bookmark.id === github.id
+    );
+
+    if (!hasRootLinkTile) {
+      throw new Error(
+        "Bookmark already in a folder did not appear at root after addBookmarkToRoot!"
+      );
+    }
+
+    console.log("PASS: Root link visibility when already in a folder");
 
     console.log("All Timber repository tests passed!");
 

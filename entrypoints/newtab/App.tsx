@@ -56,6 +56,7 @@ function App() {
     const [bookmarkSources, setBookmarkSources] = useState<BookmarkSource[]>([]);
     const [folders, setFolders] = useState<BookmarkPage[]>([]);
     const [rootOrder, setRootOrderState] = useState<string[]>([]);
+    const [rootBookmarkIds, setRootBookmarkIds] = useState<string[]>([]);
 
     const [query, setQuery] = useState("");
 
@@ -103,6 +104,7 @@ function App() {
         setBookmarkSources(state.bookmarkSources);
         setFolders(state.pages.filter((page) => page.type === "custom"));
         setRootOrderState(state.rootOrder ?? []);
+        setRootBookmarkIds(state.rootBookmarkIds ?? []);
 
         setStatus(`${state.bookmarks.length} unique bookmarks`);
     }
@@ -400,6 +402,8 @@ function App() {
 
             if (addLinkTargetFolderId) {
                 await bookmarkRepository.addBookmarkToPage(addLinkTargetFolderId, bookmark.id);
+            } else {
+                await bookmarkRepository.addBookmarkToRoot(bookmark.id);
             }
 
             await loadCatalog();
@@ -602,8 +606,9 @@ function App() {
                 pages: folders,
                 bookmarks,
                 rootOrder,
+                rootBookmarkIds,
             }),
-        [folders, bookmarks, rootOrder]
+        [folders, bookmarks, rootOrder, rootBookmarkIds]
     );
 
     const editingFolder = editingFolderLinksId

@@ -286,6 +286,14 @@ export function parseBackup(text: string): ParsedBackup {
       ? activeCandidate
       : allPage.id;
 
+  const rootBookmarkIds = Array.from(
+      new Set(
+        asStringArray(rawState.rootBookmarkIds)
+          .map((value) => bookmarkIdAlias.get(value))
+          .filter((value): value is string => value !== undefined)
+      )
+    );
+
   const state: TimberState = {
     schemaVersion: 2,
     sources,
@@ -294,6 +302,7 @@ export function parseBackup(text: string): ParsedBackup {
     pages,
     activePageId,
     rootOrder: Array.from(new Set(asStringArray(rawState.rootOrder))),
+    rootBookmarkIds,
     // Folders in a backup are already real entities — never re-derive
     // them from folderPath strings.
     foldersMigrated: true,
@@ -468,6 +477,18 @@ export function mergeBackupIntoState(
     const targetPage = target.pages.find((candidate) => candidate.id === targetId);
 
     if (targetPage) {
+
+      // ----- root bookmark placements -----
+      for (const importedBookmarkId of imported.rootBookmarkIds ?? []) {
+        const mapped = bookmarkIdMap.get(importedBookmarkId);
+        if (!mapped) continue;
+
+        target.rootBookmarkIds ??= [];
+        if (!target.rootBookmarkIds.includes(mapped)) {
+          target.rootBookmarkIds.push(mapped);
+        }
+      }
+      
       targetPage.childOrder = page.childOrder
         .map(mapOrderKey)
         .filter((key): key is string => key !== null);
