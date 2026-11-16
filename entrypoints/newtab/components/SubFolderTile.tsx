@@ -20,7 +20,7 @@ interface SubFolderTileProps {
 }
 
 /**
- * Render a nested folder tile with chevron, item count, kebab menu, and expandable children panel.
+ * Render a nested folder tile with chevron, folder icon, item count badge, kebab menu, and expandable panel.
  */
 export default function SubFolderTile({
   folder,
@@ -39,6 +39,8 @@ export default function SubFolderTile({
 
   const className = [
     "root-tile",
+    "root-tile--folder",
+    !isCollapsed && "root-tile--expanded",
     editMode && "root-tile--edit",
     isDragging && "root-tile--dragging",
   ]
@@ -56,6 +58,7 @@ export default function SubFolderTile({
           type="button"
           className="root-tile-chevron"
           onClick={() => setIsCollapsed((value) => !value)}
+          aria-label={isCollapsed ? "Expand folder" : "Collapse folder"}
         >
           {isCollapsed ? "▸" : "▾"}
         </button>
@@ -65,6 +68,9 @@ export default function SubFolderTile({
           className="root-tile-main"
           onClick={() => setIsCollapsed((value) => !value)}
         >
+          <span className="root-tile-folder-icon" aria-hidden="true">
+            📁
+          </span>
           <span className="root-tile-name">{folder.name}</span>
           <span className="root-tile-count">{bookmarkCount}</span>
         </button>

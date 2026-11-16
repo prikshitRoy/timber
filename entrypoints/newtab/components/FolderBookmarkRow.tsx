@@ -5,6 +5,7 @@
 import type { BookmarkInstanceTarget } from "../../../src/shared/bookmarks/operations/bookmark-instances";
 import KebabMenu from "../KebabMenu";
 import type { BookmarkSummary } from "../types";
+import BookmarkFavicon from "./BookmarkFavicon";
 
 interface FolderBookmarkRowProps {
   tileKey: string;
@@ -25,7 +26,7 @@ interface FolderBookmarkRowProps {
 }
 
 /**
- * Render a bookmark link row inside a folder with drag handle support and a 4-item kebab menu.
+ * Render a compact horizontal bookmark link row with favicon, title, drag support, and kebab menu.
  */
 export default function FolderBookmarkRow({
   tileKey,
@@ -54,44 +55,45 @@ export default function FolderBookmarkRow({
       data-tile-key={tileKey}
       onPointerDown={onPointerDown}
     >
+      <BookmarkFavicon url={bookmark.url} title={bookmark.title} />
+
       <a
         className="folder-bookmark-link"
         href={bookmark.url}
         target="_blank"
         rel="noopener noreferrer"
         draggable={false}
+        title={`${bookmark.title}\n${bookmark.url}`}
       >
         {bookmark.title}
       </a>
 
-      <div className="folder-bookmark-actions">
-        <KebabMenu
-          actions={[
-            {
-              label: "Edit",
-              onClick: () =>
-                onEditBookmark(bookmarkId, bookmark.title, bookmark.url),
-            },
-            {
-              label: "Copy link",
-              onClick: () => onCopyBookmark(bookmark.url),
-            },
-            {
-              label: "Remove from folder",
-              onClick: () => onRemoveBookmarkFromFolder(folderId, bookmarkId),
-            },
-            {
-              label: "Delete",
-              danger: true,
-              onClick: () =>
-                onDeleteBookmark(bookmarkId, bookmark.title, {
-                  kind: "folder",
-                  folderId,
-                }),
-            },
-          ]}
-        />
-      </div>
+      <KebabMenu
+        actions={[
+          {
+            label: "Edit",
+            onClick: () =>
+              onEditBookmark(bookmarkId, bookmark.title, bookmark.url),
+          },
+          {
+            label: "Copy link",
+            onClick: () => onCopyBookmark(bookmark.url),
+          },
+          {
+            label: "Remove from folder",
+            onClick: () => onRemoveBookmarkFromFolder(folderId, bookmarkId),
+          },
+          {
+            label: "Delete",
+            danger: true,
+            onClick: () =>
+              onDeleteBookmark(bookmarkId, bookmark.title, {
+                kind: "folder",
+                folderId,
+              }),
+          },
+        ]}
+      />
     </div>
   );
 }

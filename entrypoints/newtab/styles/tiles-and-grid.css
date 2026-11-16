@@ -20,7 +20,7 @@
 .root-tile {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   background: var(--bg-surface);
@@ -28,17 +28,50 @@
   backdrop-filter: var(--surface-blur);
   padding: 10px 12px;
   min-width: 0;
-  transition: transform 0.12s ease, box-shadow 0.12s ease,
+  transition: transform 0.14s ease, box-shadow 0.14s ease,
     border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .root-tile:hover {
   border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.root-tile--expanded {
+  border-color: var(--accent-primary);
 }
 
 .root-tile--edit {
   cursor: grab;
   border-style: dashed;
+}
+
+.bookmark-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.bookmark-favicon-fallback {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(13, 148, 136, 0.14);
+  color: var(--accent-primary);
+}
+
+.root-tile-folder-icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .root-tile-chevron {
@@ -47,6 +80,7 @@
   padding: 2px 4px;
   flex-shrink: 0;
   border-radius: 6px;
+  font-size: 10px;
 }
 
 .root-tile-chevron:hover {
@@ -62,12 +96,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   background: none;
   color: var(--text-primary);
   padding: 2px 4px;
   text-align: left;
+  border-radius: 6px;
 }
 
 .root-tile-main:hover {
@@ -85,7 +120,11 @@
 .root-tile-count {
   flex-shrink: 0;
   font-size: 11px;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-btn-secondary);
+  padding: 1px 7px;
+  border-radius: 999px;
 }
 
 .root-tile-menu {
@@ -95,13 +134,21 @@
 
 .root-tile-kebab {
   background: none;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   padding: 2px 6px;
   border-radius: 6px;
+  opacity: 0.65;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.root-tile:hover .root-tile-kebab,
+.folder-bookmark-row:hover .root-tile-kebab {
+  opacity: 1;
 }
 
 .root-tile-kebab:hover {
   background: var(--bg-surface-hover);
+  color: var(--text-primary);
 }
 
 .root-tile-menu-popover {

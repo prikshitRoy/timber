@@ -22,10 +22,11 @@ export default function DashboardFooter({
   onOpenSettings,
 }: DashboardFooterProps) {
   return (
-    <div className="dashboard-status">
-      <span>{status}</span>
-
-      {error && <span className="error-message">{error}</span>}
+    <footer className="dashboard-status">
+      <div className="dashboard-status-info">
+        <span className="dashboard-status-pill">{status}</span>
+        {error && <span className="error-message">{error}</span>}
+      </div>
 
       <div className="dashboard-footer-actions">
         <button
@@ -33,13 +34,13 @@ export default function DashboardFooter({
           className={editMode ? "edit-active" : ""}
           onClick={onToggleEditMode}
         >
-          {editMode ? "Done Editing" : "Edit"}
+          {editMode ? "Done Editing" : "Edit Layout"}
         </button>
 
         <button type="button" onClick={onOpenSettings}>
           Settings
         </button>
       </div>
-    </div>
+    </footer>
   );
 }

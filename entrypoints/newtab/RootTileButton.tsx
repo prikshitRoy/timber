@@ -7,6 +7,7 @@ import {
   type RootTile,
 } from "../../src/shared/bookmarks/root-layout";
 import KebabMenu, { type KebabMenuAction } from "./KebabMenu";
+import BookmarkFavicon from "./components/BookmarkFavicon";
 
 interface RootTileButtonProps {
   tile: RootTile;
@@ -20,13 +21,6 @@ interface RootTileButtonProps {
 }
 
 /**
- * Return the emoji icon for a root link or folder tile.
- */
-function tileIcon(tile: RootTile): string {
-  return tile.kind === "link" ? "🔗" : "📁";
-}
-
-/**
  * Return the total direct item count (bookmarks + sub-folders) for a folder tile, or null for a link.
  */
 function tileCount(tile: RootTile, childFolderCount: number): number | null {
@@ -35,7 +29,7 @@ function tileCount(tile: RootTile, childFolderCount: number): number | null {
 }
 
 /**
- * Render a root grid tile with expand chevron (for folders), title, item count, and kebab actions.
+ * Render a root grid tile with expand chevron (for folders) or favicon (for links), title, item count badge, and kebab actions.
  */
 export default function RootTileButton({
   tile,
@@ -52,6 +46,8 @@ export default function RootTileButton({
 
   const className = [
     "root-tile",
+    tile.kind === "folder" ? "root-tile--folder" : "root-tile--link",
+    expanded && "root-tile--expanded",
     editMode && "root-tile--edit",
     isDragging && "root-tile--dragging",
   ]
@@ -69,16 +65,21 @@ export default function RootTileButton({
           type="button"
           className="root-tile-chevron"
           onClick={onToggleExpand}
+          aria-label={expanded ? "Collapse folder" : "Expand folder"}
         >
           {expanded ? "▾" : "▸"}
         </button>
       ) : (
-        <span className="root-tile-icon">{tileIcon(tile)}</span>
+        <BookmarkFavicon
+          url={tile.bookmark.url}
+          title={tile.bookmark.title}
+        />
       )}
 
       <button
         type="button"
         className="root-tile-main"
+        title={tile.kind === "link" ? `${tile.bookmark.title}\n${tile.bookmark.url}` : tile.page.name}
         onClick={() => {
           if (tile.kind === "link") {
             window.open(tile.bookmark.url, "_blank", "noopener,noreferrer");
@@ -87,6 +88,11 @@ export default function RootTileButton({
           }
         }}
       >
+        {tile.kind === "folder" && (
+          <span className="root-tile-folder-icon" aria-hidden="true">
+            📁
+          </span>
+        )}
         <span className="root-tile-name">{tileLabel(tile)}</span>
         {count !== null && <span className="root-tile-count">{count}</span>}
       </button>

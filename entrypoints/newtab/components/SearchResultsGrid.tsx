@@ -7,6 +7,7 @@ import type { BookmarkPage } from "../../../src/shared/types/timber";
 import AddToFolderMenu from "../AddToFolderMenu";
 import KebabMenu from "../KebabMenu";
 import type { DashboardBookmark } from "../types";
+import BookmarkFavicon from "./BookmarkFavicon";
 
 interface SearchResultsGridProps {
   bookmarks: DashboardBookmark[];
@@ -53,7 +54,10 @@ export default function SearchResultsGrid({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <h3>{bookmark.title}</h3>
+            <div className="bookmark-card-header">
+              <BookmarkFavicon url={bookmark.url} title={bookmark.title} />
+              <h3>{bookmark.title}</h3>
+            </div>
             <p>{bookmark.url}</p>
           </a>
 

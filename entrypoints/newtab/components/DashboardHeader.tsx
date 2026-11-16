@@ -1,6 +1,6 @@
 /**
- * Top header bar for the New Tab dashboard with search input, native change badge,
- * Scan button, and quick creation buttons for links and folders.
+ * Top header bar for the New Tab dashboard with brand mark, search input,
+ * native change badge, Scan button, and quick creation buttons for links and folders.
  */
 
 interface DashboardHeaderProps {
@@ -15,7 +15,7 @@ interface DashboardHeaderProps {
 }
 
 /**
- * Render the dashboard search bar and primary header action buttons.
+ * Render the dashboard brand header, search bar, and primary action buttons.
  */
 export default function DashboardHeader({
   query,
@@ -29,13 +29,20 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
-      <input
-        type="search"
-        className="dashboard-search"
-        placeholder="Search bookmarks..."
-        value={query}
-        onChange={(event) => onQueryChange(event.target.value)}
-      />
+      <div className="dashboard-brand-search">
+        <div className="dashboard-brand">
+          <span className="dashboard-brand-dot" aria-hidden="true" />
+          <span className="dashboard-brand-title">Timber</span>
+        </div>
+
+        <input
+          type="search"
+          className="dashboard-search"
+          placeholder="Search bookmarks, folders, or URLs..."
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
+      </div>
 
       <div className="header-actions">
         {connected && nativeChanged && (

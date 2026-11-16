@@ -33,13 +33,24 @@
   text-decoration: none;
 }
 
+.bookmark-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .bookmark-link h3 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 15px;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookmark-link p {
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
