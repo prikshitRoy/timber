@@ -27,3 +27,22 @@ web-ext.config.ts
 
 
 caffeine_note
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS & temporary files
+Thumbs.db
+tmp/
+.cache/
+
+# Node / Vite / TypeScript / Test output
+dist/
+build/
+.vite/
+coverage/
+*.tsbuildinfo
