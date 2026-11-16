@@ -1,8 +1,15 @@
+/**
+ * Placeholder toolbar popup component reserved for future quick-bookmarking controls.
+ */
+
 import { useState } from 'react';
 import reactLogo from '@/assets/react.svg';
 import wxtLogo from '/wxt.svg';
 import './App.css';
 
+/**
+ * Render the placeholder extension popup view.
+ */
 function App() {
   const [count, setCount] = useState(0);
 

@@ -1,39 +1,49 @@
+/**
+ * Extension background service worker that listens for native browser bookmark events
+ * and handles runtime sync requests from the New Tab dashboard.
+ */
+
 import { browser } from "wxt/browser";
 import { defineBackground } from "wxt/utils/define-background";
-
 import {
-  hasBookmarkPermission,
-  computeCurrentBrowserSyncDiff,
   applyCurrentBrowserSyncSelection,
+  computeCurrentBrowserSyncDiff,
+  hasBookmarkPermission,
 } from "../src/shared/bookmarks/bookmark-synchronizer";
-
-import type {
-  BookmarkSyncSelection,
-  NativeBookmarkRecord,
-} from "../src/shared/bookmarks/bookmark.types";
+import {
+  TIMBER_MESSAGE_TYPES,
+  hasMessageType,
+  isApplySyncSelectionMessage,
+} from "../src/shared/messages/runtime-messages";
 
 export default defineBackground(() => {
-  let listenersRegistered = false;
+  let areListenersRegistered = false;
 
   /**
-   * Native bookmark events now only notify — Timber never
-   * auto-applies browser changes. The user reviews and applies
-   * them via the Scan action in the UI.
+   * Broadcast a notification to any open Timber dashboard tab without failing if none is open.
+   */
+  async function notifyDashboard(payload: Record<string, unknown>): Promise<void> {
+    try {
+      await browser.runtime.sendMessage(payload);
+    } catch {
+      // No open Timber dashboard tab is listening right now.
+    }
+  }
+
+  /**
+   * Register native browser bookmark event listeners once bookmark permission has been granted.
    */
   async function registerBookmarkListeners(): Promise<void> {
-    if (listenersRegistered) return;
+    if (areListenersRegistered) return;
 
-    const permitted = await hasBookmarkPermission();
-    if (!permitted) return;
+    const isPermitted = await hasBookmarkPermission();
+    if (!isPermitted) return;
 
     const bookmarks = browser.bookmarks;
 
+    // Native bookmark events only notify the UI; the user reviews changes via the Scan action.
     const handleBookmarkChange = () => {
-      void browser.runtime
-        .sendMessage({ type: "TIMBER_BOOKMARKS_CHANGED" })
-        .catch(() => {
-          // No open Timber page to notify.
-        });
+      void notifyDashboard({ type: TIMBER_MESSAGE_TYPES.BOOKMARKS_CHANGED });
     };
 
     bookmarks.onCreated.addListener(handleBookmarkChange);
@@ -42,49 +52,35 @@ export default defineBackground(() => {
     bookmarks.onRemoved.addListener(handleBookmarkChange);
     bookmarks.onChildrenReordered?.addListener(handleBookmarkChange);
 
-    listenersRegistered = true;
+    areListenersRegistered = true;
   }
 
   void registerBookmarkListeners().catch(console.error);
 
   browser.runtime.onMessage.addListener((message: unknown) => {
-    if (
-      typeof message !== "object" ||
-      message === null ||
-      !("type" in message)
-    ) {
+    if (!hasMessageType(message)) {
       return undefined;
     }
 
-    if (message.type === "TIMBER_SYNC_BOOKMARKS") {
+    if (message.type === TIMBER_MESSAGE_TYPES.SYNC_BOOKMARKS) {
       return (async () => {
         await registerBookmarkListeners();
         return computeCurrentBrowserSyncDiff();
       })();
     }
 
-    if (message.type === "TIMBER_APPLY_SYNC_SELECTION") {
-      const { sourceId, nativeBookmarks, selection } = message as unknown as {
-        sourceId: string;
-        nativeBookmarks: NativeBookmarkRecord[];
-        selection: BookmarkSyncSelection;
-      };
-
+    if (isApplySyncSelectionMessage(message)) {
       return (async () => {
         const summary = await applyCurrentBrowserSyncSelection(
-          sourceId,
-          nativeBookmarks,
-          selection
+          message.sourceId,
+          message.nativeBookmarks,
+          message.selection
         );
 
-        try {
-          await browser.runtime.sendMessage({
-            type: "TIMBER_BOOKMARKS_UPDATED",
-            summary,
-          });
-        } catch {
-          // No open Timber page to notify.
-        }
+        await notifyDashboard({
+          type: TIMBER_MESSAGE_TYPES.BOOKMARKS_UPDATED,
+          summary,
+        });
 
         return summary;
       })();

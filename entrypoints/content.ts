@@ -1,6 +1,10 @@
+/**
+ * Placeholder content script entrypoint reserved for future in-page bookmarking features.
+ */
+
 export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+  matches: ["*://*.google.com/*"],
   main() {
-    console.log('Hello content.');
+    // Reserved placeholder for future content-script integration.
   },
 });
