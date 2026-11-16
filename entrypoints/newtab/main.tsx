@@ -1,3 +1,7 @@
+/**
+ * Entry point that mounts the React New Tab dashboard into the `#root` DOM element.
+ */
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 

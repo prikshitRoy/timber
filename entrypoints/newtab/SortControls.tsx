@@ -1,8 +1,15 @@
+/**
+ * Compact A-Z / Z-A sort toolbar rendered above the root grid and inside expanded folders.
+ */
+
 interface SortControlsProps {
     onSortAsc: () => void;
     onSortDesc: () => void;
 }
 
+/**
+ * Render ascending (A–Z) and descending (Z–A) alphabetical sort buttons.
+ */
 export default function SortControls({ onSortAsc, onSortDesc }: SortControlsProps) {
     return (
         <div className="sort-controls">

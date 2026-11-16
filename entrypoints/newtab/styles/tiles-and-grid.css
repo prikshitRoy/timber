@@ -1,0 +1,174 @@
+/**
+ * Styles for the root tile grid, tile buttons, kebab popover menu, sort controls,
+ * and pointer drag-to-reorder active states.
+ */
+
+.root-grid {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.root-grid-empty {
+  color: #888;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.root-tile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fafafa;
+  padding: 10px;
+  min-width: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.root-tile--edit {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.root-tile-chevron {
+  background: none;
+  color: #777;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+.root-tile-chevron:hover {
+  background: #eee;
+}
+
+.root-tile-icon {
+  flex-shrink: 0;
+}
+
+.root-tile-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  background: none;
+  color: #222;
+  padding: 2px 4px;
+  text-align: left;
+}
+
+.root-tile-main:hover {
+  background: #f0f0f0;
+}
+
+.root-tile-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.root-tile-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #999;
+}
+
+.root-tile-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.root-tile-kebab {
+  background: none;
+  color: #888;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.root-tile-kebab:hover {
+  background: #eee;
+}
+
+.root-tile-menu-popover {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  gap: 2px;
+}
+
+.root-tile-menu-popover button,
+.root-tile-menu-popover select {
+  background: none;
+  color: #222;
+  text-align: left;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.root-tile-menu-popover button:hover {
+  background: #f2f2f2;
+}
+
+.root-tile-menu-danger {
+  color: #c0392b !important;
+}
+
+.root-expanded-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  align-items: start;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: white;
+  padding: 14px;
+}
+
+.sort-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sort-controls button {
+  font-size: 11px;
+  padding: 5px 10px;
+  background: #eee;
+  color: #444;
+}
+
+.sort-controls button:hover {
+  background: #e0e0e0;
+}
+
+.root-tile--dragging,
+.folder-bookmark-row--dragging {
+  opacity: 0.35;
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  transform: scale(1.04);
+  border: 2px dashed #2d6cdf;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  background: white;
+}

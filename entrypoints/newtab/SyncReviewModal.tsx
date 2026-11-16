@@ -1,3 +1,7 @@
+/**
+ * Modal dialog allowing the user to review and select which newly scanned browser bookmarks to add.
+ */
+
 import { useState } from "react";
 
 import type {
@@ -11,6 +15,9 @@ interface SyncReviewModalProps {
     onApply: (selection: BookmarkSyncSelection) => void;
 }
 
+/**
+ * Render a checklist modal of newly discovered native browser bookmarks for user approval.
+ */
 function SyncReviewModal({ diff, onCancel, onApply }: SyncReviewModalProps) {
     const [accepted, setAccepted] = useState<Set<string>>(
         () => new Set(diff.additions.map((item) => item.native.nativeBookmarkId))

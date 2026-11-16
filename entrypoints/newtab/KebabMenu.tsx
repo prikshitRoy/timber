@@ -1,5 +1,10 @@
+/**
+ * Reusable three-dot ("⋮") popover menu that closes automatically on outside click or item selection.
+ */
+
 import { useEffect, useRef, useState } from "react";
 
+// Descriptor for a single action button inside a KebabMenu popover.
 export interface KebabMenuAction {
     label: string;
     onClick: () => void;
@@ -10,6 +15,9 @@ interface KebabMenuProps {
     actions: KebabMenuAction[];
 }
 
+/**
+ * Render a compact three-dot menu button and its action popover.
+ */
 export default function KebabMenu({ actions }: KebabMenuProps) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);

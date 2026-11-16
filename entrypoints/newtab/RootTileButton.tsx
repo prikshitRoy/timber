@@ -1,131 +1,97 @@
-import { useState, useRef, useEffect } from "react";
-import type { RootTile } from "../../src/shared/bookmarks/root-layout";
+/**
+ * Top-level tile button rendered in RootGrid for either a folder or a standalone link.
+ */
 
-interface MenuAction {
-    label: string;
-    onClick: () => void;
-    danger?: boolean;
-}
+import {
+  tileLabel,
+  type RootTile,
+} from "../../src/shared/bookmarks/root-layout";
+import KebabMenu, { type KebabMenuAction } from "./KebabMenu";
 
 interface RootTileButtonProps {
-    tile: RootTile;
-    editMode: boolean;
-    expanded: boolean;
-    onToggleExpand: () => void;
-    actions: MenuAction[];
-    childFolderCount?: number;
-    isDragging: boolean;
-    onPointerDown?: (event: React.PointerEvent<HTMLDivElement>) => void;
+  tile: RootTile;
+  editMode: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  actions: KebabMenuAction[];
+  childFolderCount?: number;
+  isDragging: boolean;
+  onPointerDown?: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
 
+/**
+ * Return the emoji icon for a root link or folder tile.
+ */
 function tileIcon(tile: RootTile): string {
-    return tile.kind === "link" ? "🔗" : "📁";
+  return tile.kind === "link" ? "🔗" : "📁";
 }
 
-function tileLabel(tile: RootTile): string {
-    return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
-}
-
+/**
+ * Return the total direct item count (bookmarks + sub-folders) for a folder tile, or null for a link.
+ */
 function tileCount(tile: RootTile, childFolderCount: number): number | null {
-    if (tile.kind !== "folder") return null;
-    return (tile.page.bookmarkIds ?? []).length + childFolderCount;
+  if (tile.kind !== "folder") return null;
+  return (tile.page.bookmarkIds ?? []).length + childFolderCount;
 }
 
+/**
+ * Render a root grid tile with expand chevron (for folders), title, item count, and kebab actions.
+ */
 export default function RootTileButton({
-    tile,
-    editMode,
-    expanded,
-    onToggleExpand,
-    actions,
-    childFolderCount = 0,
-    isDragging,
-    onPointerDown,
+  tile,
+  editMode,
+  expanded,
+  onToggleExpand,
+  actions,
+  childFolderCount = 0,
+  isDragging,
+  onPointerDown,
 }: RootTileButtonProps) {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+  const isExpandable = tile.kind !== "link";
+  const count = tileCount(tile, childFolderCount);
 
-    useEffect(() => {
-        if (!menuOpen) return;
+  const className = [
+    "root-tile",
+    editMode && "root-tile--edit",
+    isDragging && "root-tile--dragging",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-        function handleOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setMenuOpen(false);
-            }
-        }
-
-        document.addEventListener("mousedown", handleOutside);
-        return () => document.removeEventListener("mousedown", handleOutside);
-    }, [menuOpen]);
-
-    const isExpandable = tile.kind !== "link";
-    const count = tileCount(tile, childFolderCount);
-
-    const className = [
-        "root-tile",
-        editMode && "root-tile--edit",
-        isDragging && "root-tile--dragging",
-    ]
-        .filter(Boolean)
-        .join(" ");
-
-    return (
-        <div
-            className={className}
-            data-tile-key={tile.key}
-            onPointerDown={onPointerDown}
+  return (
+    <div
+      className={className}
+      data-tile-key={tile.key}
+      onPointerDown={onPointerDown}
+    >
+      {isExpandable ? (
+        <button
+          type="button"
+          className="root-tile-chevron"
+          onClick={onToggleExpand}
         >
-            {isExpandable ? (
-                <button type="button" className="root-tile-chevron" onClick={onToggleExpand}>
-                    {expanded ? "▾" : "▸"}
-                </button>
-            ) : (
-                <span className="root-tile-icon">{tileIcon(tile)}</span>
-            )}
+          {expanded ? "▾" : "▸"}
+        </button>
+      ) : (
+        <span className="root-tile-icon">{tileIcon(tile)}</span>
+      )}
 
-            <button
-                type="button"
-                className="root-tile-main"
-                onClick={() => {
-                    if (tile.kind === "link") {
-                        window.open(tile.bookmark.url, "_blank", "noopener,noreferrer");
-                    } else {
-                        onToggleExpand();
-                    }
-                }}
-            >
-                <span className="root-tile-name">{tileLabel(tile)}</span>
-                {count !== null && <span className="root-tile-count">{count}</span>}
-            </button>
+      <button
+        type="button"
+        className="root-tile-main"
+        onClick={() => {
+          if (tile.kind === "link") {
+            window.open(tile.bookmark.url, "_blank", "noopener,noreferrer");
+          } else {
+            onToggleExpand();
+          }
+        }}
+      >
+        <span className="root-tile-name">{tileLabel(tile)}</span>
+        {count !== null && <span className="root-tile-count">{count}</span>}
+      </button>
 
-            {actions.length > 0 && (
-                <div className="root-tile-menu" ref={menuRef}>
-                    <button
-                        type="button"
-                        className="root-tile-kebab"
-                        onClick={() => setMenuOpen((value) => !value)}
-                    >
-                        ⋮
-                    </button>
-
-                    {menuOpen && (
-                        <div className="root-tile-menu-popover">
-                            {actions.map((action) => (
-                                <button
-                                    type="button"
-                                    key={action.label}
-                                    className={action.danger ? "root-tile-menu-danger" : ""}
-                                    onClick={() => {
-                                        setMenuOpen(false);
-                                        action.onClick();
-                                    }}
-                                >
-                                    {action.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
+      <KebabMenu actions={actions} />
+    </div>
+  );
 }

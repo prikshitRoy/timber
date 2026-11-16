@@ -1,3 +1,7 @@
+/**
+ * Settings modal for managing browser bookmark permission and exporting/importing Timber backups.
+ */
+
 import { useRef, useState } from "react";
 
 type ImportMode = "merge" | "replace";
@@ -12,6 +16,9 @@ interface SettingsModalProps {
     onImportBackup: (file: File, mode: ImportMode) => Promise<void>;
 }
 
+/**
+ * Render the Settings modal with connection status, JSON/HTML export buttons, and backup import controls.
+ */
 export default function SettingsModal({
     connected,
     loading,

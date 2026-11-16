@@ -1,6 +1,11 @@
+/**
+ * Dropdown menu on a bookmark card that files the bookmark into an existing or newly created folder.
+ */
+
 import { useState } from "react";
 import type { BookmarkPage } from "../../src/shared/types/timber";
 
+// Sentinel option value that triggers a prompt to create a new folder before filing.
 const NEW_FOLDER_VALUE = "__new__";
 
 interface AddToFolderMenuProps {
@@ -10,6 +15,9 @@ interface AddToFolderMenuProps {
     onCreateAndAdd: (bookmarkId: string, name: string) => void;
 }
 
+/**
+ * Render a `<select>` control for filing `bookmarkId` into a folder or creating a new folder on the fly.
+ */
 export default function AddToFolderMenu({
     bookmarkId,
     folders,

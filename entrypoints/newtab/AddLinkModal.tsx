@@ -1,3 +1,7 @@
+/**
+ * Modal dialog for manually adding a new bookmark URL and optional title to the root grid or a folder.
+ */
+
 import { useState } from "react";
 
 interface AddLinkModalProps {
@@ -6,6 +10,9 @@ interface AddLinkModalProps {
     onCreate: (url: string, title: string) => void;
 }
 
+/**
+ * Render a form modal for creating a manual bookmark link.
+ */
 export default function AddLinkModal({ targetFolderName, onClose, onCreate }: AddLinkModalProps) {
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");

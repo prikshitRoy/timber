@@ -1,3 +1,7 @@
+/**
+ * Modal dialog for editing the title and URL of a single bookmark.
+ */
+
 import { useState } from "react";
 
 interface EditBookmarkModalProps {
@@ -8,6 +12,9 @@ interface EditBookmarkModalProps {
     onSave: (bookmarkId: string, title: string, url: string) => void;
 }
 
+/**
+ * Render a form modal to edit an existing bookmark's title and URL.
+ */
 export default function EditBookmarkModal({
     bookmarkId,
     initialTitle,

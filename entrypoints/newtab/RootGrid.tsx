@@ -1,3 +1,8 @@
+/**
+ * Top-level grid displaying root folders and standalone links with A-Z sorting,
+ * drag-to-reorder, and expandable folder panels.
+ */
+
 import { Fragment, useState } from "react";
 import { type RootTile, tileLabel } from "../../src/shared/bookmarks/root-layout";
 import { sortAlphabetically } from "../../src/shared/bookmarks/tile-ordering";
@@ -5,18 +10,14 @@ import type { BookmarkPage } from "../../src/shared/types/timber";
 import RootTileButton from "./RootTileButton";
 import TimberFolderContents, { type TimberFolderHandlers } from "./TimberFolderContents";
 import SortControls from "./SortControls";
+import type { BookmarkSummary } from "./types";
 import { useTileDragReorder } from "./useTileDragReorder";
-
-interface TileBookmark {
-    title: string;
-    url: string;
-}
 
 interface RootGridProps {
     tiles: RootTile[];
     editMode: boolean;
     folders: BookmarkPage[];
-    bookmarksById: Map<string, TileBookmark>;
+    bookmarksById: Map<string, BookmarkSummary>;
     onReorder: (orderedKeys: string[]) => void;
     onRenameFolder: (pageId: string, currentName: string) => void;
     onDeleteFolder: (pageId: string, name: string) => void;
@@ -30,6 +31,9 @@ interface RootGridProps {
     onReorderFolderChildren: (folderId: string, order: string[]) => void;
 }
 
+/**
+ * Render the root grid of folder and link tiles with sort controls and inline folder expansion.
+ */
 export default function RootGrid({
     tiles,
     editMode,
