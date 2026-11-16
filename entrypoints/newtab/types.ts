@@ -6,6 +6,7 @@ import type {
   BookmarkSyncDiff,
   NativeBookmarkRecord,
 } from "../../src/shared/bookmarks/bookmark.types";
+import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
 import type { Bookmark } from "../../src/shared/types/timber";
 
 // Bookmark record enriched with the number of connected browsers where it appears.
@@ -31,4 +32,12 @@ export interface EditingBookmarkState {
   id: string;
   title: string;
   url: string;
+}
+
+// State held while the user chooses how to delete a link that has duplicates.
+export interface DeletingBookmarkState {
+  bookmarkId: string;
+  title: string;
+  target: BookmarkInstanceTarget;
+  instanceCount: number;
 }

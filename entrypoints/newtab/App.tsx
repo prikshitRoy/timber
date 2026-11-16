@@ -12,12 +12,13 @@ import SyncReviewModal from "./SyncReviewModal";
 import ConnectBookmarksSection from "./components/ConnectBookmarksSection";
 import DashboardFooter from "./components/DashboardFooter";
 import DashboardHeader from "./components/DashboardHeader";
+import DeleteBookmarkModal from "./components/DeleteBookmarkModal";
 import SearchResultsGrid from "./components/SearchResultsGrid";
 import { useBackupActions } from "./hooks/useBackupActions";
 import { useBookmarkAndFolderActions } from "./hooks/useBookmarkAndFolderActions";
 import { useBookmarkSync } from "./hooks/useBookmarkSync";
 import { useDashboardCatalog } from "./hooks/useDashboardCatalog";
-import type { EditingBookmarkState } from "./types";
+import type { DeletingBookmarkState, EditingBookmarkState } from "./types";
 
 /**
  * Render the Timber New Tab bookmark dashboard, toolbar, folder/link grid, and active modal dialogs.
@@ -28,6 +29,7 @@ function App() {
     setConnected,
     bookmarks,
     folders,
+    rootBookmarkIds,
     status,
     setStatus,
     error,
@@ -55,10 +57,16 @@ function App() {
     loadCatalog,
   });
 
+  const [deletingBookmark, setDeletingBookmark] =
+    useState<DeletingBookmarkState | null>(null);
+
   const actions = useBookmarkAndFolderActions({
+    folders,
+    rootBookmarkIds,
     loadCatalog,
     setStatus,
     setError,
+    onOpenDuplicateDeleteModal: setDeletingBookmark,
   });
 
   const backupActions = useBackupActions({
@@ -138,7 +146,7 @@ function App() {
               onCreateFolderAndAdd={actions.handleCreateFolderAndAdd}
               onEditBookmark={handleStartEditBookmark}
               onCopyBookmark={actions.handleCopyBookmarkLink}
-              onDeleteBookmark={actions.handleDeleteBookmark}
+              onDeleteBookmark={actions.handleRequestDeleteBookmark}
             />
           ) : (
             <RootGrid
@@ -150,7 +158,7 @@ function App() {
               onRenameFolder={actions.handleRenameFolder}
               onDeleteFolder={actions.handleDeleteFolder}
               onRemoveBookmarkFromFolder={actions.handleRemoveBookmarkFromFolder}
-              onDeleteBookmark={actions.handleDeleteBookmark}
+              onDeleteBookmark={actions.handleRequestDeleteBookmark}
               onEditBookmark={handleStartEditBookmark}
               onCopyBookmark={actions.handleCopyBookmarkLink}
               onEditFolderLinks={setEditingFolderLinksId}
@@ -229,7 +237,31 @@ function App() {
               () => setEditingFolderLinksId(null)
             )
           }
+          onDeleteSingleBookmark={(bookmarkId, title) =>
+            actions.handleRequestDeleteBookmark(bookmarkId, title, {
+              kind: "folder",
+              folderId: editingFolder.id,
+            })
+          }
           onSaveEdits={actions.handleSaveFolderLinkEdits}
+        />
+      )}
+
+      {deletingBookmark && (
+        <DeleteBookmarkModal
+          title={deletingBookmark.title}
+          instanceCount={deletingBookmark.instanceCount}
+          onCancel={() => setDeletingBookmark(null)}
+          onDeleteOnlyThisInstance={async () => {
+            const { bookmarkId, target } = deletingBookmark;
+            setDeletingBookmark(null);
+            await actions.handleConfirmDeleteOnlyInstance(bookmarkId, target);
+          }}
+          onDeleteAllDuplicates={async () => {
+            const { bookmarkId } = deletingBookmark;
+            setDeletingBookmark(null);
+            await actions.handleConfirmDeleteAllDuplicates(bookmarkId);
+          }}
         />
       )}
 

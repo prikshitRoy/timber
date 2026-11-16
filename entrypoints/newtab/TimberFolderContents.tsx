@@ -2,6 +2,7 @@
  * Renders the ordered contents (bookmarks and nested sub-folders) inside an expanded Timber folder.
  */
 
+import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
 import {
   applyStoredOrder,
   sortAlphabetically,
@@ -14,7 +15,11 @@ import type { BookmarkSummary } from "./types";
 import { useTileDragReorder } from "./useTileDragReorder";
 
 export interface TimberFolderHandlers {
-  onDeleteBookmark: (bookmarkId: string, title: string) => void;
+  onDeleteBookmark: (
+    bookmarkId: string,
+    title: string,
+    target: BookmarkInstanceTarget
+  ) => void;
   onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
   onCopyBookmark: (url: string) => void;
   onRemoveBookmarkFromFolder: (pageId: string, bookmarkId: string) => void;

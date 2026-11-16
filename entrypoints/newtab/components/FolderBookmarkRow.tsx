@@ -2,6 +2,7 @@
  * Single draggable bookmark row rendered inside an expanded Timber folder panel.
  */
 
+import type { BookmarkInstanceTarget } from "../../../src/shared/bookmarks/operations/bookmark-instances";
 import KebabMenu from "../KebabMenu";
 import type { BookmarkSummary } from "../types";
 
@@ -16,7 +17,11 @@ interface FolderBookmarkRowProps {
   onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
   onCopyBookmark: (url: string) => void;
   onRemoveBookmarkFromFolder: (pageId: string, bookmarkId: string) => void;
-  onDeleteBookmark: (bookmarkId: string, title: string) => void;
+  onDeleteBookmark: (
+    bookmarkId: string,
+    title: string,
+    target: BookmarkInstanceTarget
+  ) => void;
 }
 
 /**
@@ -78,7 +83,11 @@ export default function FolderBookmarkRow({
             {
               label: "Delete",
               danger: true,
-              onClick: () => onDeleteBookmark(bookmarkId, bookmark.title),
+              onClick: () =>
+                onDeleteBookmark(bookmarkId, bookmark.title, {
+                  kind: "folder",
+                  folderId,
+                }),
             },
           ]}
         />

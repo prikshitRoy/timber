@@ -184,3 +184,57 @@
   gap: 6px;
   font-size: 13px;
 }
+
+.delete-bookmark-description {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.5;
+  margin: 10px 0 16px;
+}
+
+.delete-bookmark-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.delete-instance-button,
+.delete-all-duplicates-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.delete-instance-button {
+  background: #f3f4f6;
+  color: #222;
+  border: 1px solid #d1d5db;
+}
+
+.delete-instance-button:hover {
+  background: #e5e7eb;
+}
+
+.delete-all-duplicates-button {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #f5c6cb;
+}
+
+.delete-all-duplicates-button:hover {
+  background: #f9d6d2;
+}
+
+.delete-instance-button span,
+.delete-all-duplicates-button span {
+  font-weight: 400;
+  font-size: 11.5px;
+  color: #666;
+}

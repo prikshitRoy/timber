@@ -2,6 +2,7 @@
  * Displays filtered bookmark cards when the user types a search query in the dashboard header.
  */
 
+import type { BookmarkInstanceTarget } from "../../../src/shared/bookmarks/operations/bookmark-instances";
 import type { BookmarkPage } from "../../../src/shared/types/timber";
 import AddToFolderMenu from "../AddToFolderMenu";
 import KebabMenu from "../KebabMenu";
@@ -14,7 +15,11 @@ interface SearchResultsGridProps {
   onCreateFolderAndAdd: (bookmarkId: string, name: string) => void;
   onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
   onCopyBookmark: (url: string) => void;
-  onDeleteBookmark: (bookmarkId: string, title: string) => void;
+  onDeleteBookmark: (
+    bookmarkId: string,
+    title: string,
+    target: BookmarkInstanceTarget
+  ) => void;
 }
 
 /**
@@ -79,7 +84,10 @@ export default function SearchResultsGrid({
                 {
                   label: "Delete",
                   danger: true,
-                  onClick: () => onDeleteBookmark(bookmark.id, bookmark.title),
+                  onClick: () =>
+                    onDeleteBookmark(bookmark.id, bookmark.title, {
+                      kind: "root",
+                    }),
                 },
               ]}
             />

@@ -152,6 +152,7 @@ export function useDashboardCatalog() {
     sources,
     bookmarkSources,
     folders,
+    rootBookmarkIds,
     status,
     setStatus,
     error,

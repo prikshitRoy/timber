@@ -4,6 +4,7 @@
  */
 
 import { Fragment, useState } from "react";
+import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
 import { type RootTile, tileLabel } from "../../src/shared/bookmarks/root-layout";
 import { sortAlphabetically } from "../../src/shared/bookmarks/tile-ordering";
 import type { BookmarkPage } from "../../src/shared/types/timber";
@@ -22,7 +23,11 @@ interface RootGridProps {
     onRenameFolder: (pageId: string, currentName: string) => void;
     onDeleteFolder: (pageId: string, name: string) => void;
     onRemoveBookmarkFromFolder: (pageId: string, bookmarkId: string) => void;
-    onDeleteBookmark: (bookmarkId: string, title: string) => void;
+    onDeleteBookmark: (
+        bookmarkId: string,
+        title: string,
+        target: BookmarkInstanceTarget
+    ) => void;
     onEditBookmark: (bookmarkId: string, title: string, url: string) => void;
     onCopyBookmark: (url: string) => void;
     onEditFolderLinks: (pageId: string) => void;
@@ -125,7 +130,14 @@ export default function RootGrid({
                             : [
                                 { label: "Edit", onClick: () => onEditBookmark(tile.bookmark.id, tile.bookmark.title, tile.bookmark.url) },
                                 { label: "Copy link", onClick: () => onCopyBookmark(tile.bookmark.url) },
-                                { label: "Delete", danger: true, onClick: () => onDeleteBookmark(tile.bookmark.id, tile.bookmark.title) },
+                                {
+                                    label: "Delete",
+                                    danger: true,
+                                    onClick: () =>
+                                        onDeleteBookmark(tile.bookmark.id, tile.bookmark.title, {
+                                            kind: "root",
+                                        }),
+                                },
                             ];
 
                     return (

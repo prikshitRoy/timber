@@ -13,6 +13,7 @@ interface EditFolderLinksModalProps {
   onClose: () => void;
   onCopySelected: (urls: string[]) => void;
   onDeleteSelected: (bookmarkIds: string[], alsoDeleteFolder: boolean) => void;
+  onDeleteSingleBookmark?: (bookmarkId: string, title: string) => void;
   onSaveEdits: (updates: { id: string; title: string; url: string }[]) => void;
   allowFolderDeletion?: boolean;
 }
@@ -27,6 +28,7 @@ export default function EditFolderLinksModal({
   onClose,
   onCopySelected,
   onDeleteSelected,
+  onDeleteSingleBookmark,
   onSaveEdits,
   allowFolderDeletion = true,
 }: EditFolderLinksModalProps) {
@@ -193,9 +195,16 @@ export default function EditFolderLinksModal({
                     onToggleSelect={toggle}
                     onUpdateField={updateField}
                     onCopySingle={(url) => onCopySelected([url])}
-                    onDeleteSingle={(bookmarkId) =>
-                      confirmAndDelete([bookmarkId])
-                    }
+                    onDeleteSingle={(bookmarkId) => {
+                      if (onDeleteSingleBookmark) {
+                        onDeleteSingleBookmark(
+                          bookmarkId,
+                          edit.title || edit.url
+                        );
+                        return;
+                      }
+                      confirmAndDelete([bookmarkId]);
+                    }}
                   />
                 );
               })}

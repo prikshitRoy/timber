@@ -40,6 +40,10 @@ import {
   upsertNativeBookmarkInState,
 } from "./operations/bookmark-mutations";
 import {
+  deleteBookmarkInstanceInState,
+  type BookmarkInstanceTarget,
+} from "./operations/bookmark-instances";
+import {
   addBookmarkToPageInState,
   createPageInState,
   deletePageInState,
@@ -237,6 +241,18 @@ class BookmarkRepository {
    */
   async deleteBookmark(bookmarkId: string): Promise<void> {
     await this.mutate((state) => deleteBookmarksInState(state, [bookmarkId]));
+  }
+
+  /**
+   * Delete only a single placement (root or a specific folder) of a bookmark without removing other copies.
+   */
+  async deleteBookmarkInstance(
+    bookmarkId: string,
+    target: BookmarkInstanceTarget
+  ): Promise<void> {
+    await this.mutate((state) =>
+      deleteBookmarkInstanceInState(state, bookmarkId, target)
+    );
   }
 
   /**

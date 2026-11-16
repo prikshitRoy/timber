@@ -39,6 +39,12 @@ export {
 } from "./root-layout";
 export { bookmarkRepository } from "./bookmark-repository";
 export {
+  countBookmarkInstances,
+  countBookmarkInstancesInState,
+  deleteBookmarkInstanceInState,
+  type BookmarkInstanceTarget,
+} from "./operations/bookmark-instances";
+export {
   applyCurrentBrowserSyncSelection,
   computeCurrentBrowserSyncDiff,
   hasBookmarkPermission,

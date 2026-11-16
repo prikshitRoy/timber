@@ -230,6 +230,19 @@ export function createManualLinkInState(
   );
 
   if (existing) {
+    // If the existing bookmark was unfoldered (visible on root), pin it in rootBookmarkIds
+    // so adding a duplicate inside a folder does not hide the existing root instance.
+    const isInAnyFolder = state.pages.some(
+      (page) =>
+        page.type === "custom" && Boolean(page.bookmarkIds?.includes(existing.id))
+    );
+    if (!isInAnyFolder) {
+      state.rootBookmarkIds ??= [];
+      if (!state.rootBookmarkIds.includes(existing.id)) {
+        state.rootBookmarkIds.push(existing.id);
+      }
+    }
+
     return existing;
   }
 

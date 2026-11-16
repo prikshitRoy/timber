@@ -4,25 +4,57 @@
  */
 
 import { bookmarkRepository } from "../../../src/shared/bookmarks/bookmark-repository";
+import {
+  countBookmarkInstances,
+  type BookmarkInstanceTarget,
+} from "../../../src/shared/bookmarks/operations/bookmark-instances";
+import type { BookmarkPage } from "../../../src/shared/types/timber";
+import type { DeletingBookmarkState } from "../types";
 
 interface UseBookmarkAndFolderActionsParams {
+  folders: BookmarkPage[];
+  rootBookmarkIds: string[];
   loadCatalog: () => Promise<void>;
   setStatus: (status: string) => void;
   setError: (error: string) => void;
+  onOpenDuplicateDeleteModal: (state: DeletingBookmarkState) => void;
 }
 
 /**
  * Create dashboard handlers for mutating bookmarks, folders, tile orders, and clipboard links.
  */
 export function useBookmarkAndFolderActions({
+  folders,
+  rootBookmarkIds,
   loadCatalog,
   setStatus,
   setError,
+  onOpenDuplicateDeleteModal,
 }: UseBookmarkAndFolderActionsParams) {
   /**
-   * Confirm with the user and delete a single bookmark from Timber.
+   * Delete a bookmark: opens the 2-option modal if duplicates exist, or confirms single deletion otherwise.
    */
-  async function handleDeleteBookmark(bookmarkId: string, title: string) {
+  async function handleRequestDeleteBookmark(
+    bookmarkId: string,
+    title: string,
+    target: BookmarkInstanceTarget
+  ) {
+    const instanceCount = countBookmarkInstances(
+      bookmarkId,
+      folders,
+      rootBookmarkIds
+    );
+
+    if (instanceCount > 1) {
+      onOpenDuplicateDeleteModal({
+        bookmarkId,
+        title,
+        target,
+        instanceCount,
+      });
+      return;
+    }
+
     const isConfirmed = window.confirm(
       `Remove "${title}" from Timber? It stays in your browser bookmarks, and will show up again next time you scan.`
     );
@@ -31,6 +63,41 @@ export function useBookmarkAndFolderActions({
     try {
       await bookmarkRepository.deleteBookmark(bookmarkId);
       await loadCatalog();
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to delete bookmark."
+      );
+    }
+  }
+
+  /**
+   * Remove only the selected root or folder instance of a duplicate bookmark.
+   */
+  async function handleConfirmDeleteOnlyInstance(
+    bookmarkId: string,
+    target: BookmarkInstanceTarget
+  ) {
+    try {
+      await bookmarkRepository.deleteBookmarkInstance(bookmarkId, target);
+      await loadCatalog();
+      setStatus("Removed link instance.");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove link instance."
+      );
+    }
+  }
+
+  /**
+   * Remove all instances of a duplicate bookmark across the root grid and all folders.
+   */
+  async function handleConfirmDeleteAllDuplicates(bookmarkId: string) {
+    try {
+      await bookmarkRepository.deleteBookmark(bookmarkId);
+      await loadCatalog();
+      setStatus("Deleted all duplicate instances of link.");
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Failed to delete bookmark."
@@ -301,7 +368,9 @@ export function useBookmarkAndFolderActions({
   }
 
   return {
-    handleDeleteBookmark,
+    handleRequestDeleteBookmark,
+    handleConfirmDeleteOnlyInstance,
+    handleConfirmDeleteAllDuplicates,
     handleCreateFolder,
     handleAddSubFolder,
     handleRenameFolder,

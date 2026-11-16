@@ -129,6 +129,11 @@ export function applySyncDiffInState(
         folder.bookmarkIds.push(bookmark.id);
         folder.updatedAt = now();
       }
+    } else {
+      state.rootBookmarkIds ??= [];
+      if (!state.rootBookmarkIds.includes(bookmark.id)) {
+        state.rootBookmarkIds.push(bookmark.id);
+      }
     }
 
     associationsAdded++;
