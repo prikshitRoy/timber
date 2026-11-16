@@ -54,3 +54,49 @@ export function sortAlphabetically(
 
   return sorted.map((item) => item.key);
 }
+
+/**
+ * Move `dragKey` to the index occupied by `overKey`, returning a new key array (or the same array if unchanged).
+ */
+export function moveKeyInOrder(
+  order: string[],
+  dragKey: string,
+  overKey: string
+): string[] {
+  if (dragKey === overKey) return order;
+
+  const fromIndex = order.indexOf(dragKey);
+  const toIndex = order.indexOf(overKey);
+  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+    return order;
+  }
+
+  const next = [...order];
+  next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, dragKey);
+  return next;
+}
+
+/**
+ * Return true when pointer `(clientX, clientY)` has crossed past the directional midpoint of `rect` when moving from `fromIndex` to `toIndex`.
+ */
+export function hasCrossedTileMidpoint(
+  fromIndex: number,
+  toIndex: number,
+  clientX: number,
+  clientY: number,
+  rect: { left: number; top: number; width: number; height: number }
+): boolean {
+  if (fromIndex === toIndex) return false;
+
+  const midX = rect.left + rect.width / 2;
+  const midY = rect.top + rect.height / 2;
+  const offsetX = (clientX - midX) / Math.max(rect.width, 1);
+  const offsetY = (clientY - midY) / Math.max(rect.height, 1);
+
+  // Use the dominant axis relative to the target tile center so both horizontal rows and vertical grid moves feel natural.
+  const dominantOffset =
+    Math.abs(offsetX) >= Math.abs(offsetY) ? offsetX : offsetY;
+
+  return fromIndex < toIndex ? dominantOffset >= -0.15 : dominantOffset <= 0.15;
+}

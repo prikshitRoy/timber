@@ -41,9 +41,19 @@
   border-color: var(--accent-primary);
 }
 
-.root-tile--edit {
+.root-tile--edit,
+.root-tile--edit .root-tile-main,
+.root-tile--edit .root-tile-chevron {
   cursor: grab;
+}
+
+.root-tile--edit {
   border-style: dashed;
+}
+
+.root-tile--edit:active,
+.root-tile--edit .root-tile-main:active {
+  cursor: grabbing;
 }
 
 .bookmark-favicon {
@@ -220,12 +230,18 @@
 
 .root-tile--dragging,
 .folder-bookmark-row--dragging {
-  opacity: 0.45;
-  position: relative;
-  z-index: 5;
-  cursor: grabbing;
-  transform: scale(1.04);
-  border: 2px dashed var(--accent-primary);
-  box-shadow: var(--shadow-popover);
-  background: var(--bg-surface);
+  opacity: 0.32;
+  border: 2px dashed var(--accent-primary) !important;
+  background: var(--bg-surface-subtle) !important;
+  box-shadow: none !important;
+  transform: scale(0.98);
+}
+
+.tile-drag-ghost {
+  opacity: 0.95 !important;
+  border: 1.5px solid var(--accent-primary) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: var(--shadow-popover) !important;
+  cursor: grabbing !important;
+  transition: none !important;
 }

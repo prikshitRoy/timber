@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   applyStoredOrder,
+  hasCrossedTileMidpoint,
+  moveKeyInOrder,
   sortAlphabetically,
   type OrderableItem,
 } from "./tile-ordering.ts";
@@ -78,5 +80,49 @@ describe("sortAlphabetically", () => {
 
     // Assert
     assert.deepEqual(keys, ["k1", "k3", "k2"]);
+  });
+});
+
+describe("moveKeyInOrder", () => {
+  it("moves the dragged key to the target key position", () => {
+    // Arrange
+    const order = ["a", "b", "c", "d"];
+
+    // Act
+    const result = moveKeyInOrder(order, "a", "c");
+
+    // Assert
+    assert.deepEqual(result, ["b", "c", "a", "d"]);
+  });
+
+  it("returns the original array when dragKey or overKey is not in the order", () => {
+    // Arrange
+    const order = ["a", "b", "c"];
+
+    // Act
+    const result = moveKeyInOrder(order, "a", "missing");
+
+    // Assert
+    assert.equal(result, order);
+  });
+});
+
+describe("hasCrossedTileMidpoint", () => {
+  it("returns true when dragging forward past the target tile center zone", () => {
+    // Arrange
+    const rect = { left: 100, top: 50, width: 200, height: 40 };
+
+    // Act & Assert
+    assert.equal(hasCrossedTileMidpoint(0, 1, 120, 70, rect), false);
+    assert.equal(hasCrossedTileMidpoint(0, 1, 210, 70, rect), true);
+  });
+
+  it("returns true when dragging backward past the target tile center zone", () => {
+    // Arrange
+    const rect = { left: 100, top: 50, width: 200, height: 40 };
+
+    // Act & Assert
+    assert.equal(hasCrossedTileMidpoint(2, 1, 280, 70, rect), false);
+    assert.equal(hasCrossedTileMidpoint(2, 1, 190, 70, rect), true);
   });
 });

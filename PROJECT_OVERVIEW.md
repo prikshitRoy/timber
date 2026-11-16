@@ -73,7 +73,7 @@ Status key: **Done** | **In progress** | **Planned**
 
 | Feature                                                                                         | Status |
 | ----------------------------------------------------------------------------------------------- | ------ |
-| Pointer-based live drag-to-reorder hook (`useTileDragReorder`) in Edit mode                     | Done   |
+| Pointer-based live drag-to-reorder hook (`useTileDragReorder`) with floating ghost & midpoint hysteresis | Done |
 | Custom drag order persisted for both the root grid (`rootOrder`) and each folder (`childOrder`) | Done   |
 | Alphabetical A–Z and Z–A sort controls on the root grid and inside every expanded folder        | Done   |
 
@@ -171,6 +171,7 @@ yarn zip:firefox    # package only Firefox extension into a zip archive
 
 ## 8. Changelog
 
+- **2026-11-17:** Improved drag-to-reorder logic with a floating cursor ghost, directional midpoint hysteresis (`hasCrossedTileMidpoint`), nested-folder event isolation, viewport edge auto-scrolling, and `Escape` cancellation.
 - **2026-11-17:** Elevated New Tab UI with website favicons (`BookmarkFavicon` with monogram fallback), folder icons and pill count badges on folder tiles, single-line horizontal folder bookmark rows, a branded header, and a horizontal status footer.
 - **2026-11-17:** Added Light, Dark, and System Default theme modes, custom New Tab background image support (file upload and image URL) with frosted-glass surfaces, and `appearance.test.ts` unit tests.
 - **2026-11-17:** Added duplicate link deletion dialog (`Delete only this instance` vs. `Delete all duplicates`) and updated Scan diff/apply logic to check folder/root placements so identical links in different browser folders and new browser folders always sync into Timber without altering Timber-only folders or links.

@@ -77,9 +77,18 @@
   transform: translateY(-1px);
 }
 
-.folder-bookmark-row--edit {
+.folder-bookmark-row--edit,
+.folder-bookmark-row--edit .folder-bookmark-link {
   cursor: grab;
+}
+
+.folder-bookmark-row--edit {
   border-style: dashed;
+}
+
+.folder-bookmark-row--edit:active,
+.folder-bookmark-row--edit .folder-bookmark-link:active {
+  cursor: grabbing;
 }
 
 .folder-bookmark-actions {
