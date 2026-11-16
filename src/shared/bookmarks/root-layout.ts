@@ -1,12 +1,24 @@
-import type { TimberState, BookmarkPage, Bookmark } from "../types/timber";
-import { applyStoredOrder, type OrderableItem } from "./tile-ordering";
+/**
+ * Computes the ordered list of top-level folder and link tiles displayed on the root grid.
+ */
 
+import type { TimberState, BookmarkPage, Bookmark } from "../types/timber.ts";
+import { applyStoredOrder, type OrderableItem } from "./tile-ordering.ts";
+
+// Key prefix identifying a top-level folder tile in rootOrder.
+export const ROOT_FOLDER_KEY_PREFIX = "tf:";
+
+// Key prefix identifying a top-level bookmark link tile in rootOrder.
+export const ROOT_LINK_KEY_PREFIX = "lk:";
+
+// Top-level folder tile on the root dashboard grid.
 export interface RootFolderTile {
   kind: "folder";
   key: string;
   page: BookmarkPage;
 }
 
+// Top-level standalone bookmark link tile on the root dashboard grid.
 export interface RootLinkTile {
   kind: "link";
   key: string;
@@ -20,18 +32,25 @@ type RootLayoutState = Pick<
   "pages" | "bookmarks" | "rootOrder" | "rootBookmarkIds"
 >;
 
+/**
+ * Return the human-readable display label for a root folder or link tile.
+ */
 export function tileLabel(tile: RootTile): string {
   return tile.kind === "folder" ? tile.page.name : tile.bookmark.title;
 }
 
+/**
+ * Build the ordered list of top-level folders and root-visible bookmarks for the dashboard grid.
+ */
 export function computeRootTiles(state: RootLayoutState): RootTile[] {
   const tiles = new Map<string, RootTile>();
 
+  // Include only top-level custom folders (those without a parentId).
   for (const page of state.pages) {
     if (page.type !== "custom") continue;
     if (page.parentId) continue;
 
-    const key = `tf:${page.id}`;
+    const key = `${ROOT_FOLDER_KEY_PREFIX}${page.id}`;
     tiles.set(key, { kind: "folder", key, page });
   }
 
@@ -44,12 +63,12 @@ export function computeRootTiles(state: RootLayoutState): RootTile[] {
     }
   }
 
-  // Show bookmarks that are unfoldered OR explicitly added to the root grid
+  // Show bookmarks that are unfoldered OR explicitly added to the root grid.
   const rootBookmarkIds = new Set<string>(state.rootBookmarkIds ?? []);
 
   for (const bookmark of state.bookmarks) {
     if (!foldered.has(bookmark.id) || rootBookmarkIds.has(bookmark.id)) {
-      const key = `lk:${bookmark.id}`;
+      const key = `${ROOT_LINK_KEY_PREFIX}${bookmark.id}`;
       tiles.set(key, { kind: "link", key, bookmark });
     }
   }

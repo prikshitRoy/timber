@@ -1,4 +1,8 @@
-import type { BookmarkPage, TimberState } from "../types/timber";
+/**
+ * Pure helpers for resolving and creating nested Timber folder chains from browser folder paths.
+ */
+
+import type { BookmarkPage, TimberState } from "../types/timber.ts";
 
 const now = () => Date.now();
 const createId = () => crypto.randomUUID();
@@ -6,23 +10,14 @@ const createId = () => crypto.randomUUID();
 type FolderChainState = Pick<TimberState, "pages">;
 
 /**
- * A browser's folderPath always begins with the top-level container
- * ("Bookmarks bar", "Other bookmarks", "Mobile bookmarks") — Timber
- * treats that container as transparent, so folders start one level
- * in and the browser's own organizational wrapper never becomes a
- * visible Timber folder itself.
+ * Strip the top-level browser container ("Bookmarks bar", "Other bookmarks", etc.) from a native path.
  */
 export function stripBrowserContainer(folderPath: string[]): string[] {
   return folderPath.slice(1);
 }
 
 /**
- * Find (or create) the chain of nested folders described by
- * folderPath, matching purely by name + parent — never by which
- * browser a bookmark came from, so the same folder name under the
- * same parent in two different browsers always resolves to one
- * shared Timber folder. Returns the final folder in the chain, or
- * null for an empty path (the bookmark belongs at the root).
+ * Find or create a chain of nested custom folders matching `folderPath` by name and parent.
  */
 export function findOrCreateFolderChainInState(
   state: FolderChainState,
@@ -31,6 +26,7 @@ export function findOrCreateFolderChainInState(
   let parentId: string | undefined;
   let current: BookmarkPage | null = null;
 
+  // Match purely by name + parentId so identical folder paths across different browsers merge cleanly.
   for (const rawName of folderPath) {
     const name = rawName.trim();
     if (!name) continue;

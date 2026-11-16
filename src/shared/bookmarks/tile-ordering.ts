@@ -1,13 +1,15 @@
+/**
+ * Pure ordering utilities for applying stored drag order and sorting tiles alphabetically.
+ */
+
+// Minimal shape required for any item that participates in custom drag or alphabetical ordering.
 export interface OrderableItem {
   key: string;
   label: string;
 }
 
 /**
- * Apply a previously-stored order to a list of items: items whose
- * key appears in storedOrder come first, in that order; anything
- * new (not yet in storedOrder) is appended afterward, sorted
- * alphabetically by label for a stable, predictable default.
+ * Place items present in `storedOrder` first in that exact sequence, then append any remaining items sorted A-Z by label.
  */
 export function applyStoredOrder<T extends OrderableItem>(
   items: T[],
@@ -27,6 +29,7 @@ export function applyStoredOrder<T extends OrderableItem>(
     }
   }
 
+  // Append newly added items that don't yet have a saved position in alphabetical order.
   const remaining = items
     .filter((item) => !seen.has(item.key))
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -37,8 +40,7 @@ export function applyStoredOrder<T extends OrderableItem>(
 }
 
 /**
- * Compute a fresh order — every item's key, sorted alphabetically by
- * label — for the A-Z / Z-A sort buttons.
+ * Return an array of item keys sorted alphabetically by label in ascending ("asc") or descending ("desc") order.
  */
 export function sortAlphabetically(
   items: OrderableItem[],

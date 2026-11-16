@@ -1,29 +1,16 @@
 
+/**
+ * Reads the browser's native bookmark tree and flattens it into NativeBookmarkRecord items.
+ */
+
 import { browser } from "wxt/browser";
+import { isSupportedBookmarkUrl } from "./bookmark-normalizer";
 import type { NativeBookmarkRecord } from "./bookmark.types";
 
 type NativeTreeNode = Browser.bookmarks.BookmarkTreeNode;
 
 /**
- * Check whether a URL is supported by Timber's
- * initial bookmark catalog.
- */
-function isSupportedUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-
-    return (
-      parsed.protocol === "http:" ||
-      parsed.protocol === "https:"
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Recursively convert the native browser bookmark tree
- * into flat bookmark records.
+ * Recursively convert the native browser bookmark tree into flat bookmark records with folder paths.
  */
 function flattenBookmarkTree(
   nodes: NativeTreeNode[],
@@ -31,9 +18,9 @@ function flattenBookmarkTree(
   records: NativeBookmarkRecord[] = []
 ): NativeBookmarkRecord[] {
   for (const node of nodes) {
-    // This is an actual bookmark.
+    // Leaf nodes have a URL; skip any non-http(s) bookmarklets or internal browser pages.
     if (node.url) {
-      if (!isSupportedUrl(node.url)) {
+      if (!isSupportedBookmarkUrl(node.url)) {
         continue;
       }
 
@@ -52,7 +39,7 @@ function flattenBookmarkTree(
       continue;
     }
 
-    // This is a folder.
+    // Folder nodes have children; append non-empty folder titles to the path before recursing.
     if (node.children?.length) {
       const nextFolderPath = node.title
         ? [...folderPath, node.title]
@@ -70,7 +57,7 @@ function flattenBookmarkTree(
 }
 
 /**
- * Read all native bookmarks from the current browser.
+ * Read all supported native bookmarks from the current browser's bookmark tree.
  */
 export async function readNativeBookmarkTree():
   Promise<NativeBookmarkRecord[]> {
