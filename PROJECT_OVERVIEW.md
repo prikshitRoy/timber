@@ -104,19 +104,63 @@ Project Timber/
 
 ## 7. How to Run
 
+### Root Workspace Commands (run from `Project Timber/`)
+
 ```bash
-yarn install        # install workspace dependencies and run wxt prepare
+yarn install        # install all workspace dependencies and link @timber/core
+yarn watch          # start automated watcher (runs typecheck + unit tests on save)
 yarn typecheck      # run tsc --noEmit across @timber/core, @timber/extension, and @timber/mobile
 yarn test           # run @timber/core unit tests
-yarn watch          # start automated file watcher for typecheck + unit tests
+yarn test:watch     # continuously re-run @timber/core unit tests on file changes
 yarn dev:extension  # start WXT extension dev server (Chrome MV3)
+yarn build:extension # build production WXT extension bundle
 yarn dev:mobile     # start Tauri Android dev build
+yarn build:mobile   # build Tauri Android APK/AAB bundle
 ```
+
+### Per-Package Developer Commands (run from `Project Timber/`)
+
+```bash
+# Shared Core (Project Timber/packages/core)
+yarn workspace @timber/core compile       # type-check shared pure TypeScript modules
+yarn workspace @timber/core test          # run Node unit test suites in packages/core
+
+# Browser Extension (Project Timber/apps/extension)
+yarn workspace @timber/extension compile  # type-check WXT extension against @timber/core
+yarn workspace @timber/extension dev      # run Chrome MV3 dev server
+yarn workspace @timber/extension dev:brave # run Brave MV3 dev server
+yarn workspace @timber/extension dev:firefox # run Firefox dev server
+yarn workspace @timber/extension build    # build Chrome MV3 production extension
+yarn workspace @timber/extension build:firefox # build Firefox production extension
+yarn workspace @timber/extension zip      # package Chrome and Firefox extension zips
+
+# Android Mobile App (Project Timber/apps/mobile)
+yarn workspace @timber/mobile compile     # type-check Next.js mobile frontend against @timber/core
+yarn workspace @timber/mobile next-build  # test Next.js static export to apps/mobile/out
+yarn workspace @timber/mobile tauri android init # initialize Android Gradle project
+yarn workspace @timber/mobile tauri android dev  # run app on connected Android device/emulator
+```
+
+### Developer Workflow: How Changes Propagate
+
+1. **Editing shared domain, backup, or layout logic (`Project Timber/packages/core/src/`):**
+   - Put pure data types, URL normalizers, JSON backup validators/parsers, and tile/folder sorting logic in `Project Timber/packages/core/src/`.
+   - Export any new public function or type from `Project Timber/packages/core/src/index.ts`.
+   - Keep `yarn watch` running at the root (or run `yarn workspace @timber/core compile`, `yarn workspace @timber/core test`, `yarn workspace @timber/extension compile`, and `yarn workspace @timber/mobile compile`) to verify the change does not break either app.
+2. **Editing browser extension code (`Project Timber/apps/extension/`):**
+   - Keep `wxt/browser` side effects (`browser.storage.local`, `browser.bookmarks`, background service workers) inside `Project Timber/apps/extension/`.
+   - Import shared logic from `@timber/core` instead of duplicating types or parsers.
+   - Verify with `yarn workspace @timber/extension compile`.
+3. **Editing Android mobile code (`Project Timber/apps/mobile/`):**
+   - Keep mobile UI components, `localStorage` persistence, and Tauri plugin calls (`@tauri-apps/plugin-opener`) inside `Project Timber/apps/mobile/`.
+   - Import `parseBackup`, `mergeBackupIntoState`, `computeRootTiles`, and domain types from `@timber/core`.
+   - Verify with `yarn workspace @timber/mobile compile`.
 
 ## 8. Changelog
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-18 — Added root `Project Timber/README.md` and documented per-workspace commands and developer workflow in `Project Timber/PROJECT_OVERVIEW.md`.
 - 2026-11-18 — Re-wired `Project Timber/apps/extension` to import shared domain types, backup parser, layout helpers, and mutations from `@timber/core`.
 - 2026-11-18 — Extracted pure domain types, backup parser/merger, layout/ordering helpers, state operations, and unit tests into `Project Timber/packages/core`.
 - 2026-11-18 — Initialized `Project Timber` Yarn Workspaces monorepo, moved extension to `apps/extension`, added `apps/mobile` template, `@timber/core` package scaffold, and `scripts/watch-verify.mjs`.
