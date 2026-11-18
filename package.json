@@ -1,0 +1,39 @@
+{
+  "name": "timber-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
+    "nohoist": [
+      "**/react",
+      "**/react/**",
+      "**/react-dom",
+      "**/react-dom/**",
+      "**/@types/react",
+      "**/@types/react/**",
+      "**/@types/react-dom",
+      "**/@types/react-dom/**",
+      "**/wxt",
+      "**/wxt/**",
+      "**/@wxt-dev/**",
+      "**/next",
+      "**/next/**",
+      "**/tailwindcss",
+      "**/tailwindcss/**",
+      "**/@tailwindcss/**"
+    ]
+  },
+  "scripts": {
+    "typecheck": "yarn workspace @timber/core compile && yarn workspace @timber/extension compile && yarn workspace @timber/mobile compile",
+    "test": "yarn workspace @timber/core test",
+    "test:watch": "node --experimental-strip-types --watch --test \"packages/core/src/**/*.test.ts\"",
+    "watch": "node scripts/watch-verify.mjs",
+    "dev:extension": "yarn workspace @timber/extension dev",
+    "build:extension": "yarn workspace @timber/extension build",
+    "dev:mobile": "yarn workspace @timber/mobile tauri android dev",
+    "build:mobile": "yarn workspace @timber/mobile tauri android build"
+  }
+}
