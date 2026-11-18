@@ -54,11 +54,11 @@ Status key: **Done** | **In progress** | **Planned**
 
 ### 4.1 Monorepo & Tooling
 
-| Feature                                                                       | Status  |
-| ----------------------------------------------------------------------------- | ------- |
-| Yarn Workspaces monorepo (`packages/core`, `apps/extension`, `apps/mobile`)   | Done    |
-| Automated cross-package watcher & error notifier (`scripts/watch-verify.mjs`) | Done    |
-| Extract shared types, backup parser, and layout logic into `@timber/core`     | Planned |
+| Feature                                                                       | Status |
+| ----------------------------------------------------------------------------- | ------ |
+| Yarn Workspaces monorepo (`packages/core`, `apps/extension`, `apps/mobile`)   | Done   |
+| Automated cross-package watcher & error notifier (`scripts/watch-verify.mjs`) | Done   |
+| Extract shared types, backup parser, and layout logic into `@timber/core`     | Done   |
 
 ### 4.2 Browser Extension (`apps/extension`)
 
@@ -86,7 +86,7 @@ Status key: **Done** | **In progress** | **Planned**
 
 > Verify these against the current code; remove an item when it is fixed.
 
-- `Project Timber/packages/core` currently holds a starter barrel (`Project Timber/packages/core/src/index.ts`) awaiting Step 2 extraction.
+- `Project Timber/apps/extension` imports need to be re-wired to `@timber/core` in Step 2B after moving pure modules to `Project Timber/packages/core`.
 - One extension installation currently registers a single default `BrowserSource` per detected `BrowserKind` (`TODO` in `Project Timber/apps/extension/src/shared/bookmarks/bookmark-synchronizer.ts`).
 - `Project Timber/apps/extension/entrypoints/popup/` and `Project Timber/apps/extension/entrypoints/content.ts` are WXT starter placeholders.
 
@@ -118,6 +118,7 @@ yarn dev:mobile     # start Tauri Android dev build
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-18 — Extracted pure domain types, backup parser/merger, layout/ordering helpers, state operations, and unit tests into `Project Timber/packages/core`.
 - 2026-11-18 — Initialized `Project Timber` Yarn Workspaces monorepo, moved extension to `apps/extension`, added `apps/mobile` template, `@timber/core` package scaffold, and `scripts/watch-verify.mjs`.
 - 2026-11-17 — Added drag-to-reorder ghost/hysteresis, favicons, Light/Dark/System themes with custom background images, duplicate-link deletion modal, modularized repository/backup/styles, and added unit tests.
 

@@ -2,8 +2,11 @@
  * One-time state migration that materializes custom BookmarkPage folders from legacy BookmarkSource folderPath arrays.
  */
 
-import type { TimberState } from "../types/timber";
-import { findOrCreateFolderChainInState, stripBrowserContainer } from "./folder-chain";
+import type { TimberState } from "../types/timber.ts";
+import {
+  findOrCreateFolderChainInState,
+  stripBrowserContainer,
+} from "./folder-chain.ts";
 
 /**
  * Walk every BookmarkSource once and file its bookmark into the matching custom BookmarkPage folder chain.

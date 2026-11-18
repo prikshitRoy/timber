@@ -3,9 +3,9 @@
  * Netscape Bookmark HTML format understood by all major browsers.
  */
 
-import type { Bookmark, BookmarkPage, TimberState } from "../types/timber";
-import { computeRootTiles } from "../bookmarks/root-layout";
-import { applyStoredOrder } from "../bookmarks/tile-ordering";
+import type { Bookmark, BookmarkPage, TimberState } from "../types/timber.ts";
+import { computeRootTiles } from "../bookmarks/root-layout.ts";
+import { applyStoredOrder } from "../bookmarks/tile-ordering.ts";
 
 // Milliseconds per second used to convert JS timestamps into Netscape ADD_DATE seconds.
 const MS_PER_SECOND = 1000;
@@ -39,9 +39,11 @@ function toSeconds(ms: number): number {
  * Render a single bookmark as a Netscape `<DT><A ...>` line with the given indentation.
  */
 function renderBookmark(bookmark: Bookmark, indent: string): string {
-  return `${indent}<DT><A HREF="${escapeHtml(bookmark.url)}" ADD_DATE="${toSeconds(
-    bookmark.createdAt
-  )}">${escapeHtml(bookmark.title)}</A>\n`;
+  return `${indent}<DT><A HREF="${escapeHtml(
+    bookmark.url
+  )}" ADD_DATE="${toSeconds(bookmark.createdAt)}">${escapeHtml(
+    bookmark.title
+  )}</A>\n`;
 }
 
 /**
@@ -92,9 +94,9 @@ function renderFolder(
   const ordered = collectOrderedFolderChildren(page, state, bookmarksById);
   const inner = `${indent}${INDENT_STEP}`;
 
-  let html = `${indent}<DT><H3 ADD_DATE="${toSeconds(page.createdAt)}">${escapeHtml(
-    page.name
-  )}</H3>\n`;
+  let html = `${indent}<DT><H3 ADD_DATE="${toSeconds(
+    page.createdAt
+  )}">${escapeHtml(page.name)}</H3>\n`;
   html += `${indent}<DL><p>\n`;
 
   for (const child of ordered) {
