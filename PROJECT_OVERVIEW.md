@@ -13,7 +13,7 @@
 
 > ⚠️ **Instruction for AI (binding, not descriptive):** This file is the single source of truth for what this project is and what has been built so far. See **"How to Keep This File Updated (Instructions for AI)"** at the bottom — those are operating rules you must act on in every response that changes the project, not prose describing the project.
 
-**Last updated:** 2026-11-18
+**Last updated:** 2026-11-19
 
 ---
 
@@ -37,7 +37,7 @@ It is built for unifying bookmarks across browsers (Chrome, Brave, Firefox) into
 | Tests                                | Node.js built-in test runner (`node --experimental-strip-types --test`)                   |
 | Target platforms                     | Chrome/Chromium (MV3), Brave (MV3), Firefox, Android (Tauri v2 mobile)                    |
 
-Planned: Extract pure domain/backup/layout modules into `Project Timber/packages/core` and build Android JSON import & bookmark list UI in `Project Timber/apps/mobile`.
+Planned: Add CI/CD GitHub Actions workflow for automated workspace testing and builds.
 
 ## 3. Core Concepts
 
@@ -80,7 +80,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Tauri v2 + Next.js 14.2.23 static export template copied into `apps/mobile`                 | Done    |
 | Tauri Android target initialization and clean Rust host config                              | Done    |
 | Offline `localStorage` persistence and `.json` backup file import (Merge / Replace)         | Done    |
-| Mobile bookmark list, expandable nested folders, search filter, and external browser opener | Planned |
+| Mobile bookmark list, expandable nested folders, search filter, and external browser opener | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -160,6 +160,8 @@ yarn workspace @timber/mobile tauri android dev  # run app on connected Android 
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-19 — Built Android bookmark UI components (`MobileHeader`, `EmptyCatalogState`, `BookmarkFavicon`, `BookmarkRow`, `FolderItem`, `CatalogList`) and wired `apps/mobile/src/app/page.tsx`.
+- 2026-11-18 — Added mobile catalog helpers and unit tests in `packages/core`, plus `localStorage` persistence, Tauri link opener, and `useTimberCatalog` hook in `apps/mobile`.
 - 2026-11-18 — Configured `Project Timber/apps/mobile` to consume `@timber/core`, cleaned up `src-tauri` Rust host metadata (`com.timber.mobile`), and initialized Tauri Android.
 - 2026-11-18 — Added root `Project Timber/README.md` and documented per-workspace commands and developer workflow in `Project Timber/PROJECT_OVERVIEW.md`.
 - 2026-11-18 — Re-wired `Project Timber/apps/extension` to import shared domain types, backup parser, layout helpers, and mutations from `@timber/core`.

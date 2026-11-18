@@ -1,17 +1,102 @@
 "use client";
 
-import { TIMBER_SCHEMA_VERSION } from "@timber/core";
+import { useRef } from "react";
+import {
+  CatalogList,
+  EmptyCatalogState,
+  MobileHeader,
+  openBookmarkUrl,
+  useTimberCatalog,
+} from "@/features/bookmarks";
 
 /**
- * Root mobile screen entry point (placeholder before wiring useTimberCatalog in Step 5).
+ * Main Android screen for importing Timber JSON backups, searching, and opening bookmarks.
  */
 export default function Home() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    isLoaded,
+    hasCatalogData,
+    bookmarks,
+    folders,
+    bookmarksById,
+    rootTiles,
+    query,
+    setQuery,
+    searchResults,
+    importMode,
+    setImportMode,
+    status,
+    error,
+    setError,
+    handleImportJsonFile,
+    handleClearCatalog,
+  } = useTimberCatalog();
+
+  /**
+   * Open a bookmark link in Android's default browser and surface any error.
+   */
+  async function handleOpenBookmark(url: string) {
+    try {
+      setError("");
+      await openBookmarkUrl(url);
+    } catch (openError) {
+      setError(
+        openError instanceof Error ? openError.message : "Failed to open link."
+      );
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-4">
-      <h1 className="text-lg font-semibold">Timber Mobile</h1>
-      <p className="text-xs text-zinc-400">
-        Schema v{TIMBER_SCHEMA_VERSION} ready
-      </p>
-    </main>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <MobileHeader
+        bookmarkCount={bookmarks.length}
+        folderCount={folders.length}
+        query={query}
+        onQueryChange={setQuery}
+        importMode={importMode}
+        onImportModeChange={setImportMode}
+        fileInputRef={fileInputRef}
+        onFileSelected={(file) => void handleImportJsonFile(file)}
+        hasCatalogData={hasCatalogData}
+        onClearCatalog={handleClearCatalog}
+      />
+
+      <main className="mx-auto max-w-2xl px-4 pb-10 pt-3">
+        {(status || error) && (
+          <div className="mb-3 flex flex-col gap-1">
+            {status && (
+              <p className="rounded-lg border border-teal-500/30 bg-teal-500/10 px-3 py-2 text-xs text-teal-300">
+                {status}
+              </p>
+            )}
+            {error && (
+              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
+
+        {!isLoaded ? (
+          <p className="py-12 text-center text-xs text-zinc-500">
+            Loading bookmarks...
+          </p>
+        ) : !hasCatalogData ? (
+          <EmptyCatalogState
+            onTriggerImport={() => fileInputRef.current?.click()}
+          />
+        ) : (
+          <CatalogList
+            query={query}
+            searchResults={searchResults}
+            rootTiles={rootTiles}
+            folders={folders}
+            bookmarksById={bookmarksById}
+            onOpenUrl={(url) => void handleOpenBookmark(url)}
+          />
+        )}
+      </main>
+    </div>
   );
 }
