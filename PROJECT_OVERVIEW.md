@@ -79,7 +79,7 @@ Status key: **Done** | **In progress** | **Planned**
 | ------------------------------------------------------------------------------------------- | ------- |
 | Tauri v2 + Next.js 14.2.23 static export template copied into `apps/mobile`                 | Done    |
 | Tauri Android target initialization and clean Rust host config                              | Done    |
-| Offline `localStorage` persistence and `.json` backup file import (Merge / Replace)         | Planned |
+| Offline `localStorage` persistence and `.json` backup file import (Merge / Replace)         | Done    |
 | Mobile bookmark list, expandable nested folders, search filter, and external browser opener | Planned |
 
 ## 5. Known Issues and Open Items

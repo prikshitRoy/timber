@@ -117,3 +117,13 @@ export {
   createTestBookmark,
   createTestFolder,
 } from "./testing/test-state-factory.ts";
+
+export {
+  applyBackupImportToState,
+  createEmptyMobileState,
+  filterBookmarksByQuery,
+  getOrderedFolderChildren,
+  type BackupImportMode,
+  type MobileImportResult,
+  type OrderedFolderChild,
+} from "./bookmarks/mobile-catalog.ts";
