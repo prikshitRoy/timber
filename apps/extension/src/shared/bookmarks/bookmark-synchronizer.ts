@@ -10,13 +10,13 @@ import {
   readNativeBookmarkTree,
   readNativeFolderPaths,
 } from "./bookmark-tree-reader";
-import type { BrowserSource } from "../types/timber";
 import type {
-  BookmarkSyncSummary,
   BookmarkSyncDiff,
   BookmarkSyncSelection,
+  BookmarkSyncSummary,
+  BrowserSource,
   NativeBookmarkRecord,
-} from "./bookmark.types";
+} from "@timber/core";
 
 /**
  * Check whether Timber currently holds optional "bookmarks" permission in this browser.
@@ -102,9 +102,5 @@ export async function applyCurrentBrowserSyncSelection(
   nativeBookmarks: NativeBookmarkRecord[],
   selection: BookmarkSyncSelection
 ): Promise<BookmarkSyncSummary> {
-  return bookmarkRepository.applySyncDiff(
-    sourceId,
-    nativeBookmarks,
-    selection
-  );
+  return bookmarkRepository.applySyncDiff(sourceId, nativeBookmarks, selection);
 }

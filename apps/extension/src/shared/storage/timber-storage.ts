@@ -1,4 +1,3 @@
-
 /**
  * Low-level persistence adapter for reading, writing, and initializing
  * TimberState in browser.storage.local.
@@ -11,7 +10,7 @@ import {
   TIMBER_SCHEMA_VERSION,
   type BrowserKind,
   type TimberState,
-} from "@/src/shared/types/timber";
+} from "@timber/core";
 
 // Key under which the entire Timber catalog state is stored in browser.storage.local.
 const STORAGE_KEY = "timber.state.v2";
@@ -40,9 +39,7 @@ export async function saveState(state: TimberState): Promise<void> {
 /**
  * Build a fresh initial TimberState seeded with a default source and built-in pages for the current browser.
  */
-export function createInitialState(
-  browserKind: BrowserKind
-): TimberState {
+export function createInitialState(browserKind: BrowserKind): TimberState {
   const now = Date.now();
 
   const sourceId = crypto.randomUUID();

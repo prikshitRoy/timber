@@ -5,7 +5,7 @@
 import {
   tileLabel,
   type RootTile,
-} from "../../src/shared/bookmarks/root-layout";
+} from "@timber/core";
 import KebabMenu, { type KebabMenuAction } from "./KebabMenu";
 import BookmarkFavicon from "./components/BookmarkFavicon";
 

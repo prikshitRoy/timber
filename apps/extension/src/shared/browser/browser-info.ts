@@ -2,7 +2,7 @@
  * Browser environment detection and display-name lookup helpers.
  */
 
-import type { BrowserKind } from "../types/timber";
+import type { BrowserKind } from "@timber/core";
 
 declare global {
   interface Navigator {
@@ -40,7 +40,7 @@ export async function detectBrowser(): Promise<BrowserKind> {
   try {
     if (
       typeof navigator !== "undefined" &&
-      await navigator.brave?.isBrave?.()
+      (await navigator.brave?.isBrave?.())
     ) {
       return "brave";
     }

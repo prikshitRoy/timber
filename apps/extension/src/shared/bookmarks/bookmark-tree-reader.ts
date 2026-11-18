@@ -1,11 +1,12 @@
-
 /**
  * Reads the browser's native bookmark tree and flattens it into NativeBookmarkRecord items.
  */
 
 import { browser } from "wxt/browser";
-import { isSupportedBookmarkUrl } from "./bookmark-normalizer";
-import type { NativeBookmarkRecord } from "./bookmark.types";
+import {
+  isSupportedBookmarkUrl,
+  type NativeBookmarkRecord,
+} from "@timber/core";
 
 type NativeTreeNode = Browser.bookmarks.BookmarkTreeNode;
 
@@ -45,11 +46,7 @@ function flattenBookmarkTree(
         ? [...folderPath, node.title]
         : folderPath;
 
-      flattenBookmarkTree(
-        node.children,
-        nextFolderPath,
-        records
-      );
+      flattenBookmarkTree(node.children, nextFolderPath, records);
     }
   }
 
@@ -59,9 +56,9 @@ function flattenBookmarkTree(
 /**
  * Read all supported native bookmarks from the current browser's bookmark tree.
  */
-export async function readNativeBookmarkTree():
-  Promise<NativeBookmarkRecord[]> {
-
+export async function readNativeBookmarkTree(): Promise<
+  NativeBookmarkRecord[]
+> {
   const tree = await browser.bookmarks.getTree();
 
   return flattenBookmarkTree(tree);

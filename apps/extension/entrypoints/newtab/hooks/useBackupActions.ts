@@ -3,16 +3,16 @@
  * and importing/restoring backups in merge or replace mode.
  */
 
-import { exportBookmarksHtml } from "../../../src/shared/backup/bookmarks-html";
+import {
+  createBackup,
+  dropStaleNativeLinks,
+  exportBookmarksHtml,
+  parseBackup,
+} from "@timber/core";
 import {
   backupFileName,
   downloadTextFile,
 } from "../../../src/shared/backup/download-file";
-import {
-  createBackup,
-  dropStaleNativeLinks,
-  parseBackup,
-} from "../../../src/shared/backup/timber-backup";
 import { bookmarkRepository } from "../../../src/shared/bookmarks/bookmark-repository";
 import { hasBookmarkPermission } from "../../../src/shared/bookmarks/bookmark-synchronizer";
 import { readNativeBookmarkTree } from "../../../src/shared/bookmarks/bookmark-tree-reader";
@@ -87,7 +87,9 @@ export function useBackupActions({
 
       const skippedNote =
         skippedBookmarks > 0
-          ? ` (${skippedBookmarks} invalid link${skippedBookmarks === 1 ? "" : "s"} skipped)`
+          ? ` (${skippedBookmarks} invalid link${
+              skippedBookmarks === 1 ? "" : "s"
+            } skipped)`
           : "";
 
       const browserKind = await detectBrowser();
@@ -125,7 +127,11 @@ export function useBackupActions({
       await loadCatalog();
 
       setStatus(
-        `Backup merged: ${summary.bookmarksAdded} new bookmark${summary.bookmarksAdded === 1 ? "" : "s"}, ${summary.foldersAdded} new folder${summary.foldersAdded === 1 ? "" : "s"}${skippedNote}.`
+        `Backup merged: ${summary.bookmarksAdded} new bookmark${
+          summary.bookmarksAdded === 1 ? "" : "s"
+        }, ${summary.foldersAdded} new folder${
+          summary.foldersAdded === 1 ? "" : "s"
+        }${skippedNote}.`
       );
     } catch (error) {
       setError(

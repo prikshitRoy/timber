@@ -4,10 +4,13 @@
  */
 
 import { Fragment, useState } from "react";
-import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
-import { type RootTile, tileLabel } from "../../src/shared/bookmarks/root-layout";
-import { sortAlphabetically } from "../../src/shared/bookmarks/tile-ordering";
-import type { BookmarkPage } from "../../src/shared/types/timber";
+import {
+    sortAlphabetically,
+    tileLabel,
+    type BookmarkInstanceTarget,
+    type BookmarkPage,
+    type RootTile,
+} from "@timber/core";
 import RootTileButton from "./RootTileButton";
 import TimberFolderContents, { type TimberFolderHandlers } from "./TimberFolderContents";
 import SortControls from "./SortControls";

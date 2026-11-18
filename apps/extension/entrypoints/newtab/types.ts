@@ -3,11 +3,11 @@
  */
 
 import type {
+  Bookmark,
+  BookmarkInstanceTarget,
   BookmarkSyncDiff,
   NativeBookmarkRecord,
-} from "../../src/shared/bookmarks/bookmark.types";
-import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
-import type { Bookmark } from "../../src/shared/types/timber";
+} from "@timber/core";
 
 // Bookmark record enriched with the number of connected browsers where it appears.
 export interface DashboardBookmark extends Bookmark {

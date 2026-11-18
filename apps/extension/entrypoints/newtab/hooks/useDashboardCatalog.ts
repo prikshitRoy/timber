@@ -7,16 +7,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { browser } from "wxt/browser";
 import { bookmarkRepository } from "../../../src/shared/bookmarks/bookmark-repository";
 import { hasBookmarkPermission } from "../../../src/shared/bookmarks/bookmark-synchronizer";
-import { computeRootTiles } from "../../../src/shared/bookmarks/root-layout";
+import {
+  computeRootTiles,
+  type BookmarkPage,
+  type BookmarkSource,
+  type BrowserSource,
+} from "@timber/core";
 import {
   TIMBER_MESSAGE_TYPES,
   hasMessageType,
 } from "../../../src/shared/messages/runtime-messages";
-import type {
-  BookmarkPage,
-  BookmarkSource,
-  BrowserSource,
-} from "../../../src/shared/types/timber";
 import type { BookmarkSummary, DashboardBookmark } from "../types";
 
 /**

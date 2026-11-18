@@ -13,7 +13,7 @@ import {
   type AppearanceSettings,
   type ResolvedTheme,
   type ThemeMode,
-} from "../../../src/shared/appearance/appearance.types";
+} from "@timber/core";
 
 /**
  * Convert a user-selected image File into a base64 Data URL for local persistence.

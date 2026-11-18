@@ -12,7 +12,6 @@ export {
   type MergeSummary,
   type ParsedBackup,
   type TimberBackupFile,
-} from "./timber-backup";
-
-export { exportBookmarksHtml } from "./bookmarks-html";
+  exportBookmarksHtml,
+} from "@timber/core";
 export { backupFileName, downloadTextFile } from "./download-file";

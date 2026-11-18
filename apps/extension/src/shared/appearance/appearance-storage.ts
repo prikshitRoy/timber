@@ -6,7 +6,7 @@ import { browser } from "wxt/browser";
 import {
   sanitizeAppearanceSettings,
   type AppearanceSettings,
-} from "./appearance.types.ts";
+} from "@timber/core";
 
 // Storage key used to persist theme and background image settings.
 const APPEARANCE_STORAGE_KEY = "timber.appearance.v1";

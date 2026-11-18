@@ -16,10 +16,11 @@
     "zip:brave": "wxt zip -b chrome --mv3",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "test": "yarn --cwd ../../packages/core test",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@timber/core": "*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

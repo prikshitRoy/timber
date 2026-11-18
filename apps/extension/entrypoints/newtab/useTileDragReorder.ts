@@ -4,10 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  hasCrossedTileMidpoint,
-  moveKeyInOrder,
-} from "../../src/shared/bookmarks/tile-ordering";
+import { hasCrossedTileMidpoint, moveKeyInOrder } from "@timber/core";
 
 const DRAG_THRESHOLD_PX = 5;
 const AUTO_SCROLL_EDGE_PX = 65;
@@ -16,10 +13,7 @@ const AUTO_SCROLL_MAX_SPEED_PX = 14;
 /**
  * Create a floating visual clone of the dragged tile that tracks the cursor smoothly.
  */
-function createDragGhost(
-  sourceEl: HTMLElement,
-  rect: DOMRect
-): HTMLDivElement {
+function createDragGhost(sourceEl: HTMLElement, rect: DOMRect): HTMLDivElement {
   const ghost = sourceEl.cloneNode(true) as HTMLDivElement;
   ghost.className = `${sourceEl.className} tile-drag-ghost`;
   ghost.removeAttribute("data-tile-key");
@@ -143,7 +137,12 @@ export function useTileDragReorder<T>(
       ?.closest<HTMLElement>("[data-tile-key]");
 
     const overKey = target?.getAttribute("data-tile-key");
-    if (!target || !overKey || overKey === s.dragKey || !s.order.includes(overKey)) {
+    if (
+      !target ||
+      !overKey ||
+      overKey === s.dragKey ||
+      !s.order.includes(overKey)
+    ) {
       return;
     }
 
@@ -173,8 +172,7 @@ export function useTileDragReorder<T>(
     const s = stateRef.current;
     const didMove = s.moved && s.dragKey !== null;
     const orderChanged =
-      didMove &&
-      s.order.some((key, index) => key !== s.initialOrder[index]);
+      didMove && s.order.some((key, index) => key !== s.initialOrder[index]);
     const finalOrder = [...s.order];
 
     cleanupDragSession(handlePointerMove, handlePointerUp, handleKeyDown);

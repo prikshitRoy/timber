@@ -7,8 +7,8 @@ import { bookmarkRepository } from "../../../src/shared/bookmarks/bookmark-repos
 import {
   countBookmarkInstances,
   type BookmarkInstanceTarget,
-} from "../../../src/shared/bookmarks/operations/bookmark-instances";
-import type { BookmarkPage } from "../../../src/shared/types/timber";
+  type BookmarkPage,
+} from "@timber/core";
 import type { DeletingBookmarkState } from "../types";
 
 interface UseBookmarkAndFolderActionsParams {
@@ -344,7 +344,9 @@ export function useBookmarkAndFolderActions({
     try {
       await navigator.clipboard.writeText(urls.join("\n"));
       setStatus(
-        `${urls.length} link${urls.length === 1 ? "" : "s"} copied to clipboard.`
+        `${urls.length} link${
+          urls.length === 1 ? "" : "s"
+        } copied to clipboard.`
       );
     } catch {
       setError("Failed to copy links.");

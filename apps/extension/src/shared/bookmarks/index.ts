@@ -1,50 +1,39 @@
 /**
- * Public barrel export for the Timber bookmarks domain module.
+ * Public barrel export for the Timber extension bookmarks module.
  */
 
-export type {
-  BookmarkSyncAddition,
-  BookmarkSyncDiff,
-  BookmarkSyncSelection,
-  BookmarkSyncSummary,
-  NativeBookmarkInput,
-  NativeBookmarkRecord,
-} from "./bookmark.types";
-
-export {
-  SUPPORTED_BOOKMARK_PROTOCOLS,
-  isSupportedBookmarkUrl,
-  normalizeBookmarkUrl,
-} from "./bookmark-normalizer";
-
-export { readNativeBookmarkTree } from "./bookmark-tree-reader";
-export {
-  findFolderChainInState,
-  findOrCreateFolderChainInState,
-  stripBrowserContainer,
-} from "./folder-chain";
-export { migrateFoldersFromPaths } from "./bookmark-folder-migration";
-export {
-  applyStoredOrder,
-  sortAlphabetically,
-  type OrderableItem,
-} from "./tile-ordering";
 export {
   ROOT_FOLDER_KEY_PREFIX,
   ROOT_LINK_KEY_PREFIX,
+  SUPPORTED_BOOKMARK_PROTOCOLS,
+  applyStoredOrder,
   computeRootTiles,
-  tileLabel,
-  type RootFolderTile,
-  type RootLinkTile,
-  type RootTile,
-} from "./root-layout";
-export { bookmarkRepository } from "./bookmark-repository";
-export {
   countBookmarkInstances,
   countBookmarkInstancesInState,
   deleteBookmarkInstanceInState,
+  findFolderChainInState,
+  findOrCreateFolderChainInState,
+  isSupportedBookmarkUrl,
+  migrateFoldersFromPaths,
+  normalizeBookmarkUrl,
+  sortAlphabetically,
+  stripBrowserContainer,
+  tileLabel,
   type BookmarkInstanceTarget,
-} from "./operations/bookmark-instances";
+  type BookmarkSyncAddition,
+  type BookmarkSyncDiff,
+  type BookmarkSyncSelection,
+  type BookmarkSyncSummary,
+  type NativeBookmarkInput,
+  type NativeBookmarkRecord,
+  type OrderableItem,
+  type RootFolderTile,
+  type RootLinkTile,
+  type RootTile,
+} from "@timber/core";
+
+export { readNativeBookmarkTree } from "./bookmark-tree-reader";
+export { bookmarkRepository } from "./bookmark-repository";
 export {
   applyCurrentBrowserSyncSelection,
   computeCurrentBrowserSyncDiff,

@@ -4,7 +4,7 @@
  */
 
 import { useRef, useState } from "react";
-import type { ThemeMode } from "../../src/shared/appearance/appearance.types";
+import type { ThemeMode } from "@timber/core";
 import AppearanceSettingsSection from "./components/AppearanceSettingsSection";
 
 type ImportMode = "merge" | "replace";

@@ -4,7 +4,7 @@
  */
 
 import { useRef, useState } from "react";
-import type { ThemeMode } from "../../../src/shared/appearance/appearance.types";
+import type { ThemeMode } from "@timber/core";
 
 interface AppearanceSettingsSectionProps {
   themeMode: ThemeMode;
@@ -67,9 +67,8 @@ export default function AppearanceSettingsSection({
           <button
             key={option.value}
             type="button"
-            className={`theme-option-btn ${
-              themeMode === option.value ? "theme-option-btn--active" : ""
-            }`}
+            className={`theme-option-btn ${themeMode === option.value ? "theme-option-btn--active" : ""
+              }`}
             onClick={() => onSetThemeMode(option.value)}
           >
             {option.label}

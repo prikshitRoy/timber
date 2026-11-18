@@ -8,7 +8,7 @@ import type {
   BookmarkSyncSelection,
   BookmarkSyncSummary,
   NativeBookmarkRecord,
-} from "../bookmarks/bookmark.types";
+} from "@timber/core";
 
 // Named constants for all extension runtime message types.
 export const TIMBER_MESSAGE_TYPES = {

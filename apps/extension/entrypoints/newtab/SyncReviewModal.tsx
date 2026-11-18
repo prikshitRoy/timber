@@ -4,11 +4,11 @@
 
 import { useState } from "react";
 
-import type {
-    BookmarkSyncDiff,
-    BookmarkSyncSelection,
-} from "../../src/shared/bookmarks/bookmark.types";
-import { stripBrowserContainer } from "../../src/shared/bookmarks/folder-chain";
+import {
+    stripBrowserContainer,
+    type BookmarkSyncDiff,
+    type BookmarkSyncSelection,
+} from "@timber/core";
 
 interface SyncReviewModalProps {
     diff: BookmarkSyncDiff;

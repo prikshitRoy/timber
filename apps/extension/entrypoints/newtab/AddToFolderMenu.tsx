@@ -3,7 +3,7 @@
  */
 
 import { useState } from "react";
-import type { BookmarkPage } from "../../src/shared/types/timber";
+import type { BookmarkPage } from "@timber/core";
 
 // Sentinel option value that triggers a prompt to create a new folder before filing.
 const NEW_FOLDER_VALUE = "__new__";

@@ -3,61 +3,49 @@
  * domain mutations to pure operation modules.
  */
 
-import type {
-  BrowserKind,
-  BrowserSource,
-  Bookmark,
-  BookmarkSource,
-  BookmarkPage,
-  TimberState,
-} from "@/src/shared/types/timber";
+import {
+  addBookmarkToPageInState,
+  addBookmarkToRootInState,
+  applySyncDiffInState,
+  computeSyncDiffInState,
+  createManualLinkInState,
+  createPageInState,
+  deleteBookmarkInstanceInState,
+  deleteBookmarksInState,
+  deletePageInState,
+  ensureNativeFoldersInState,
+  findOrCreateFolderChainInState,
+  getBookmarksForPageInState,
+  mergeBackupIntoState,
+  migrateFoldersFromPaths,
+  registerSourceInState,
+  removeBookmarkFromPageInState,
+  removeNativeBookmarkInState,
+  renamePageInState,
+  setFolderChildOrderInState,
+  syncNativeBookmarksInState,
+  updateBookmarkInState,
+  updateBookmarksInState,
+  upsertNativeBookmarkInState,
+  type Bookmark,
+  type BookmarkInstanceTarget,
+  type BookmarkPage,
+  type BookmarkSource,
+  type BookmarkSyncDiff,
+  type BookmarkSyncSelection,
+  type BookmarkSyncSummary,
+  type BrowserKind,
+  type BrowserSource,
+  type MergeSummary,
+  type NativeBookmarkInput,
+  type NativeBookmarkRecord,
+  type TimberState,
+} from "@timber/core";
 import {
   createInitialState,
   loadState,
   saveState,
 } from "@/src/shared/storage/timber-storage";
-import type {
-  NativeBookmarkInput,
-  NativeBookmarkRecord,
-  BookmarkSyncSummary,
-  BookmarkSyncDiff,
-  BookmarkSyncSelection,
-} from "./bookmark.types";
-import { findOrCreateFolderChainInState } from "./folder-chain";
-import { migrateFoldersFromPaths } from "./bookmark-folder-migration";
-import {
-  mergeBackupIntoState,
-  type MergeSummary,
-} from "../backup/timber-backup";
-import {
-  addBookmarkToRootInState,
-  createManualLinkInState,
-  deleteBookmarksInState,
-  registerSourceInState,
-  removeNativeBookmarkInState,
-  updateBookmarkInState,
-  updateBookmarksInState,
-  upsertNativeBookmarkInState,
-} from "./operations/bookmark-mutations";
-import {
-  deleteBookmarkInstanceInState,
-  type BookmarkInstanceTarget,
-} from "./operations/bookmark-instances";
-import {
-  addBookmarkToPageInState,
-  createPageInState,
-  deletePageInState,
-  getBookmarksForPageInState,
-  removeBookmarkFromPageInState,
-  renamePageInState,
-  setFolderChildOrderInState,
-} from "./operations/folder-mutations";
-import {
-  applySyncDiffInState,
-  computeSyncDiffInState,
-  ensureNativeFoldersInState,
-  syncNativeBookmarksInState,
-} from "./operations/sync-mutations";
 
 /**
  * Provides serialized async CRUD, folder, sync, and backup operations over persisted TimberState.

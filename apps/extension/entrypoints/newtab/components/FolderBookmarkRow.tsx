@@ -2,7 +2,7 @@
  * Single draggable bookmark row rendered inside an expanded Timber folder panel.
  */
 
-import type { BookmarkInstanceTarget } from "../../../src/shared/bookmarks/operations/bookmark-instances";
+import type { BookmarkInstanceTarget } from "@timber/core";
 import KebabMenu from "../KebabMenu";
 import type { BookmarkSummary } from "../types";
 import BookmarkFavicon from "./BookmarkFavicon";

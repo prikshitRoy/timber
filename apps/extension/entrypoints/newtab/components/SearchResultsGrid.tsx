@@ -2,8 +2,7 @@
  * Displays filtered bookmark cards when the user types a search query in the dashboard header.
  */
 
-import type { BookmarkInstanceTarget } from "../../../src/shared/bookmarks/operations/bookmark-instances";
-import type { BookmarkPage } from "../../../src/shared/types/timber";
+import type { BookmarkInstanceTarget, BookmarkPage } from "@timber/core";
 import AddToFolderMenu from "../AddToFolderMenu";
 import KebabMenu from "../KebabMenu";
 import type { DashboardBookmark } from "../types";

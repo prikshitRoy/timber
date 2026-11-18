@@ -3,7 +3,7 @@
  */
 
 import { Fragment, useState, type ReactNode } from "react";
-import type { BookmarkPage } from "../../../src/shared/types/timber";
+import type { BookmarkPage } from "@timber/core";
 import KebabMenu from "../KebabMenu";
 
 interface SubFolderTileProps {

@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { browser } from "wxt/browser";
-import type { BookmarkSyncSelection } from "../../../src/shared/bookmarks/bookmark.types";
+import type { BookmarkSyncSelection } from "@timber/core";
 import { requestBookmarkPermission } from "../../../src/shared/bookmarks/bookmark-synchronizer";
 import {
   TIMBER_MESSAGE_TYPES,
@@ -80,9 +80,7 @@ export function useBookmarkSync({
       await handleScan();
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to connect bookmarks."
+        error instanceof Error ? error.message : "Failed to connect bookmarks."
       );
     } finally {
       setLoading(false);

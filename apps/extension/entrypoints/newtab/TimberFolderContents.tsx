@@ -2,12 +2,12 @@
  * Renders the ordered contents (bookmarks and nested sub-folders) inside an expanded Timber folder.
  */
 
-import type { BookmarkInstanceTarget } from "../../src/shared/bookmarks/operations/bookmark-instances";
 import {
   applyStoredOrder,
   sortAlphabetically,
-} from "../../src/shared/bookmarks/tile-ordering";
-import type { BookmarkPage } from "../../src/shared/types/timber";
+  type BookmarkInstanceTarget,
+  type BookmarkPage,
+} from "@timber/core";
 import SortControls from "./SortControls";
 import FolderBookmarkRow from "./components/FolderBookmarkRow";
 import SubFolderTile from "./components/SubFolderTile";
