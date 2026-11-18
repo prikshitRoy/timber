@@ -1,32 +1,26 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-.output
-stats.html
-stats-*.json
-.wxt
-web-ext.config.ts
-
-# Editor directories and files
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/tasks.json
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-
-caffeine_note
+# Logs & temporary caches
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+tmp/
+.cache/
 
 # Environment & secrets
 .env
@@ -34,15 +28,51 @@ caffeine_note
 !.env.example
 *.pem
 *.key
+*.p12
+*.keystore
+*.jks
+credentials.json
+serviceAccount*.json
 
-# OS & temporary files
-Thumbs.db
-tmp/
-.cache/
-
-# Node / Vite / TypeScript / Test output
+# Node / Yarn / TypeScript
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
 dist/
 build/
-.vite/
 coverage/
 *.tsbuildinfo
+
+# WXT Browser Extension (Project Timber/apps/extension)
+.output/
+.wxt/
+.vite/
+stats.html
+stats-*.json
+web-ext.config.ts
+
+# Next.js (Project Timber/apps/mobile)
+.next/
+out/
+.vercel/
+next-env.d.ts
+
+# Rust / Tauri (Project Timber/apps/mobile/src-tauri)
+**/src-tauri/target/
+**/src-tauri/gen/schemas/
+
+# Android (Project Timber/apps/mobile/src-tauri/gen/android)
+local.properties
+.gradle/
+**/gen/android/**/build/
+**/gen/android/.gradle/
+**/gen/android/.idea/
+**/gen/android/local.properties
+.cxx/
+captures/
+*.apk
+*.aab
+
+# Custom tooling
+caffeine_note
