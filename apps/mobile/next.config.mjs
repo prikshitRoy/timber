@@ -6,6 +6,7 @@ const internalHost = process.env.TAURI_DEV_HOST || "localhost";
 
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@timber/core"],
   // Ensure Next.js uses SSG instead of SSR
   // https://nextjs.org/docs/pages/building-your-application/deploying/static-exports
   output: "export",

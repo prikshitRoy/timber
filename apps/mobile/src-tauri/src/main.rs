@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    tauri_20_nextjs_14223_template_lib::run()
+    timber_mobile_lib::run()
 }

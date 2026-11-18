@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-20-nextjs-14223-template",
+  "productName": "Timber",
   "version": "0.1.0",
-  "identifier": "com.tauri-20-nextjs-14223-template.app",
+  "identifier": "com.timber.mobile",
   "build": {
     "beforeDevCommand": "yarn next-start",
     "beforeBuildCommand": "yarn next-build",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-20-nextjs-14223-template",
+        "title": "Timber",
         "width": 800,
         "height": 600
       }

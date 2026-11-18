@@ -78,7 +78,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Feature                                                                                     | Status  |
 | ------------------------------------------------------------------------------------------- | ------- |
 | Tauri v2 + Next.js 14.2.23 static export template copied into `apps/mobile`                 | Done    |
-| Tauri Android target initialization and clean Rust host config                              | Planned |
+| Tauri Android target initialization and clean Rust host config                              | Done    |
 | Offline `localStorage` persistence and `.json` backup file import (Merge / Replace)         | Planned |
 | Mobile bookmark list, expandable nested folders, search filter, and external browser opener | Planned |
 
@@ -160,6 +160,7 @@ yarn workspace @timber/mobile tauri android dev  # run app on connected Android 
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-18 — Configured `Project Timber/apps/mobile` to consume `@timber/core`, cleaned up `src-tauri` Rust host metadata (`com.timber.mobile`), and initialized Tauri Android.
 - 2026-11-18 — Added root `Project Timber/README.md` and documented per-workspace commands and developer workflow in `Project Timber/PROJECT_OVERVIEW.md`.
 - 2026-11-18 — Re-wired `Project Timber/apps/extension` to import shared domain types, backup parser, layout helpers, and mutations from `@timber/core`.
 - 2026-11-18 — Extracted pure domain types, backup parser/merger, layout/ordering helpers, state operations, and unit tests into `Project Timber/packages/core`.

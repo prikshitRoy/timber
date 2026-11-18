@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
+    "@timber/core": "*",
     "@tauri-apps/plugin-opener": "~2",
     "next": "14.2.23",
     "react": "^18",
