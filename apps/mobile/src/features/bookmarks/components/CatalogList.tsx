@@ -13,6 +13,7 @@ interface CatalogListProps {
   folders: BookmarkPage[];
   bookmarksById: Map<string, Bookmark>;
   onOpenUrl: (url: string) => void;
+  onCopyUrl: (url: string) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function CatalogList({
   folders,
   bookmarksById,
   onOpenUrl,
+  onCopyUrl,
 }: CatalogListProps) {
   const hasActiveQuery = query.trim().length > 0;
 
@@ -54,6 +56,7 @@ export default function CatalogList({
             key={bookmark.id}
             bookmark={bookmark}
             onOpenUrl={onOpenUrl}
+            onCopyUrl={onCopyUrl}
           />
         ))}
       </section>
@@ -70,12 +73,14 @@ export default function CatalogList({
             allFolders={folders}
             bookmarksById={bookmarksById}
             onOpenUrl={onOpenUrl}
+            onCopyUrl={onCopyUrl}
           />
         ) : (
           <BookmarkRow
             key={tile.key}
             bookmark={tile.bookmark}
             onOpenUrl={onOpenUrl}
+            onCopyUrl={onCopyUrl}
           />
         )
       )}

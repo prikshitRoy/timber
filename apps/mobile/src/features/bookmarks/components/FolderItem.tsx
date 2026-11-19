@@ -15,6 +15,7 @@ interface FolderItemProps {
   allFolders: BookmarkPage[];
   bookmarksById: Map<string, Bookmark>;
   onOpenUrl: (url: string) => void;
+  onCopyUrl: (url: string) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function FolderItem({
   allFolders,
   bookmarksById,
   onOpenUrl,
+  onCopyUrl,
 }: FolderItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -76,12 +78,14 @@ export default function FolderItem({
                   allFolders={allFolders}
                   bookmarksById={bookmarksById}
                   onOpenUrl={onOpenUrl}
+                  onCopyUrl={onCopyUrl}
                 />
               ) : (
                 <BookmarkRow
                   key={child.key}
                   bookmark={child.bookmark}
                   onOpenUrl={onOpenUrl}
+                  onCopyUrl={onCopyUrl}
                 />
               )
             )

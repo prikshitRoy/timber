@@ -8,6 +8,7 @@ import {
   MobileHeader,
   SettingsModal,
   StatusBanner,
+  copyBookmarkUrl,
   openBookmarkUrl,
   useTimberCatalog,
 } from "@/features/bookmarks";
@@ -53,8 +54,25 @@ export default function Home() {
       setError("");
       await openBookmarkUrl(url);
     } catch (openError) {
-setError(
+      setError(
         openError instanceof Error ? openError.message : "Failed to open link."
+      );
+    }
+  }
+
+  /**
+   * Copy a bookmark URL to the Android clipboard and show a transient confirmation message.
+   */
+  async function handleCopyBookmark(url: string) {
+    try {
+      setError("");
+      await copyBookmarkUrl(url);
+      setStatus("Link copied to clipboard.");
+    } catch (copyError) {
+      setError(
+        copyError instanceof Error
+          ? copyError.message
+          : "Failed to copy link."
       );
     }
   }
@@ -127,6 +145,7 @@ setError(
             folders={folders}
             bookmarksById={bookmarksById}
             onOpenUrl={(url) => void handleOpenBookmark(url)}
+            onCopyUrl={(url) => void handleCopyBookmark(url)}
           />
         )}
       </main>
