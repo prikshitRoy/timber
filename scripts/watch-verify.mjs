@@ -10,7 +10,7 @@ import { resolve } from "node:path";
 // Debounce window in milliseconds to batch rapid file saves from the editor.
 const DEBOUNCE_DELAY_MS = 300;
 
-// Directories watched relative to the Project Timber root.
+// Directories watched relative to the Timber root.
 const WATCH_TARGETS = [
   "packages/core/src",
   "apps/extension/src",

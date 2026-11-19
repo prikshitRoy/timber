@@ -1,6 +1,6 @@
-# Project Timber
+# Timber
 
-Project Timber is a Yarn Workspaces monorepo containing the **Timber** cross-browser New Tab bookmark extension, the **Timber Mobile** Android bookmark companion app, and the `@timber/core` shared pure-TypeScript domain library.
+Timber is a Yarn Workspaces monorepo containing the **Timber** cross-browser New Tab bookmark extension, the **Timber Mobile** Android bookmark companion app, and the `@timber/core` shared pure-TypeScript domain library.
 
 ## Features
 
@@ -43,7 +43,7 @@ Project Timber is a Yarn Workspaces monorepo containing the **Timber** cross-bro
 1. Navigate into the monorepo root directory:
 
 ```bash
-cd "Project Timber"
+cd "Timber"
 ```
 
 2. Install dependencies for all workspaces (this links `@timber/core` into both `apps/extension` and `apps/mobile` and runs `wxt prepare`):
@@ -214,7 +214,7 @@ yarn workspace @timber/mobile next-build
 ## Project Structure
 
 ```text
-Project Timber/
+Timber/
 ├── packages/
 │   └── core/                        # @timber/core shared pure-TypeScript package
 │       ├── src/
@@ -248,7 +248,7 @@ Project Timber/
 
 ## Scripts and Commands Reference
 
-### Root Scripts (`Project Timber/package.json`)
+### Root Scripts (`Timber/package.json`)
 
 | Command                | Description                                                                                   |
 | ---------------------- | --------------------------------------------------------------------------------------------- |

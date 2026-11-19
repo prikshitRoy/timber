@@ -44,7 +44,7 @@ build/
 coverage/
 *.tsbuildinfo
 
-# WXT Browser Extension (Project Timber/apps/extension)
+# WXT Browser Extension (Timber/apps/extension)
 .output/
 .wxt/
 .vite/
@@ -52,17 +52,17 @@ stats.html
 stats-*.json
 web-ext.config.ts
 
-# Next.js (Project Timber/apps/mobile)
+# Next.js (Timber/apps/mobile)
 .next/
 out/
 .vercel/
 next-env.d.ts
 
-# Rust / Tauri (Project Timber/apps/mobile/src-tauri)
+# Rust / Tauri (Timber/apps/mobile/src-tauri)
 **/src-tauri/target/
 **/src-tauri/gen/schemas/
 
-# Android (Project Timber/apps/mobile/src-tauri/gen/android)
+# Android (Timber/apps/mobile/src-tauri/gen/android)
 local.properties
 .gradle/
 **/gen/android/**/build/

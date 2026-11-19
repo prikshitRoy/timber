@@ -19,9 +19,9 @@
 
 ## 1. What Is This Project?
 
-**Name:** Project Timber
+**Name:** Timber
 
-A Yarn Workspaces monorepo containing the **Timber** cross-browser New Tab bookmark dashboard extension (`Project Timber/apps/extension`), the **Timber Mobile** Android bookmark viewer (`Project Timber/apps/mobile`), and the shared pure-TypeScript domain library (`Project Timber/packages/core`).
+A Yarn Workspaces monorepo containing the **Timber** cross-browser New Tab bookmark dashboard extension (`Timber/apps/extension`), the **Timber Mobile** Android bookmark viewer (`Timber/apps/mobile`), and the shared pure-TypeScript domain library (`Timber/packages/core`).
 
 It is built for unifying bookmarks across browsers (Chrome, Brave, Firefox) into a single deduplicated catalog and importing exported `.json` Timber backups to browse and search offline on Android.
 
@@ -93,13 +93,13 @@ Status key: **Done** | **In progress** | **Planned**
 
 > Verify these against the current code; remove an item when it is fixed.
 
-- One extension installation currently registers a single default `BrowserSource` per detected `BrowserKind` (`TODO` in `Project Timber/apps/extension/src/shared/bookmarks/bookmark-synchronizer.ts`).
-- `Project Timber/apps/extension/entrypoints/popup/` and `Project Timber/apps/extension/entrypoints/content.ts` are WXT starter placeholders.
+- One extension installation currently registers a single default `BrowserSource` per detected `BrowserKind` (`TODO` in `Timber/apps/extension/src/shared/bookmarks/bookmark-synchronizer.ts`).
+- `Timber/apps/extension/entrypoints/popup/` and `Timber/apps/extension/entrypoints/content.ts` are WXT starter placeholders.
 
 ## 6. Project Structure
 
 ```text
-Project Timber/
+Timber/
   packages/
     core/                # Shared pure-TypeScript types, backup parser, normalizer, and layout logic
   apps/
@@ -111,7 +111,7 @@ Project Timber/
 
 ## 7. How to Run
 
-### Root Workspace Commands (run from `Project Timber/`)
+### Root Workspace Commands (run from `Timber/`)
 
 ```bash
 yarn install        # install all workspace dependencies and link @timber/core
@@ -126,14 +126,14 @@ yarn dev:mobile      # start Tauri Android dev build on 127.0.0.1
 yarn build:mobile    # build Tauri Android APK/AAB bundle
 ```
 
-### Per-Package Developer Commands (run from `Project Timber/`)
+### Per-Package Developer Commands (run from `Timber/`)
 
 ```bash
-# Shared Core (Project Timber/packages/core)
+# Shared Core (Timber/packages/core)
 yarn workspace @timber/core compile       # type-check shared pure TypeScript modules
 yarn workspace @timber/core test          # run Node unit test suites in packages/core
 
-# Browser Extension (Project Timber/apps/extension)
+# Browser Extension (Timber/apps/extension)
 yarn workspace @timber/extension compile  # type-check WXT extension against @timber/core
 yarn workspace @timber/extension dev      # run Chrome MV3 dev server
 yarn workspace @timber/extension dev:brave # run Brave MV3 dev server
@@ -142,7 +142,7 @@ yarn workspace @timber/extension build    # build Chrome MV3 production extensio
 yarn workspace @timber/extension build:firefox # build Firefox production extension
 yarn workspace @timber/extension zip      # package Chrome and Firefox extension zips
 
-# Android Mobile App (Project Timber/apps/mobile)
+# Android Mobile App (Timber/apps/mobile)
 yarn workspace @timber/mobile compile          # type-check Next.js mobile frontend against @timber/core
 yarn workspace @timber/mobile next-build       # test Next.js static export to apps/mobile/out
 yarn workspace @timber/mobile tauri android init # initialize Android Gradle project
@@ -154,16 +154,16 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 ### Developer Workflow: How Changes Propagate
 
-1. **Editing shared domain, backup, or layout logic (`Project Timber/packages/core/src/`):**
-   - Put pure data types, URL normalizers, JSON backup validators/parsers, and tile/folder sorting logic in `Project Timber/packages/core/src/`.
-   - Export any new public function or type from `Project Timber/packages/core/src/index.ts`.
+1. **Editing shared domain, backup, or layout logic (`Timber/packages/core/src/`):**
+   - Put pure data types, URL normalizers, JSON backup validators/parsers, and tile/folder sorting logic in `Timber/packages/core/src/`.
+   - Export any new public function or type from `Timber/packages/core/src/index.ts`.
    - Keep `yarn watch` running at the root (or run `yarn workspace @timber/core compile`, `yarn workspace @timber/core test`, `yarn workspace @timber/extension compile`, and `yarn workspace @timber/mobile compile`) to verify the change does not break either app.
-2. **Editing browser extension code (`Project Timber/apps/extension/`):**
-   - Keep `wxt/browser` side effects (`browser.storage.local`, `browser.bookmarks`, background service workers) inside `Project Timber/apps/extension/`.
+2. **Editing browser extension code (`Timber/apps/extension/`):**
+   - Keep `wxt/browser` side effects (`browser.storage.local`, `browser.bookmarks`, background service workers) inside `Timber/apps/extension/`.
    - Import shared logic from `@timber/core` instead of duplicating types or parsers.
    - Verify with `yarn workspace @timber/extension compile`.
-3. **Editing Android mobile code (`Project Timber/apps/mobile/`):**
-   - Keep mobile UI components, `localStorage` persistence, and Tauri plugin calls (`@tauri-apps/plugin-opener`) inside `Project Timber/apps/mobile/`.
+3. **Editing Android mobile code (`Timber/apps/mobile/`):**
+   - Keep mobile UI components, `localStorage` persistence, and Tauri plugin calls (`@tauri-apps/plugin-opener`) inside `Timber/apps/mobile/`.
    - Import `parseBackup`, `mergeBackupIntoState`, `computeRootTiles`, and domain types from `@timber/core`.
    - Verify with `yarn workspace @timber/mobile compile`.
 
@@ -171,23 +171,23 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
-- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
-- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
-- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
-- 2026-11-19 — Added System / Light / Dark theme toggle (`features/theme`) and light/dark Tailwind styling across `Project Timber/apps/mobile`.
-- 2026-11-19 — Added quick Copy URL button (`copy-bookmark.ts`, `BookmarkRow.tsx`) with Android clipboard fallback in `Project Timber/apps/mobile`.
-- 2026-11-19 — Added auto-dismissible `StatusBanner` and search input clear button in `Project Timber/apps/mobile`.
-- 2026-11-19 — Added reusable `ConfirmDialog` to guard Clear All and Replace All imports in `Project Timber/apps/mobile`.
+- 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
+- 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
+- 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
+- 2026-11-19 — Added System / Light / Dark theme toggle (`features/theme`) and light/dark Tailwind styling across `Timber/apps/mobile`.
+- 2026-11-19 — Added quick Copy URL button (`copy-bookmark.ts`, `BookmarkRow.tsx`) with Android clipboard fallback in `Timber/apps/mobile`.
+- 2026-11-19 — Added auto-dismissible `StatusBanner` and search input clear button in `Timber/apps/mobile`.
+- 2026-11-19 — Added reusable `ConfirmDialog` to guard Clear All and Replace All imports in `Timber/apps/mobile`.
 - 2026-11-19 — Decluttered `apps/mobile` sticky header and moved JSON backup import and Clear controls into `SettingsModal.tsx`.
 - 2026-11-19 — Documented ADB Wi-Fi debugging (`adb connect`, `adb devices`, `android:reverse`) and Android run commands in `README.md` and `PROJECT_OVERVIEW.md`.
 - 2026-11-19 — Added Android status bar top clearance and bottom gesture-bar safe-area insets to `apps/mobile` (`layout.tsx`, `globals.css`, `MobileHeader.tsx`, `page.tsx`) and added `android:reverse` / `android:dev` scripts.
 - 2026-11-19 — Built Android bookmark UI components (`MobileHeader`, `EmptyCatalogState`, `BookmarkFavicon`, `BookmarkRow`, `FolderItem`, `CatalogList`) and wired `apps/mobile/src/app/page.tsx`.
 - 2026-11-18 — Added mobile catalog helpers and unit tests in `packages/core`, plus `localStorage` persistence, Tauri link opener, and `useTimberCatalog` hook in `apps/mobile`.
-- 2026-11-18 — Configured `Project Timber/apps/mobile` to consume `@timber/core`, cleaned up `src-tauri` Rust host metadata (`com.timber.mobile`), and initialized Tauri Android.
-- 2026-11-18 — Added root `Project Timber/README.md` and documented per-workspace commands and developer workflow in `Project Timber/PROJECT_OVERVIEW.md`.
-- 2026-11-18 — Re-wired `Project Timber/apps/extension` to import shared domain types, backup parser, layout helpers, and mutations from `@timber/core`.
-- 2026-11-18 — Extracted pure domain types, backup parser/merger, layout/ordering helpers, state operations, and unit tests into `Project Timber/packages/core`.
-- 2026-11-18 — Initialized `Project Timber` Yarn Workspaces monorepo, moved extension to `apps/extension`, added `apps/mobile` template, `@timber/core` package scaffold, and `scripts/watch-verify.mjs`.
+- 2026-11-18 — Configured `Timber/apps/mobile` to consume `@timber/core`, cleaned up `src-tauri` Rust host metadata (`com.timber.mobile`), and initialized Tauri Android.
+- 2026-11-18 — Added root `Timber/README.md` and documented per-workspace commands and developer workflow in `Timber/PROJECT_OVERVIEW.md`.
+- 2026-11-18 — Re-wired `Timber/apps/extension` to import shared domain types, backup parser, layout helpers, and mutations from `@timber/core`.
+- 2026-11-18 — Extracted pure domain types, backup parser/merger, layout/ordering helpers, state operations, and unit tests into `Timber/packages/core`.
+- 2026-11-18 — Initialized `Timber` Yarn Workspaces monorepo, moved extension to `apps/extension`, added `apps/mobile` template, `@timber/core` package scaffold, and `scripts/watch-verify.mjs`.
 - 2026-11-17 — Added drag-to-reorder ghost/hysteresis, favicons, Light/Dark/System themes with custom background images, duplicate-link deletion modal, modularized repository/backup/styles, and added unit tests.
 
 ---
