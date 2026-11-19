@@ -37,7 +37,7 @@ It is built for unifying bookmarks across browsers (Chrome, Brave, Firefox) into
 | Tests                                | Node.js built-in test runner (`node --experimental-strip-types --test`)                   |
 | Target platforms                     | Chrome/Chromium (MV3), Brave (MV3), Firefox, Android (Tauri v2 mobile)                    |
 
-Planned: Add CI/CD GitHub Actions workflow for automated workspace testing and builds.
+CI/CD: GitHub Actions workflows for automated workspace testing (`ci.yml`) and signed Android release APK builds (`release-android.yml`).
 
 ## 3. Core Concepts
 
@@ -89,6 +89,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
 | Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
 | Signed standalone offline `universal` Android release APK build (`build:mobile:apk`) and installation docs | Done |
+| GitHub Actions CI (`ci.yml`) and signed Android APK release pipeline (`release-android.yml`) | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -173,6 +174,7 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-20 — Added GitHub Actions CI (`ci.yml`) and Android APK release (`release-android.yml`) workflows.
 - 2026-11-20 — Documented Android release signing setup, standalone APK sideloading (ADB and on-device), required device permissions ("Install unknown apps", USB install prompt, Play Protect), and common install troubleshooting in `README.md` and `PROJECT_OVERVIEW.md`.
 - 2026-11-19 — Added `build:mobile:apk` script for standalone offline `universal` Android APK builds and verified offline installation on device.
 - 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).

@@ -380,6 +380,14 @@ yarn workspace @timber/core test
 yarn test:watch
 ```
 
+
+## CI/CD (GitHub Actions)
+
+* **`.github/workflows/ci.yml`** runs on pushes to `main` and pull requests: executes `yarn test`, `yarn typecheck`, `yarn --cwd apps/mobile next-build`, and `yarn workspace @timber/extension build`.
+* **`.github/workflows/release-android.yml`** runs on manual dispatch or version tags (`v*`): builds the `arm64` release APK, uploads it as a workflow artifact, and publishes a GitHub Release on tagged commits.
+* Configure `ANDROID_KEYSTORE_BASE64`, `ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, and `ANDROID_KEY_ALIAS` under **Settings -> Secrets and variables -> Actions** to enable signed release APKs in CI.
+
+
 ## Contributing
 
 1. Create a short-lived branch from `main` (`feat/short-description`, `fix/short-description`, `refactor/short-description`).

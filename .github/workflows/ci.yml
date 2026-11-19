@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-workspace:
+    name: Typecheck, Test & Frontend Builds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run unit tests (@timber/core)
+        run: yarn test
+
+      - name: Run workspace TypeScript check
+        run: yarn typecheck
+
+      - name: Verify Next.js mobile static export
+        run: yarn --cwd apps/mobile next-build
+
+      - name: Verify browser extension build
+        run: yarn workspace @timber/extension build
+        
