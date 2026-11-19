@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   CatalogList,
   EmptyCatalogState,
   MobileHeader,
+  SettingsModal,
   openBookmarkUrl,
   useTimberCatalog,
 } from "@/features/bookmarks";
@@ -14,6 +15,7 @@ import {
  */
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const {
     isLoaded,
     hasCatalogData,
@@ -41,9 +43,22 @@ export default function Home() {
       setError("");
       await openBookmarkUrl(url);
     } catch (openError) {
-      setError(
+setError(
         openError instanceof Error ? openError.message : "Failed to open link."
       );
+    }
+  }
+
+  /**
+   * Pass the selected JSON backup file to the catalog importer and close Settings if open.
+   */
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    // Reset input value so selecting the same filename twice still triggers onChange.
+    event.target.value = "";
+    if (file) {
+      setIsSettingsOpen(false);
+      void handleImportJsonFile(file);
     }
   }
 
@@ -54,12 +69,7 @@ export default function Home() {
         folderCount={folders.length}
         query={query}
         onQueryChange={setQuery}
-        importMode={importMode}
-        onImportModeChange={setImportMode}
-        fileInputRef={fileInputRef}
-        onFileSelected={(file) => void handleImportJsonFile(file)}
-        hasCatalogData={hasCatalogData}
-        onClearCatalog={handleClearCatalog}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       <main className="safe-area-bottom mx-auto max-w-2xl px-4 pt-3">
@@ -97,6 +107,28 @@ export default function Home() {
           />
         )}
       </main>
+      
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={handleFileChange}
+      />
+
+      {isSettingsOpen && (
+        <SettingsModal
+          importMode={importMode}
+          onImportModeChange={setImportMode}
+          onTriggerImport={() => fileInputRef.current?.click()}
+          hasCatalogData={hasCatalogData}
+          onClearCatalog={() => {
+            handleClearCatalog();
+            setIsSettingsOpen(false);
+          }}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 }
