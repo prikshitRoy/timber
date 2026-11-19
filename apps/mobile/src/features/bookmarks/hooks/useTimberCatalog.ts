@@ -19,6 +19,9 @@ import {
   saveMobileState,
 } from "../storage/bookmark-storage";
 
+// Duration in milliseconds before transient status feedback auto-dismisses.
+const STATUS_AUTO_DISMISS_MS = 4000;
+
 /**
  * Provide reactive catalog state, search results, and JSON backup import actions for the Android UI.
  */
@@ -35,6 +38,17 @@ export function useTimberCatalog() {
     setState(stored);
     setIsLoaded(true);
   }, []);
+
+  // Automatically clear transient status messages while leaving errors visible until dismissed.
+  useEffect(() => {
+    if (!status) return;
+
+    const timerId = window.setTimeout(() => {
+      setStatus("");
+    }, STATUS_AUTO_DISMISS_MS);
+
+    return () => window.clearTimeout(timerId);
+  }, [status]);
 
   /**
    * Read an uploaded .json backup File, parse/merge it into state, and persist to localStorage.
@@ -123,6 +137,7 @@ export function useTimberCatalog() {
     importMode,
     setImportMode,
     status,
+    setStatus,
     error,
     setError,
     handleImportJsonFile,

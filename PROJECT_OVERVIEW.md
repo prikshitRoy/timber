@@ -83,6 +83,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Mobile bookmark list, expandable nested folders, search filter, and external browser opener | Done |
 | Compact sticky header and mobile Settings / Backup Import bottom-sheet modal | Done |
 | Confirmation dialogs protecting Clear All and Replace All backup imports | Done |
+| Auto-dismissible status banners, dismissible error banners, and search clear button | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -166,6 +167,7 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-19 — Added auto-dismissible `StatusBanner` and search input clear button in `Project Timber/apps/mobile`.
 - 2026-11-19 — Added reusable `ConfirmDialog` to guard Clear All and Replace All imports in `Project Timber/apps/mobile`.
 - 2026-11-19 — Decluttered `apps/mobile` sticky header and moved JSON backup import and Clear controls into `SettingsModal.tsx`.
 - 2026-11-19 — Documented ADB Wi-Fi debugging (`adb connect`, `adb devices`, `android:reverse`) and Android run commands in `README.md` and `PROJECT_OVERVIEW.md`.

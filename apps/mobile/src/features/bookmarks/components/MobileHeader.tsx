@@ -47,14 +47,28 @@ export default function MobileHeader({
         </button>
       </div>
 
-      <div className="mt-2.5">
+      <div className="relative mt-2.5">
         <input
-          type="search"
+          type="text"
+          role="searchbox"
+          inputMode="search"
+          enterKeyHint="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search bookmarks by title or URL..."
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-teal-500"
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 pl-3.5 pr-10 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-teal-500"
         />
+
+        {query.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onQueryChange("")}
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-xs text-zinc-400 transition active:bg-zinc-800 active:text-zinc-100"
+          >
+            ✕
+          </button>
+        )}
       </div>
     </header>
   );
