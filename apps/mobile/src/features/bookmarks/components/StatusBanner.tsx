@@ -28,10 +28,13 @@ export default function StatusBanner({
           role="status"
           onClick={onDismissStatus}
           aria-label="Dismiss status message"
-          className="flex w-full items-center justify-between gap-2 rounded-lg border border-teal-500/30 bg-teal-500/10 px-3 py-2 text-left text-xs text-teal-300 transition active:bg-teal-500/20"
+          className="flex w-full items-center justify-between gap-2 rounded-lg border border-teal-500/30 bg-teal-500/10 px-3 py-2 text-left text-xs text-teal-700 transition active:bg-teal-500/20 dark:text-teal-300"
         >
           <span>{status}</span>
-          <span aria-hidden="true" className="shrink-0 text-teal-400/80">
+          <span
+            aria-hidden="true"
+            className="shrink-0 text-teal-600/80 dark:text-teal-400/80"
+          >
             ✕
           </span>
         </button>
@@ -43,10 +46,13 @@ export default function StatusBanner({
           role="alert"
           onClick={onDismissError}
           aria-label="Dismiss error message"
-          className="flex w-full items-center justify-between gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-left text-xs text-red-300 transition active:bg-red-500/20"
+          className="flex w-full items-center justify-between gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-left text-xs text-red-700 transition active:bg-red-500/20 dark:text-red-300"
         >
           <span>{error}</span>
-          <span aria-hidden="true" className="shrink-0 text-red-400/80">
+          <span
+            aria-hidden="true"
+            className="shrink-0 text-red-600/80 dark:text-red-400/80"
+          >
             ✕
           </span>
         </button>

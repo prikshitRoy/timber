@@ -33,8 +33,9 @@ export default function CatalogList({
   if (hasActiveQuery) {
     if (searchResults.length === 0) {
       return (
-        <div className="py-16 text-center">
-          <p className="text-sm font-medium text-zinc-300">
+
+      <div className="py-16 text-center">
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             No bookmarks found
           </p>
           <p className="mt-1 text-xs text-zinc-500">
@@ -46,7 +47,7 @@ export default function CatalogList({
 
     return (
       <section className="flex flex-col gap-2">
-        <p className="px-1 text-xs font-medium text-zinc-400">
+        <p className="px-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           {searchResults.length} matching bookmark
           {searchResults.length === 1 ? "" : "s"}
         </p>

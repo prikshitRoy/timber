@@ -13,7 +13,8 @@ export default function EmptyCatalogState({
   onTriggerImport,
 }: EmptyCatalogStateProps) {
   return (
-    <section className="mx-auto my-12 max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 text-center shadow-lg">
+
+  <section className="mx-auto my-12 max-w-md rounded-2xl border border-zinc-200 bg-white p-6 text-center shadow-lg dark:border-zinc-800 dark:bg-zinc-900/80">
       <div
         aria-hidden="true"
         className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-500/15 text-2xl"
@@ -21,14 +22,17 @@ export default function EmptyCatalogState({
         🔖
       </div>
 
-      <h2 className="text-base font-semibold text-zinc-100">
+      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
         No bookmarks imported yet
       </h2>
 
-      <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-        Export a <code className="text-zinc-200">timber-backup.json</code> file
-        from your Timber browser extension and import it here to browse all your
-        folders and bookmarks offline.
+      <p className="mt-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+        Export a{" "}
+        <code className="text-zinc-800 dark:text-zinc-200">
+          timber-backup.json
+        </code>{" "}
+        file from your Timber browser extension and import it here to browse all
+        your folders and bookmarks offline.
       </p>
 
       <button

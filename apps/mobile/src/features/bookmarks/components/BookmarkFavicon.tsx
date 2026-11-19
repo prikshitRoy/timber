@@ -44,7 +44,7 @@ export default function BookmarkFavicon({ url, title }: BookmarkFaviconProps) {
     return (
       <span
         aria-hidden="true"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-teal-500/15 text-xs font-bold text-teal-400"
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-teal-500/15 text-xs font-bold text-teal-700 dark:text-teal-400"
       >
         {getFallbackInitial(title, hostname)}
       </span>

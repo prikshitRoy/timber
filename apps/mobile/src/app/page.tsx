@@ -12,6 +12,7 @@ import {
   openBookmarkUrl,
   useTimberCatalog,
 } from "@/features/bookmarks";
+import { useMobileTheme } from "@/features/theme";
 
 // Tracks a pending destructive action awaiting explicit confirmation from the user.
 type PendingConfirmation =
@@ -23,6 +24,7 @@ type PendingConfirmation =
  */
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { themeMode, setThemeMode } = useMobileTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingConfirmation | null>(null);
@@ -112,7 +114,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <MobileHeader
         bookmarkCount={bookmarks.length}
         folderCount={folders.length}
@@ -160,6 +162,8 @@ export default function Home() {
 
       {isSettingsOpen && (
         <SettingsModal
+          themeMode={themeMode}
+          onThemeModeChange={setThemeMode}
           importMode={importMode}
           onImportModeChange={setImportMode}
           onTriggerImport={() => fileInputRef.current?.click()}
