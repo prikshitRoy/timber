@@ -116,23 +116,6 @@ Defined in [apps/extension/wxt.config.ts](./apps/extension/wxt.config.ts):
 yarn workspace @timber/mobile tauri android init
 ```
 
-2. Start an Android Emulator in Android Studio or connect a physical Android device with **USB Debugging** enabled (`adb devices`).
-3. Run the Android app in development mode:
-
-```bash
-yarn dev:mobile
-```
-
-4. Build the production Android APK / AAB:
-
-### 3. Running the Android App (`@timber/mobile`)
-
-1. Initialize the Tauri Android project (first time only):
-
-```bash
-yarn workspace @timber/mobile tauri android init
-```
-
 2. On your Android device (connected to the same Wi-Fi network as your PC), enable **Developer options** and turn on **Wireless debugging**.
 3. Connect your PC to the device using the IP address and port shown on the phone's **Wireless debugging** screen, then verify it is detected:
 
@@ -160,11 +143,110 @@ yarn dev:mobile
 
 *(If your phone disconnects from Wi-Fi or restarts, re-run `adb connect` and `yarn android:reverse` before launching `yarn dev:mobile`.)*
 
-6. Build the production Android APK / AAB:
+6. **Build a Standalone Offline Release APK**
 
-```bash
-yarn build:mobile
-```
+   Debug APKs (`tauri android build --debug`) connect to `devUrl` (`[http://127.0.0.1:3000](http://127.0.0.1:3000)`) and will show a `"Failed to request"` error when disconnected from your PC. Only a **signed release APK** embeds the static Next.js export (`apps/mobile/out`) and runs 100% offline.
+
+   **One-time local signing setup** (secrets are excluded via `.gitignore`):
+
+   ```powershell
+   # 1. Generate a local Android release keystore
+   keytool -genkeypair -v `
+     -keystore "apps\mobile\src-tauri\gen\android\timber-release.keystore" `
+     -alias timber `
+     -keyalg RSA `
+     -keysize 2048 `
+     -validity 10000 `
+     -storepass "YourStrongPassword" `
+     -keypass "YourStrongPassword" `
+     -dname "CN=Timber, O=Timber, C=IN"
+
+   # 2. Create apps/mobile/src-tauri/gen/android/keystore.properties
+   @"
+   storePassword=YourStrongPassword
+   keyPassword=YourStrongPassword
+   keyAlias=timber
+   storeFile=timber-release.keystore
+   "@ | Set-Content -Path "apps\mobile\src-tauri\gen\android\keystore.properties" -Encoding ASCII
+   ```
+
+   `apps/mobile/src-tauri/gen/android/app/build.gradle.kts` automatically loads `keystore.properties` when present.
+
+   > **Error: `keytool : The term 'keytool' is not recognized as the name of a cmdlet...`**
+   >
+   > `keytool` comes with the JDK, and PowerShell can't find it because the JDK's `bin` folder isn't on your `PATH`. Add Android Studio's bundled JDK for the current PowerShell window, check it works, then rerun step 1:
+   >
+   > ```powershell
+   > $env:Path += ";C:\Program Files\Android\Android Studio\jbr\bin"
+   > keytool -help
+   > ```
+   >
+   > If that folder doesn't exist, search for `keytool.exe` and add the `bin` folder it prints:
+   >
+   > ```powershell
+   > Get-ChildItem "C:\Program Files\Android","C:\Program Files\Java","C:\Program Files\Eclipse Adoptium","C:\Program Files\Microsoft" -Recurse -Filter keytool.exe -ErrorAction SilentlyContinue | Select-Object -First 5 FullName
+   > ```
+   >
+   > No JDK at all? Run `winget install Microsoft.OpenJDK.17`, then close and reopen PowerShell.
+   >
+   > The `$env:Path` change only lasts for the current window. To make it permanent, add the same folder under **Windows → Environment Variables → Path**.
+   >
+   > **Made a mistake (wrong password, wrong alias)?** Delete both generated files and rerun steps 1 and 2:
+   >
+   > ```powershell
+   > Remove-Item "apps\mobile\src-tauri\gen\android\timber-release.keystore" -ErrorAction SilentlyContinue
+   > Remove-Item "apps\mobile\src-tauri\gen\android\keystore.properties" -ErrorAction SilentlyContinue
+   > ```
+   >
+   > Back up the keystore and its password somewhere safe. If you lose them, you can't publish updates to the same app under the same signing key.
+
+   **Build the signed release APK:**
+
+   ```powershell
+   yarn build:mobile:apk
+   ```
+
+   Output APK path:
+   `apps\mobile\src-tauri\gen\android\app\build\outputs\apk\universal\release\app-universal-release.apk`
+
+7. **Install the APK on Your Android Device**
+
+   * **Option A — Install via ADB (recommended for development):**
+     ```powershell
+     # Remove any prior debug build and clear port-forwarding tunnels
+     adb uninstall com.timber.mobile
+     adb reverse --remove-all
+
+     # Install the signed offline release APK
+     adb install "apps\mobile\src-tauri\gen\android\app\build\outputs\apk\universal\release\app-universal-release.apk"
+     ```
+   * **Option B — Install directly on the phone:**
+     Copy `app-universal-release.apk` to your phone's `Download` folder (via USB or `adb push`) and tap the file in your Android file manager to install.
+
+   To build all Android targets / Play Store bundles:
+
+   ```bash
+   yarn build:mobile
+   ```
+
+#### What Users Need to Know Before Installing
+
+* **Enable "Install unknown apps" (required for on-device APK install):** Because Timber is sideloaded outside the Google Play Store, Android blocks direct `.apk` installation by default and shows a generic **"App not installed"** error. Go to **Settings → Apps → Special app access → Install unknown apps** (or tap **Settings** on the prompt) and allow your file manager or browser to install apps.
+* **Accept the "Install via USB" countdown prompt (ADB installs):** Some Android devices (MIUI, HyperOS, ColorOS, etc.) show an on-screen security popup with a countdown timer when running `adb install`. Unlock your phone and tap **Install / Allow** before the timer expires, and make sure **Install via USB** is enabled in **Developer options**.
+* **Google Play Protect warning:** Because the APK is signed with a self-signed keystore, Google Play Protect may display an unrecognized developer warning during installation. Tap **More details → Install anyway**.
+* **Uninstall before switching between Dev and Release builds:** Android rejects installing a release-signed APK over a debug-signed APK (or vice versa) with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Always run `adb uninstall com.timber.mobile` before switching between `yarn dev:mobile` and `yarn build:mobile:apk`. *(Export or keep your `.json` backup file handy first, since uninstalling clears `localStorage`.)*
+* **Verify 100% offline operation:** After installing the release APK, run `adb reverse --remove-all`, turn on **Airplane Mode**, and launch **Timber**. The app should load immediately without requiring a PC connection.
+
+#### Common Android Build & Install Issues
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `"App not installed"` when tapping APK on phone | Unknown sources disabled, unsigned APK, or signature conflict with an older debug install | Enable **Install unknown apps** for your file manager, ensure `app-universal-release.apk` is signed, and uninstall any prior Timber debug build first |
+| `"Failed to request..."` or `"Web page not available"` when disconnected from PC | Running a `--debug` APK instead of a signed release APK | Build with `yarn build:mobile:apk` (without `--debug`) and install `app-universal-release.apk` |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | Switching between debug (`android:dev`) and release (`build:mobile:apk`) signatures | Run `adb uninstall com.timber.mobile` (or `adb shell pm uninstall --user 0 com.timber.mobile`) and reinstall |
+| Gradle fails with `A problem occurred starting process 'command 'cli.bat''` | Corepack Yarn caused `tauri android init` to write `executable = """cli"""` in `BuildTask.kt` | Change `val executable = """cli"""` to `val executable = """yarn"""` in `apps/mobile/src-tauri/gen/android/buildSrc/src/main/java/com/timber/mobile/kotlin/BuildTask.kt` |
+| `keytool : The term 'keytool' is not recognized...` | The JDK's `bin` folder is not on your `PATH` | Run `$env:Path += ";C:\Program Files\Android\Android Studio\jbr\bin"`, confirm with `keytool -help`, then rerun the keystore command |
+| `keytool error: Key pair not generated, alias <timber> already exists` | A keystore from an earlier attempt is still there | Delete `timber-release.keystore` and `keystore.properties` in `apps\mobile\src-tauri\gen\android`, then rerun both setup steps |
 
 ## Developer Guide: How to Make Changes
 

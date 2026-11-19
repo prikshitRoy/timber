@@ -13,7 +13,7 @@
 
 > ⚠️ **Instruction for AI (binding, not descriptive):** This file is the single source of truth for what this project is and what has been built so far. See **"How to Keep This File Updated (Instructions for AI)"** at the bottom — those are operating rules you must act on in every response that changes the project, not prose describing the project.
 
-**Last updated:** 2026-11-19
+**Last updated:** 2026-11-20
 
 ---
 
@@ -88,6 +88,7 @@ Status key: **Done** | **In progress** | **Planned**
 | System / Light / Dark theme toggle with `localStorage` persistence | Done |
 | Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
 | Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
+| Signed standalone offline `universal` Android release APK build (`build:mobile:apk`) and installation docs | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -121,9 +122,10 @@ yarn test           # run @timber/core unit tests
 yarn test:watch     # continuously re-run @timber/core unit tests on file changes
 yarn dev:extension  # start WXT extension dev server (Chrome MV3)
 yarn build:extension # build production WXT extension bundle
-yarn android:reverse # tunnel Android port 3000 to PC via adb reverse
-yarn dev:mobile      # start Tauri Android dev build on 127.0.0.1
-yarn build:mobile    # build Tauri Android APK/AAB bundle
+yarn android:reverse  # tunnel Android port 3000 to PC via adb reverse
+yarn dev:mobile       # start Tauri Android dev build on 127.0.0.1
+yarn build:mobile:apk # build signed standalone offline arm64 Android APK
+yarn build:mobile     # build Tauri Android release APK/AAB bundle
 ```
 
 ### Per-Package Developer Commands (run from `Timber/`)
@@ -171,6 +173,8 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-20 — Documented Android release signing setup, standalone APK sideloading (ADB and on-device), required device permissions ("Install unknown apps", USB install prompt, Play Protect), and common install troubleshooting in `README.md` and `PROJECT_OVERVIEW.md`.
+- 2026-11-19 — Added `build:mobile:apk` script for standalone offline `universal` Android APK builds and verified offline installation on device.
 - 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
 - 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
 - 2026-11-19 — Generated custom Timber launcher icons for `Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
