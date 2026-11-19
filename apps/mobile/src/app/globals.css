@@ -24,4 +24,20 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Android edge-to-edge WebView may report 0px for safe-area-inset-top, so enforce a minimum clearance */
+  .safe-header-top {
+    --status-bar-min-inset: 2.5rem;
+    padding-top: calc(
+      max(env(safe-area-inset-top, 0px), var(--status-bar-min-inset)) + 0.75rem
+    );
+  }
+
+  /* Keep the bottom of the bookmark list clear of the Android gesture navigation bar */
+  .safe-area-bottom {
+    --nav-bar-min-inset: 1.5rem;
+    padding-bottom: calc(
+      max(env(safe-area-inset-bottom, 0px), var(--nav-bar-min-inset)) + 1.5rem
+    );
+  }
 }

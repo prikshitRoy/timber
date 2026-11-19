@@ -46,7 +46,7 @@ export default function MobileHeader({
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/95 px-4 pb-3 pt-4 backdrop-blur">
+    <header className="safe-header-top sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/95 px-4 pb-3 backdrop-blur">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span

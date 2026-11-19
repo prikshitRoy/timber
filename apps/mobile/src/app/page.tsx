@@ -62,7 +62,7 @@ export default function Home() {
         onClearCatalog={handleClearCatalog}
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-10 pt-3">
+      <main className="safe-area-bottom mx-auto max-w-2xl px-4 pt-3">
         {(status || error) && (
           <div className="mb-3 flex flex-col gap-1">
             {status && (
