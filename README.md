@@ -125,6 +125,43 @@ yarn dev:mobile
 
 4. Build the production Android APK / AAB:
 
+### 3. Running the Android App (`@timber/mobile`)
+
+1. Initialize the Tauri Android project (first time only):
+
+```bash
+yarn workspace @timber/mobile tauri android init
+```
+
+2. On your Android device (connected to the same Wi-Fi network as your PC), enable **Developer options** and turn on **Wireless debugging**.
+3. Connect your PC to the device using the IP address and port shown on the phone's **Wireless debugging** screen, then verify it is detected:
+
+```bash
+# Connect over Wi-Fi (replace with your phone's IP:port)
+adb connect 192.168.xxx.xx:xxxxx
+
+# Confirm the device appears with status "device"
+adb devices
+```
+
+4. Tunnel port `3000` from the Android device to your PC so the Tauri WebView can load the local Next.js dev server (`127.0.0.1:3000`):
+
+```bash
+yarn android:reverse
+# or: yarn workspace @timber/mobile android:reverse
+```
+
+5. Start the Tauri Android development build:
+
+```bash
+yarn dev:mobile
+# or: yarn workspace @timber/mobile android:dev
+```
+
+*(If your phone disconnects from Wi-Fi or restarts, re-run `adb connect` and `yarn android:reverse` before launching `yarn dev:mobile`.)*
+
+6. Build the production Android APK / AAB:
+
 ```bash
 yarn build:mobile
 ```
@@ -222,8 +259,9 @@ Project Timber/
 | `yarn test:watch`      | Run `@timber/core` unit tests in continuous watch mode                                        |
 | `yarn dev:extension`   | Start WXT development server for Chrome MV3                                                   |
 | `yarn build:extension` | Build production Chrome MV3 extension bundle                                                  |
-| `yarn dev:mobile`      | Run Tauri Android development build (`tauri android dev`)                                     |
-| `yarn build:mobile`    | Build Tauri Android production package (`tauri android build`)                                |
+| `yarn android:reverse` | Forward Android device port `3000` to PC (`adb reverse tcp:3000 tcp:3000`) |
+| `yarn dev:mobile` | Run Tauri Android development build on `127.0.0.1` (`apps/mobile` `android:dev`) |
+| `yarn build:mobile` | Build Tauri Android production package (`tauri android build`) |
 
 ### Per-Workspace Scripts (`yarn workspace <pkg> <script>`)
 
@@ -240,8 +278,10 @@ Project Timber/
 | `@timber/extension` | `yarn workspace @timber/extension zip`           | Package Chrome MV3 and Firefox extension `.zip` archives                     |
 | `@timber/mobile`    | `yarn workspace @timber/mobile compile`          | Type-check the Next.js mobile app (`tsc --noEmit`)                           |
 | `@timber/mobile`    | `yarn workspace @timber/mobile next-start`       | Start Next.js frontend dev server on port 3000                               |
-| `@timber/mobile`    | `yarn workspace @timber/mobile next-build`       | Build static Next.js frontend export to `apps/mobile/out`                    |
-| `@timber/mobile`    | `yarn workspace @timber/mobile tauri`            | Run Tauri CLI commands for `@timber/mobile`                                  |
+| `@timber/mobile` | `yarn workspace @timber/mobile next-build` | Build static Next.js frontend export to `apps/mobile/out` |
+| `@timber/mobile` | `yarn workspace @timber/mobile android:reverse` | Tunnel device port `3000` over ADB (`adb reverse tcp:3000 tcp:3000`) |
+| `@timber/mobile` | `yarn workspace @timber/mobile android:dev` | Run Tauri Android dev build bound to `127.0.0.1` |
+| `@timber/mobile` | `yarn workspace @timber/mobile tauri` | Run Tauri CLI commands for `@timber/mobile` |                            |
 
 ## Testing
 

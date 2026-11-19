@@ -114,8 +114,9 @@ yarn test           # run @timber/core unit tests
 yarn test:watch     # continuously re-run @timber/core unit tests on file changes
 yarn dev:extension  # start WXT extension dev server (Chrome MV3)
 yarn build:extension # build production WXT extension bundle
-yarn dev:mobile     # start Tauri Android dev build
-yarn build:mobile   # build Tauri Android APK/AAB bundle
+yarn android:reverse # tunnel Android port 3000 to PC via adb reverse
+yarn dev:mobile      # start Tauri Android dev build on 127.0.0.1
+yarn build:mobile    # build Tauri Android APK/AAB bundle
 ```
 
 ### Per-Package Developer Commands (run from `Project Timber/`)
@@ -135,10 +136,13 @@ yarn workspace @timber/extension build:firefox # build Firefox production extens
 yarn workspace @timber/extension zip      # package Chrome and Firefox extension zips
 
 # Android Mobile App (Project Timber/apps/mobile)
-yarn workspace @timber/mobile compile     # type-check Next.js mobile frontend against @timber/core
-yarn workspace @timber/mobile next-build  # test Next.js static export to apps/mobile/out
+yarn workspace @timber/mobile compile          # type-check Next.js mobile frontend against @timber/core
+yarn workspace @timber/mobile next-build       # test Next.js static export to apps/mobile/out
 yarn workspace @timber/mobile tauri android init # initialize Android Gradle project
-yarn workspace @timber/mobile tauri android dev  # run app on connected Android device/emulator
+adb connect 192.168.xxx.xx:xxxxx               # connect Android device over Wireless Debugging
+adb devices                                    # verify device is connected with status "device"
+yarn workspace @timber/mobile android:reverse  # forward device port 3000 to PC (adb reverse tcp:3000 tcp:3000)
+yarn workspace @timber/mobile android:dev      # run app on connected Android device (tauri android dev --host 127.0.0.1)
 ```
 
 ### Developer Workflow: How Changes Propagate
@@ -160,6 +164,8 @@ yarn workspace @timber/mobile tauri android dev  # run app on connected Android 
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-19 — Documented ADB Wi-Fi debugging (`adb connect`, `adb devices`, `android:reverse`) and Android run commands in `README.md` and `PROJECT_OVERVIEW.md`.
+- 2026-11-19 — Added Android status bar top clearance and bottom gesture-bar safe-area insets to `apps/mobile` (`layout.tsx`, `globals.css`, `MobileHeader.tsx`, `page.tsx`) and added `android:reverse` / `android:dev` scripts.
 - 2026-11-19 — Built Android bookmark UI components (`MobileHeader`, `EmptyCatalogState`, `BookmarkFavicon`, `BookmarkRow`, `FolderItem`, `CatalogList`) and wired `apps/mobile/src/app/page.tsx`.
 - 2026-11-18 — Added mobile catalog helpers and unit tests in `packages/core`, plus `localStorage` persistence, Tauri link opener, and `useTimberCatalog` hook in `apps/mobile`.
 - 2026-11-18 — Configured `Project Timber/apps/mobile` to consume `@timber/core`, cleaned up `src-tauri` Rust host metadata (`com.timber.mobile`), and initialized Tauri Android.
