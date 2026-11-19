@@ -86,6 +86,8 @@ Status key: **Done** | **In progress** | **Planned**
 | Auto-dismissible status banners, dismissible error banners, and search clear button | Done |
 | Quick Copy URL button on bookmark rows with Android WebView clipboard fallback | Done |
 | System / Light / Dark theme toggle with `localStorage` persistence | Done |
+| Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
+| Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -169,6 +171,9 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
+- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
+- 2026-11-19 — Generated custom Timber launcher icons for `Project Timber/apps/mobile` (`src-tauri/icons/` and Android `mipmap-*` resources).
 - 2026-11-19 — Added System / Light / Dark theme toggle (`features/theme`) and light/dark Tailwind styling across `Project Timber/apps/mobile`.
 - 2026-11-19 — Added quick Copy URL button (`copy-bookmark.ts`, `BookmarkRow.tsx`) with Android clipboard fallback in `Project Timber/apps/mobile`.
 - 2026-11-19 — Added auto-dismissible `StatusBanner` and search input clear button in `Project Timber/apps/mobile`.
