@@ -23,7 +23,7 @@ abstract class BuildTask : DefaultTask() {
 
     @TaskAction
     fun assemble() {
-        val executable = """cli""";
+        val executable = """yarn""";
         try {
             runTauriCli(executable)
         } catch (e: Exception) {
