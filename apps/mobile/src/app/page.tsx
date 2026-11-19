@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import {
   CatalogList,
+  ConfirmDialog,
   EmptyCatalogState,
   MobileHeader,
   SettingsModal,
@@ -10,12 +11,19 @@ import {
   useTimberCatalog,
 } from "@/features/bookmarks";
 
+// Tracks a pending destructive action awaiting explicit confirmation from the user.
+type PendingConfirmation =
+  | { kind: "clear" }
+  | { kind: "replace"; file: File };
+
 /**
  * Main Android screen for importing Timber JSON backups, searching, and opening bookmarks.
  */
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [pendingConfirm, setPendingConfirm] =
+    useState<PendingConfirmation | null>(null);
   const {
     isLoaded,
     hasCatalogData,
@@ -49,17 +57,38 @@ setError(
     }
   }
 
-  /**
-   * Pass the selected JSON backup file to the catalog importer and close Settings if open.
+/**
+   * Guard Replace imports with a confirmation dialog when local data exists; import immediately otherwise.
    */
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     // Reset input value so selecting the same filename twice still triggers onChange.
     event.target.value = "";
-    if (file) {
-      setIsSettingsOpen(false);
-      void handleImportJsonFile(file);
+    if (!file) return;
+
+    setIsSettingsOpen(false);
+
+    if (importMode === "replace" && hasCatalogData) {
+      setPendingConfirm({ kind: "replace", file });
+      return;
     }
+
+    void handleImportJsonFile(file);
+  }
+
+  /**
+   * Execute the pending destructive action after explicit user confirmation.
+   */
+  function handleConfirmAction() {
+    if (!pendingConfirm) return;
+
+    if (pendingConfirm.kind === "clear") {
+      handleClearCatalog();
+    } else {
+      void handleImportJsonFile(pendingConfirm.file);
+    }
+
+    setPendingConfirm(null);
   }
 
   return (
@@ -123,10 +152,31 @@ setError(
           onTriggerImport={() => fileInputRef.current?.click()}
           hasCatalogData={hasCatalogData}
           onClearCatalog={() => {
-            handleClearCatalog();
             setIsSettingsOpen(false);
+            setPendingConfirm({ kind: "clear" });
           }}
           onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
+
+      {pendingConfirm && (
+        <ConfirmDialog
+          title={
+            pendingConfirm.kind === "clear"
+              ? "Clear all bookmarks?"
+              : "Replace current bookmarks?"
+          }
+          description={
+            pendingConfirm.kind === "clear"
+              ? `This removes all ${bookmarks.length} bookmarks and ${folders.length} folders from this device. This can't be undone.`
+              : `Importing "${pendingConfirm.file.name}" in Replace mode will overwrite your current ${bookmarks.length} bookmarks and ${folders.length} folders.`
+          }
+          confirmLabel={
+            pendingConfirm.kind === "clear" ? "Clear All" : "Replace All"
+          }
+          isDanger
+          onConfirm={handleConfirmAction}
+          onCancel={() => setPendingConfirm(null)}
         />
       )}
     </div>
