@@ -33,7 +33,8 @@
     "watch": "node scripts/watch-verify.mjs",
     "dev:extension": "yarn workspace @timber/extension dev",
     "build:extension": "yarn workspace @timber/extension build",
-    "dev:mobile": "yarn workspace @timber/mobile tauri android dev",
-    "build:mobile": "yarn workspace @timber/mobile tauri android build"
+    "android:reverse": "yarn --cwd apps/mobile android:reverse",
+    "dev:mobile": "yarn --cwd apps/mobile android:dev",
+    "build:mobile": "yarn --cwd apps/mobile tauri android build"
   }
 }
