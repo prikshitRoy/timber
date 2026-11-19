@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-android-apk:
-    name: Build Standalone Android APK (arm64)
+    name: Build Standalone Android APK (universal)
     runs-on: ubuntu-latest
 
     steps:
@@ -90,9 +90,9 @@ jobs:
       - name: Resolve generated APK path
         id: apk
         run: |
-          APK_DIR="apps/mobile/src-tauri/gen/android/app/build/outputs/apk/arm64/release"
-          if [ -f "$APK_DIR/app-arm64-release.apk" ]; then
-            echo "path=$APK_DIR/app-arm64-release.apk" >> "$GITHUB_OUTPUT"
+          APK_DIR="apps\mobile\src-tauri\gen\android\app\build\outputs\apk\universal\release"
+          if [ -f "$APK_DIR/app-universal-release.apk" ]; then
+            echo "path=$APK_DIR/app-universal-release.apk" >> "$GITHUB_OUTPUT"
             echo "name=timber-android-arm64.apk" >> "$GITHUB_OUTPUT"
           elif [ -f "$APK_DIR/app-arm64-release-unsigned.apk" ]; then
             echo "path=$APK_DIR/app-arm64-release-unsigned.apk" >> "$GITHUB_OUTPUT"
@@ -116,4 +116,3 @@ jobs:
         with:
           generate_release_notes: true
           files: ${{ steps.apk.outputs.path }}
-          
