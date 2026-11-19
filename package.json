@@ -35,6 +35,7 @@
     "build:extension": "yarn workspace @timber/extension build",
     "android:reverse": "yarn --cwd apps/mobile android:reverse",
     "dev:mobile": "yarn --cwd apps/mobile android:dev",
+    "build:mobile:apk": "yarn --cwd apps/mobile android:apk",
     "build:mobile": "yarn --cwd apps/mobile tauri android build"
   }
 }

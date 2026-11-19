@@ -10,7 +10,8 @@
     "build": "tauri build",
     "dev": "tauri dev",
     "android:reverse": "adb reverse tcp:3000 tcp:3000",
-    "android:dev": "tauri android dev --host 127.0.0.1"
+    "android:dev": "tauri android dev --host 127.0.0.1",
+    "android:apk": "tauri android build --apk --target aarch64"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",

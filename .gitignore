@@ -76,3 +76,8 @@ captures/
 
 # Custom tooling
 caffeine_note
+
+# Android release signing secrets
+*.keystore
+*.jks
+keystore.properties
