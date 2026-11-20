@@ -36,7 +36,7 @@ jobs:
           targets: aarch64-linux-android
 
       - name: Cache Rust build artifacts
-        uses: swatinem/rust-cache@v3
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: apps/mobile/src-tauri -> target
 
@@ -84,7 +84,7 @@ jobs:
       - name: Ensure gradlew is executable on Linux
         run: chmod +x apps/mobile/src-tauri/gen/android/gradlew
 
-      - name: Build Android release APK (arm64)
+      - name: Build Android release APK
         run: yarn build:mobile:apk
 
       - name: Resolve generated APK path
@@ -116,3 +116,4 @@ jobs:
         with:
           generate_release_notes: true
           files: ${{ steps.apk.outputs.path }}
+          
