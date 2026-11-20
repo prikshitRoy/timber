@@ -133,6 +133,7 @@ function App() {
         connected={connected}
         nativeChanged={nativeChanged}
         loading={loading}
+        onConnect={handleConnect}
         onScan={handleScan}
         onAddRootLink={() => {
           setAddLinkTargetFolderId(null);

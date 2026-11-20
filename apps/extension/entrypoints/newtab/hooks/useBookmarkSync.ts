@@ -67,10 +67,11 @@ export function useBookmarkSync({
    */
   async function handleConnect() {
     try {
+      const permissionPromise = requestBookmarkPermission();
       setLoading(true);
       setError("");
 
-      const granted = await requestBookmarkPermission();
+      const granted = await permissionPromise;
       if (!granted) {
         setStatus("Bookmark permission was not granted.");
         return;

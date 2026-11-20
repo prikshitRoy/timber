@@ -1,6 +1,6 @@
 /**
  * Top header bar for the New Tab dashboard with brand mark, search input,
- * native change badge, Scan button, and quick creation buttons for links and folders.
+ * native change badge, Connect/Scan button, and quick creation buttons for links and folders.
  */
 
 interface DashboardHeaderProps {
@@ -9,6 +9,7 @@ interface DashboardHeaderProps {
   connected: boolean;
   nativeChanged: boolean;
   loading: boolean;
+  onConnect: () => void;
   onScan: () => void;
   onAddRootLink: () => void;
   onCreateFolder: () => void;
@@ -23,6 +24,7 @@ export default function DashboardHeader({
   connected,
   nativeChanged,
   loading,
+  onConnect,
   onScan,
   onAddRootLink,
   onCreateFolder,
@@ -49,9 +51,13 @@ export default function DashboardHeader({
           <span className="native-changed-badge">Bookmarks changed</span>
         )}
 
-        {connected && (
+        {connected ? (
           <button onClick={onScan} disabled={loading} type="button">
             {loading ? "Scanning..." : "Scan"}
+          </button>
+        ) : (
+          <button onClick={onConnect} disabled={loading} type="button">
+            {loading ? "Connecting..." : "Connect & Scan"}
           </button>
         )}
 
