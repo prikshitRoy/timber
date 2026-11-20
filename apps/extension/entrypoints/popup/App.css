@@ -1,42 +1,214 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.popup-shell {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #54bc4ae0);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--popup-border);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.popup-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.popup-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
 }
 
-.card {
-  padding: 2em;
+.popup-title {
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.read-the-docs {
-  color: #888;
+.popup-link-btn {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  color: var(--popup-accent);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.popup-link-btn:hover {
+  text-decoration: underline;
+}
+
+.popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.popup-saved-banner {
+  background: var(--popup-surface);
+  border: 1px solid var(--popup-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popup-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--popup-success);
+}
+
+.popup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.popup-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--popup-surface-subtle);
+  color: var(--popup-text);
+}
+
+.popup-chip-remove {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  color: var(--popup-text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.popup-chip-remove:hover {
+  color: var(--popup-danger);
+}
+
+.popup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popup-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--popup-text-muted);
+}
+
+.popup-input,
+.popup-select {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--popup-border);
+  background: var(--popup-surface);
+  color: var(--popup-text);
+  font-size: 13px;
+  outline: none;
+}
+
+.popup-input:focus,
+.popup-select:focus {
+  border-color: var(--popup-accent);
+}
+
+.popup-url {
+  margin: 0;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: var(--popup-surface-subtle);
+  color: var(--popup-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.popup-btn-primary {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--popup-accent);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup-btn-primary:hover:not(:disabled) {
+  background: var(--popup-accent-hover);
+}
+
+.popup-btn-primary:disabled,
+.popup-btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.popup-btn-danger {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--popup-danger-bg);
+  color: var(--popup-danger);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.popup-empty-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.popup-muted {
+  margin: 0;
+  font-size: 12px;
+  color: var(--popup-text-muted);
+}
+
+.popup-status {
+  margin: 0;
+  font-size: 12px;
+  color: var(--popup-success);
+}
+
+.popup-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--popup-danger);
 }

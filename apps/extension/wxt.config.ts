@@ -13,7 +13,7 @@ export default defineConfig({
     name: "Timber",
     description: "A universal bookmark dashboard.",
 
-    permissions: ["storage"],
+    permissions: ["storage", "activeTab"],
     optional_permissions: ["bookmarks"],
   }
 });
