@@ -90,16 +90,16 @@ jobs:
       - name: Resolve generated APK path
         id: apk
         run: |
-          APK_DIR="apps\mobile\src-tauri\gen\android\app\build\outputs\apk\universal\release"
+          APK_DIR="apps/mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release"
           if [ -f "$APK_DIR/app-universal-release.apk" ]; then
             echo "path=$APK_DIR/app-universal-release.apk" >> "$GITHUB_OUTPUT"
-            echo "name=timber-android-arm64.apk" >> "$GITHUB_OUTPUT"
-          elif [ -f "$APK_DIR/app-arm64-release-unsigned.apk" ]; then
-            echo "path=$APK_DIR/app-arm64-release-unsigned.apk" >> "$GITHUB_OUTPUT"
-            echo "name=timber-android-arm64-unsigned.apk" >> "$GITHUB_OUTPUT"
+            echo "name=timber-android-universal.apk" >> "$GITHUB_OUTPUT"
+          elif [ -f "$APK_DIR/app-universal-release-unsigned.apk" ]; then
+            echo "path=$APK_DIR/app-universal-release-unsigned.apk" >> "$GITHUB_OUTPUT"
+            echo "name=timber-android-universal-unsigned.apk" >> "$GITHUB_OUTPUT"
           else
             echo "No APK found in $APK_DIR"
-            ls -la "$APK_DIR"
+            find apps/mobile/src-tauri/gen/android/app/build/outputs/apk -maxdepth 3 -ls || true
             exit 1
           fi
 
