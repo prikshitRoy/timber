@@ -11,3 +11,5 @@ export { default as StatusBanner } from "./components/StatusBanner";
 export { useTimberCatalog } from "./hooks/useTimberCatalog";
 export { copyBookmarkUrl } from "./services/copy-bookmark";
 export { openBookmarkUrl } from "./services/open-bookmark";
+export { default as ShareLinkModal } from "./components/ShareLinkModal";
+export { useSharedLinkIntent } from "./hooks/useSharedLinkIntent";

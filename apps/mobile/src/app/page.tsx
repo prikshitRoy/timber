@@ -7,9 +7,11 @@ import {
   EmptyCatalogState,
   MobileHeader,
   SettingsModal,
+  ShareLinkModal,
   StatusBanner,
   copyBookmarkUrl,
   openBookmarkUrl,
+  useSharedLinkIntent,
   useTimberCatalog,
 } from "@/features/bookmarks";
 import { useMobileTheme } from "@/features/theme";
@@ -26,6 +28,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { themeMode, setThemeMode } = useMobileTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { pendingShare, clearPendingShare } = useSharedLinkIntent();
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingConfirmation | null>(null);
   const {
@@ -46,6 +49,7 @@ export default function Home() {
     setError,
     handleImportJsonFile,
     handleClearCatalog,
+    handleAddSharedBookmark,
   } = useTimberCatalog();
 
   /**
@@ -194,6 +198,16 @@ export default function Home() {
           isDanger
           onConfirm={handleConfirmAction}
           onCancel={() => setPendingConfirm(null)}
+        />
+      )}
+
+      {pendingShare && (
+        <ShareLinkModal
+          key={`${pendingShare.url}-${pendingShare.title}`}
+          sharedLink={pendingShare}
+          folders={folders}
+          onSave={handleAddSharedBookmark}
+          onClose={clearPendingShare}
         />
       )}
     </div>

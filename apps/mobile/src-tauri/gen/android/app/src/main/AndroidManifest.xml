@@ -10,6 +10,7 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.timber_mobile"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
+        
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
@@ -21,6 +22,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <!-- AndroidTV support -->
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <!-- Appear in Android Share Sheet for URLs / shared text -->
+            <intent-filter android:label="Save to Timber">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
 
