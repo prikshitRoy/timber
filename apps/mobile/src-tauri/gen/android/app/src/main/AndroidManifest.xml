@@ -39,11 +39,21 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
-            <!-- Appear in Android Share Sheet for URLs / shared text -->
+            </activity>
+
+        <!-- Translucent overlay popup so users can save shared URLs without leaving their current app -->
+        <activity
+            android:name=".ShareActivity"
+            android:label="Save to Timber"
+            android:theme="@style/Theme.Timber.ShareOverlay"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter android:label="Save to Timber">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/*" />
             </intent-filter>
         </activity>
 

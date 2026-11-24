@@ -3,4 +3,16 @@
     <style name="Theme.timber_mobile" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Transparent theme so ShareActivity floats as a popup over the caller app -->
+    <style name="Theme.Timber.ShareOverlay" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>
