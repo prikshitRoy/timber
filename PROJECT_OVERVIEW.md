@@ -93,12 +93,51 @@ Status key: **Done** | **In progress** | **Planned**
 | add Android share target to save URLs into Timber from different app | Done |
 | Per-link browser choice (Default Browser button, installed browsers "Open with" picker, and Default Browser setting) | Done |
 
+
+### 4.4 Feature Parity (Extension vs. Mobile)
+
+Status key: **Done** | **In progress** | **Planned** | **N/A** (platform-specific)
+
+| Area | Feature | Extension (`apps/extension`) | Mobile (`apps/mobile`) |
+| --- | --- | --- | --- |
+| **Viewing & Search** | Root grid / list of folders and standalone links | Done | Done |
+| | Nested sub-folders at arbitrary depth | Done | Done |
+| | Website favicons with monogram fallback | Done | Done |
+| | Live search by title or URL | Done | Done |
+| **Opening & Quick Save** | Open link in default browser / new tab | Done | Done |
+| | Per-link browser picker ("Open with" installed browsers + Default Browser setting) | N/A | Done |
+| | Copy bookmark URL to clipboard | Done | Done |
+| | Quick-save outside dashboard (toolbar popup / Android Share Sheet) | Done | Done |
+| **Bookmark CRUD** | Create manual link (`+ Link`) at root | Done | Planned |
+| | Create manual link inside a specific folder | Done | Planned |
+| | Edit single bookmark (title & URL) | Done | Planned |
+| | Delete single bookmark (with confirmation) | Done | Planned |
+| | Duplicate-link deletion choice ("only this instance" vs. "all duplicates") | Done | Planned |
+| | Add existing bookmark to a folder (or create folder & add) | Done | Planned |
+| | Remove bookmark from a folder without deleting it from catalog | Done | Planned |
+| **Folder Management** | Create top-level folder (`+ Folder`) | Done | In progress (Share Sheet only) |
+| | Create nested sub-folder (`Add folder`) | Done | Planned |
+| | Rename folder | Done | Planned |
+| | Delete folder (cascading delete of nested folders & links) | Done | Planned |
+| | Bulk folder link editor (inline edit, multi-select copy/delete) | Done | Planned |
+| **Ordering & Sorting** | Sort root items A–Z / Z–A | Done | Planned |
+| | Sort folder children A–Z / Z–A | Done | Planned |
+| | Custom manual reordering (`Edit Layout` for root & folders) | Done | Planned |
+| **Backup & Local Data** | Import `.json` backup (Merge & Replace modes) | Done | Done |
+| | Export `.json` backup (`timber-backup-YYYY-MM-DD.json`) | Done | Planned |
+| | Export Netscape `.html` bookmarks (`timber-bookmarks-YYYY-MM-DD.html`) | Done | Planned |
+| | Clear all local bookmarks (with confirmation) | N/A | Done |
+| **Appearance** | System / Light / Dark theme mode | Done | Done |
+| | Custom background image (upload or URL + frosted-glass surfaces) | Done | Planned |
+| **Native Browser Sync** | Browser bookmark permission, change listener, Scan diff & review modal | Done | N/A |
+
+
 ## 5. Known Issues and Open Items
 
 > Verify these against the current code; remove an item when it is fixed.
 
 - One extension installation currently registers a single default `BrowserSource` per detected `BrowserKind` (`TODO` in `Timber/apps/extension/src/shared/bookmarks/bookmark-synchronizer.ts`).
-- `Timber/apps/extension/entrypoints/popup/` and `Timber/apps/extension/entrypoints/content.ts` are WXT starter placeholders.
+- `Timber/apps/extension/entrypoints/content.ts` is a WXT starter placeholder.
 
 ## 6. Project Structure
 
@@ -176,6 +215,7 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-24 — Added Extension vs. Mobile feature parity matrix (Section 4.4) and removed stale extension popup placeholder note in `PROJECT_OVERVIEW.md`.
 - 2026-11-24 — Added Android browser choice feature (`BrowserBridge.kt`, `features/browsers/`, Default Browser and "Open with" buttons on bookmark cards, Default Browser selector in Settings, and `browser-resolver` unit tests).
 - 2026-11-23 - Added Android share target to save URLs into Timber from different app share option, opens timber popUp for quick save.
 - 2026-11-20 — Added GitHub Actions CI (`ci.yml`) and Android APK release (`release-android.yml`) workflows.
