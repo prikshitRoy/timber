@@ -8,6 +8,7 @@ import {
   type Bookmark,
   type BookmarkPage,
 } from "@timber/core";
+import type { BookmarkActionLocation } from "../state/bookmark-item-mutations";
 import BookmarkRow from "./BookmarkRow";
 
 interface FolderItemProps {
@@ -18,6 +19,10 @@ interface FolderItemProps {
   onOpenUrl: (url: string) => void;
   onChooseBrowser: (bookmark: Bookmark) => void;
   onCopyUrl: (url: string) => void;
+  onOpenBookmarkActions: (
+    bookmark: Bookmark,
+    location: BookmarkActionLocation
+  ) => void;
 }
 
 /**
@@ -31,6 +36,7 @@ export default function FolderItem({
   onOpenUrl,
   onChooseBrowser,
   onCopyUrl,
+  onOpenBookmarkActions,
 }: FolderItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -85,6 +91,7 @@ return (
                   onOpenUrl={onOpenUrl}
                   onChooseBrowser={onChooseBrowser}
                   onCopyUrl={onCopyUrl}
+                  onOpenBookmarkActions={onOpenBookmarkActions}
                 />
               ) : (
                 <BookmarkRow
@@ -94,6 +101,13 @@ return (
                   onOpenUrl={onOpenUrl}
                   onChooseBrowser={onChooseBrowser}
                   onCopyUrl={onCopyUrl}
+                  onOpenActions={(bm) =>
+                    onOpenBookmarkActions(bm, {
+                      kind: "folder",
+                      folderId: folder.id,
+                      folderName: folder.name,
+                    })
+                  }
                 />
               )
             )

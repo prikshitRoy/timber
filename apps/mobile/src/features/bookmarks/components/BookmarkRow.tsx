@@ -12,10 +12,11 @@ interface BookmarkRowProps {
   onOpenUrl: (url: string) => void;
   onChooseBrowser: (bookmark: Bookmark) => void;
   onCopyUrl: (url: string) => void;
+  onOpenActions: (bookmark: Bookmark) => void;
 }
 
 /**
- * Render a bookmark card with two browser-open buttons (default browser & browser list) plus Copy.
+ * Render a bookmark card with two browser-open buttons (default browser & browser list), Copy, and a "⋮" actions button.
  */
 export default function BookmarkRow({
   bookmark,
@@ -23,25 +24,37 @@ export default function BookmarkRow({
   onOpenUrl,
   onChooseBrowser,
   onCopyUrl,
+  onOpenActions,
 }: BookmarkRowProps) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800/90 dark:bg-zinc-900/90 dark:shadow-none">
-      <button
-        type="button"
-        onClick={() => onOpenUrl(bookmark.url)}
-        className="flex w-full min-w-0 items-center gap-3 rounded-t-xl px-3.5 pb-2 pt-3 text-left transition active:bg-zinc-100 dark:active:bg-zinc-800/80"
-      >
-        <BookmarkFavicon url={bookmark.url} title={bookmark.title} />
+      <div className="flex items-center">
+        <button
+          type="button"
+          onClick={() => onOpenUrl(bookmark.url)}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-tl-xl py-3 pl-3.5 pr-1 text-left transition active:bg-zinc-100 dark:active:bg-zinc-800/80"
+        >
+          <BookmarkFavicon url={bookmark.url} title={bookmark.title} />
 
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            {bookmark.title}
-          </p>
-          <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-            {bookmark.url}
-          </p>
-        </div>
-      </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              {bookmark.title}
+            </p>
+            <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+              {bookmark.url}
+            </p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onOpenActions(bookmark)}
+          aria-label={`More actions for ${bookmark.title}`}
+          className="mr-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base font-bold text-zinc-500 transition active:bg-zinc-100 active:text-zinc-900 dark:text-zinc-400 dark:active:bg-zinc-800 dark:active:text-zinc-100"
+        >
+          ⋮
+        </button>
+      </div>
 
       <div className="flex items-center gap-1.5 border-t border-zinc-100 px-3 py-2 dark:border-zinc-800/70">
         <button

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { Bookmark } from "@timber/core";
 import {
   AddLinkModal,
+  BookmarkActionModals,
   CatalogList,
   ConfirmDialog,
   EmptyCatalogState,
@@ -15,6 +16,7 @@ import {
   useMobileBookmarkActions,
   useSharedLinkIntent,
   useTimberCatalog,
+  type BookmarkActionMenuTarget,
 } from "@/features/bookmarks";
 import {
   BrowserPickerModal,
@@ -55,8 +57,10 @@ export default function Home() {
 
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingConfirmation | null>(null);
-const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
+  const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [bookmarkMenuTarget, setBookmarkMenuTarget] =
+    useState<BookmarkActionMenuTarget | null>(null);
 
   const {
     state,
@@ -80,7 +84,15 @@ const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
     handleClearCatalog,
   } = useTimberCatalog();
 
-  const { handleCreateLink, handleCreateFolder } = useMobileBookmarkActions({
+  const {
+    handleCreateLink,
+    handleCreateFolder,
+    handleEditBookmark,
+    handleAddBookmarkToFolder,
+    handleRemoveBookmarkFromFolder,
+    handleDeleteBookmarkInstance,
+    handleDeleteBookmarkAll,
+  } = useMobileBookmarkActions({
     state,
     commitState,
     setStatus,
@@ -235,6 +247,9 @@ const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
             onOpenUrl={(url) => void handleOpenBookmark(url)}
             onChooseBrowser={handleChooseBrowser}
             onCopyUrl={(url) => void handleCopyBookmark(url)}
+            onOpenBookmarkActions={(bookmark, location) =>
+              setBookmarkMenuTarget({ bookmark, location })
+            }
           />
         )}
       </main>
@@ -320,6 +335,19 @@ const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
           onClose={() => setIsCreateFolderOpen(false)}
         />
       )}
+
+      <BookmarkActionModals
+        menuTarget={bookmarkMenuTarget}
+        folders={folders}
+        rootBookmarkIds={state?.rootBookmarkIds ?? []}
+        onCloseMenu={() => setBookmarkMenuTarget(null)}
+        onEditBookmark={handleEditBookmark}
+        onAddBookmarkToFolder={handleAddBookmarkToFolder}
+        onRemoveBookmarkFromFolder={handleRemoveBookmarkFromFolder}
+        onDeleteBookmarkInstance={handleDeleteBookmarkInstance}
+        onDeleteBookmarkAll={handleDeleteBookmarkAll}
+        onCopyUrl={(url) => void handleCopyBookmark(url)}
+      />
       
     </div>
   );

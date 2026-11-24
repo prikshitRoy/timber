@@ -3,6 +3,7 @@
  */
 
 import type { Bookmark, BookmarkPage, RootTile } from "@timber/core";
+import type { BookmarkActionLocation } from "../state/bookmark-item-mutations";
 import BookmarkRow from "./BookmarkRow";
 import FolderItem from "./FolderItem";
 
@@ -16,6 +17,10 @@ interface CatalogListProps {
   onOpenUrl: (url: string) => void;
   onChooseBrowser: (bookmark: Bookmark) => void;
   onCopyUrl: (url: string) => void;
+  onOpenBookmarkActions: (
+    bookmark: Bookmark,
+    location: BookmarkActionLocation
+  ) => void;
 }
 
 /**
@@ -31,6 +36,7 @@ export default function CatalogList({
   onOpenUrl,
   onChooseBrowser,
   onCopyUrl,
+  onOpenBookmarkActions,
 }: CatalogListProps) {
   const hasActiveQuery = query.trim().length > 0;
 
@@ -64,6 +70,9 @@ export default function CatalogList({
             onOpenUrl={onOpenUrl}
             onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
+            onOpenActions={(bm) =>
+              onOpenBookmarkActions(bm, { kind: "search" })
+            }
           />
         ))}
       </section>
@@ -83,6 +92,7 @@ export default function CatalogList({
             onOpenUrl={onOpenUrl}
             onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
+            onOpenBookmarkActions={onOpenBookmarkActions}
           />
         ) : (
           <BookmarkRow
@@ -92,6 +102,7 @@ export default function CatalogList({
             onOpenUrl={onOpenUrl}
             onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
+            onOpenActions={(bm) => onOpenBookmarkActions(bm, { kind: "root" })}
           />
         )
       )}
