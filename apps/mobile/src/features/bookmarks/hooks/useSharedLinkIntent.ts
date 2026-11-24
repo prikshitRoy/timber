@@ -1,100 +1,112 @@
 /**
- * Hook that reads incoming Android ACTION_SEND share payloads exposed by MainActivity.kt
- * on both cold launch and warm resume.
+ * Hook that syncs Timber folders to Android's native ShareActivity dropdown
+ * and drains links saved via the native share overlay into local TimberState.
  */
 
-import { useCallback, useEffect, useState } from "react";
-
-export interface IncomingSharedLink {
-    url: string;
-    title: string;
-    rawText: string;
-}
-
-interface RawSharePayload {
-    text?: string;
-    subject?: string;
-}
+import { useCallback, useEffect, useRef } from "react";
+import type { BookmarkPage, TimberState } from "@timber/core";
+import { buildFolderOptions } from "../state/folder-options";
+import {
+    applyPendingNativeSavesToState,
+    parsePendingNativeSaves,
+} from "../state/pending-share-saves";
 
 declare global {
     interface Window {
         TimberAndroidShare?: {
-            consumePendingShare: () => string | null;
+            consumePendingSaves?: () => string | null;
+            syncFolders?: (foldersJson: string) => void;
         };
     }
 }
 
-const URL_PATTERN = /https?:\/\/[^\s<>"{}|\\^`[\]]+/i;
-
-/**
- * Extract the first http(s) URL and a fallback title from Android's shared text/subject extras.
- */
-function parseSharedPayload(raw: RawSharePayload): IncomingSharedLink | null {
-    const rawText = (raw.text ?? "").trim();
-    if (!rawText) return null;
-
-    const match = rawText.match(URL_PATTERN);
-    const extractedUrl = match
-        ? match[0].replace(/[.,!?;:)\]]+$/, "")
-        : rawText;
-
-    const subject = (raw.subject ?? "").trim();
-    const textWithoutUrl = match
-        ? rawText.replace(match[0], "").trim()
-        : "";
-
-    const derivedTitle = subject || textWithoutUrl || extractedUrl;
-
-    return {
-        url: extractedUrl,
-        title: derivedTitle,
-        rawText,
-    };
+interface UseSharedLinkIntentParams {
+    isLoaded: boolean;
+    state: TimberState | null;
+    folders: BookmarkPage[];
+    commitState: (nextState: TimberState) => void;
+    setStatus: (status: string) => void;
 }
 
 /**
- * Subscribe to Android Share Sheet payloads and expose the active pending share for the popup modal.
+ * Mirror custom folders to Android SharedPreferences and drain queued native share saves.
  */
-export function useSharedLinkIntent() {
-    const [pendingShare, setPendingShare] = useState<IncomingSharedLink | null>(
-        null
-    );
+export function useSharedLinkIntent({
+    isLoaded,
+    state,
+    folders,
+    commitState,
+    setStatus,
+}: UseSharedLinkIntentParams) {
+    const latestStateRef = useRef<TimberState | null>(state);
+    latestStateRef.current = state;
 
-    const checkPendingShare = useCallback(() => {
-        if (typeof window === "undefined") return;
-        const rawJson = window.TimberAndroidShare?.consumePendingShare?.();
+    // Keep Android's native ShareActivity folder dropdown in sync with Timber's folders.
+    useEffect(() => {
+        if (!isLoaded || typeof window === "undefined") return;
+        const bridge = window.TimberAndroidShare;
+        if (!bridge || typeof bridge.syncFolders !== "function") return;
+
+        try {
+            const options = buildFolderOptions(folders);
+            // Invoke directly on the injected bridge object; detached Android WebView methods throw.
+            bridge.syncFolders(JSON.stringify(options));
+        } catch {
+            // Ignore bridge errors when WebView is tearing down.
+        }
+    }, [isLoaded, folders]);
+
+    const drainPendingSaves = useCallback(() => {
+        if (!isLoaded || typeof window === "undefined") return;
+
+        const bridge = window.TimberAndroidShare;
+        if (!bridge || typeof bridge.consumePendingSaves !== "function") return;
+
+        // Invoke directly on the injected bridge object; detached Android WebView methods throw.
+        const rawJson = bridge.consumePendingSaves();
         if (!rawJson) return;
 
         try {
-            const parsed = JSON.parse(rawJson) as RawSharePayload;
-            const sharedLink = parseSharedPayload(parsed);
-            if (sharedLink) {
-                setPendingShare(sharedLink);
-            }
+            const parsed = parsePendingNativeSaves(JSON.parse(rawJson));
+            if (parsed.length === 0) return;
+
+            const { nextState, savedCount, lastTitle } =
+                applyPendingNativeSavesToState(latestStateRef.current, parsed);
+
+            if (savedCount === 0) return;
+
+            commitState(nextState);
+            setStatus(
+                savedCount === 1
+                    ? `Saved "${lastTitle}" from Share.`
+                    : `Saved ${savedCount} shared links to Timber.`
+            );
         } catch {
-            // Ignore malformed intent payloads.
+            // Ignore malformed native queue payloads.
         }
-    }, []);
+    }, [isLoaded, commitState, setStatus]);
 
     useEffect(() => {
-        // Check immediately on mount for cold-start shares.
-        checkPendingShare();
+        if (!isLoaded) return;
 
-        // Listen for warm-start shares dispatched from MainActivity.onNewIntent.
-        const handleShareEvent = () => checkPendingShare();
-        window.addEventListener("timber:share-intent", handleShareEvent);
+        // Drain immediately once localStorage catalog finishes loading.
+        drainPendingSaves();
+
+        const handlePendingSaves = () => drainPendingSaves();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                drainPendingSaves();
+            }
+        };
+
+        window.addEventListener("timber:pending-saves", handlePendingSaves);
+        window.addEventListener("focus", handlePendingSaves);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
         return () => {
-            window.removeEventListener("timber:share-intent", handleShareEvent);
+            window.removeEventListener("timber:pending-saves", handlePendingSaves);
+            window.removeEventListener("focus", handlePendingSaves);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [checkPendingShare]);
-
-    const clearPendingShare = useCallback(() => {
-        setPendingShare(null);
-    }, []);
-
-    return {
-        pendingShare,
-        clearPendingShare,
-    };
+    }, [isLoaded, drainPendingSaves]);
 }

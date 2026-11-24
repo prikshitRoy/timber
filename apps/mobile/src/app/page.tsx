@@ -3,14 +3,16 @@
 import { useRef, useState } from "react";
 import type { Bookmark } from "@timber/core";
 import {
+  AddLinkModal,
   CatalogList,
   ConfirmDialog,
   EmptyCatalogState,
+  FolderNameModal,
   MobileHeader,
   SettingsModal,
-  ShareLinkModal,
   StatusBanner,
   copyBookmarkUrl,
+  useMobileBookmarkActions,
   useSharedLinkIntent,
   useTimberCatalog,
 } from "@/features/bookmarks";
@@ -51,10 +53,14 @@ export default function Home() {
   } = useMobileBrowsers();
 
 
-  const { pendingShare, clearPendingShare } = useSharedLinkIntent();
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingConfirmation | null>(null);
+const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+
   const {
+    state,
+    commitState,
     isLoaded,
     hasCatalogData,
     bookmarks,
@@ -72,8 +78,24 @@ export default function Home() {
     setError,
     handleImportJsonFile,
     handleClearCatalog,
-    handleAddSharedBookmark,
   } = useTimberCatalog();
+
+  const { handleCreateLink, handleCreateFolder } = useMobileBookmarkActions({
+    state,
+    commitState,
+    setStatus,
+    setError,
+  });
+
+
+
+  useSharedLinkIntent({
+    isLoaded,
+    state,
+    folders,
+    commitState,
+    setStatus,
+  });
 
 
   /**
@@ -179,6 +201,8 @@ export default function Home() {
         folderCount={folders.length}
         query={query}
         onQueryChange={setQuery}
+        onAddLink={() => setIsAddLinkOpen(true)}
+        onCreateFolder={() => setIsCreateFolderOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
@@ -197,6 +221,8 @@ export default function Home() {
         ) : !hasCatalogData ? (
           <EmptyCatalogState
             onTriggerImport={() => fileInputRef.current?.click()}
+            onAddLink={() => setIsAddLinkOpen(true)}
+            onCreateFolder={() => setIsCreateFolderOpen(true)}
           />
         ) : (
           <CatalogList
@@ -262,17 +288,6 @@ export default function Home() {
         />
       )}
 
-      {pendingShare && (
-        <ShareLinkModal
-          key={`${pendingShare.url}-${pendingShare.title}`}
-          sharedLink={pendingShare}
-          folders={folders}
-          onSave={handleAddSharedBookmark}
-          onClose={clearPendingShare}
-        />
-      )}
-
-
       {browserPickerBookmark && (
         <BrowserPickerModal
           bookmark={browserPickerBookmark}
@@ -286,6 +301,23 @@ export default function Home() {
             void handleOpenInSelectedBrowser(url, browser, shouldSetAsDefault)
           }
           onClose={() => setBrowserPickerBookmark(null)}
+        />
+      )}
+
+      {isAddLinkOpen && (
+        <AddLinkModal
+          folders={folders}
+          onCreate={handleCreateLink}
+          onClose={() => setIsAddLinkOpen(false)}
+        />
+      )}
+
+      {isCreateFolderOpen && (
+        <FolderNameModal
+          title="New folder"
+          submitLabel="Create Folder"
+          onSubmit={(name) => handleCreateFolder(name)}
+          onClose={() => setIsCreateFolderOpen(false)}
         />
       )}
       
