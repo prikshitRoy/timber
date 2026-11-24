@@ -13,7 +13,7 @@
 
 > ⚠️ **Instruction for AI (binding, not descriptive):** This file is the single source of truth for what this project is and what has been built so far. See **"How to Keep This File Updated (Instructions for AI)"** at the bottom — those are operating rules you must act on in every response that changes the project, not prose describing the project.
 
-**Last updated:** 2026-11-20
+**Last updated:** 2026-11-24
 
 ---
 
@@ -29,7 +29,7 @@ It is built for unifying bookmarks across browsers (Chrome, Brave, Firefox) into
 
 | Area                                 | Choice                                                                                    |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Languages                            | TypeScript, Rust (Tauri v2 host)                                                          |
+| Languages                            | TypeScript, Rust (Tauri v2 host), Kotlin (Android native bridges)                         |
 | Shared Core (`packages/core`)        | Pure TypeScript, Node.js built-in test runner (`node:test`)                               |
 | Browser Extension (`apps/extension`) | WXT 0.21.5 (`@wxt-dev/module-react` 1.2.2), React 19.3.1, Tailwind CSS 4.3.4, Vite 8.3.5  |
 | Mobile App (`apps/mobile`)           | Tauri v2 (`2.12`), Next.js `14.2.23` (`output: "export"`), React 18, Tailwind CSS `3.4.1` |
@@ -91,6 +91,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Signed standalone offline `universal` Android release APK build (`build:mobile:apk`) and installation docs | Done |
 | GitHub Actions CI (`ci.yml`) and signed Android APK release pipeline (`release-android.yml`) | Done |
 | add Android share target to save URLs into Timber from different app | Done |
+| Per-link browser choice (Default Browser button, installed browsers "Open with" picker, and Default Browser setting) | Done |
 
 ## 5. Known Issues and Open Items
 
@@ -175,6 +176,7 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-24 — Added Android browser choice feature (`BrowserBridge.kt`, `features/browsers/`, Default Browser and "Open with" buttons on bookmark cards, Default Browser selector in Settings, and `browser-resolver` unit tests).
 - 2026-11-23 - Added Android share target to save URLs into Timber from different app share option, opens timber popUp for quick save.
 - 2026-11-20 — Added GitHub Actions CI (`ci.yml`) and Android APK release (`release-android.yml`) workflows.
 - 2026-11-20 — Documented Android release signing setup, standalone APK sideloading (ADB and on-device), required device permissions ("Install unknown apps", USB install prompt, Play Protect), and common install troubleshooting in `README.md` and `PROJECT_OVERVIEW.md`.

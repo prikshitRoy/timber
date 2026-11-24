@@ -8,7 +8,7 @@ Timber is a Yarn Workspaces monorepo containing the **Timber** cross-browser New
 - **Unified New Tab Browser Extension (`@timber/extension`):** Replaces the browser New Tab page in Chrome, Brave, and Firefox with a deduplicated grid of nestable folders and links.
 - **User-Controlled Browser Sync:** Scans native browser bookmarks and presents a diff checklist before importing new links or folders.
 - **Portable JSON Backups & HTML Export:** Exports timestamped `.json` backup files (supporting non-destructive **Merge** and full **Replace** modes) and standard Netscape `.html` bookmark files.
-- **Android Bookmark Viewer (`@timber/mobile`):** Tauri v2 + Next.js 14 Android app that imports Timber `.json` backup files for offline browsing, folder navigation, and search.
+- **Android Bookmark Viewer (`@timber/mobile`):** Tauri v2 + Next.js 14 Android app that imports Timber `.json` backup files for offline browsing, folder navigation, search, and opening links in your default or any installed Android browser.
 - **Automated Cross-Package Verification:** Watches `@timber/core`, `@timber/extension`, and `@timber/mobile` simultaneously, running type-checks and unit tests on save with instant failure alerts.
 
 ## Monorepo Architecture & How Packages Connect
@@ -17,7 +17,7 @@ Timber is a Yarn Workspaces monorepo containing the **Timber** cross-browser New
 | ------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@timber/core`      | `packages/core`  | Pure TypeScript library with zero browser, DOM storage, or Tauri dependencies. Exports `TimberState` types, `parseBackup`, `mergeBackupIntoState`, `normalizeBookmarkUrl`, `computeRootTiles`, `tile-ordering`, and state mutation helpers. |
 | `@timber/extension` | `apps/extension` | WXT + React 19 browser extension for Chrome, Brave, and Firefox. Imports all pure domain/backup/layout logic from `@timber/core` and handles WebExtension side effects (`browser.storage.local`, `browser.bookmarks`).                      |
-| `@timber/mobile`    | `apps/mobile`    | Tauri v2 + Next.js 14 (`output: "export"`) + React 18 Android application. Imports `@timber/core` to parse and lay out `.json` backup files, persists state locally, and opens external links via `@tauri-apps/plugin-opener`.              |
+| `@timber/mobile`    | `apps/mobile`    | Tauri v2 + Next.js 14 (`output: "export"`) + React 18 Android application. Imports `@timber/core` to parse and lay out `.json` backup files, persists state locally, and opens links in a chosen or default installed Android browser via `BrowserBridge.kt` (with `@tauri-apps/plugin-opener` fallback). |
 
 ## Tech Stack
 
@@ -316,7 +316,8 @@ Timber/
 │   │   └── wxt.config.ts
 │   └── mobile/                      # @timber/mobile Tauri v2 + Next.js 14 Android application
 │       ├── src/app/                 # Next.js App Router layout, styles, and main view
-│       ├── src-tauri/               # Tauri v2 Rust host, capabilities, and generated Android project
+|       ├── src/features/            # Mobile feature modules (bookmarks, browsers, theme)
+│       ├── src-tauri/               # Tauri v2 Rust host, capabilities, and generated Android project (including Kotlin WebView bridges)
 │       ├── next.config.mjs          # Static export configuration (output: "export")
 │       ├── package.json
 │       └── tailwind.config.ts
@@ -378,6 +379,9 @@ yarn workspace @timber/core test
 
 # Run unit tests in watch mode
 yarn test:watch
+
+# Run mobile browser-resolver unit tests
+node --test apps/mobile/src/features/browsers/browser-resolver.test.ts
 ```
 
 
