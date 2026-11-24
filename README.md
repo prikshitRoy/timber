@@ -8,7 +8,7 @@ Timber is a Yarn Workspaces monorepo containing the **Timber** cross-browser New
 - **Unified New Tab Browser Extension (`@timber/extension`):** Replaces the browser New Tab page in Chrome, Brave, and Firefox with a deduplicated grid of nestable folders and links.
 - **User-Controlled Browser Sync:** Scans native browser bookmarks and presents a diff checklist before importing new links or folders.
 - **Portable JSON Backups & HTML Export:** Exports timestamped `.json` backup files (supporting non-destructive **Merge** and full **Replace** modes) and standard Netscape `.html` bookmark files.
-- **Android Bookmark Viewer (`@timber/mobile`):** Tauri v2 + Next.js 14 Android app that imports Timber `.json` backup files for offline browsing, folder navigation, search, and opening links in your default or any installed Android browser.
+- **Android Bookmark Companion (`@timber/mobile`):** Tauri v2 + Next.js 14 Android app to import Timber `.json` backups, create links and folders, quick-save URLs via a translucent Android share popup without leaving your current app, search offline, and open links in your default or any installed browser.
 - **Automated Cross-Package Verification:** Watches `@timber/core`, `@timber/extension`, and `@timber/mobile` simultaneously, running type-checks and unit tests on save with instant failure alerts.
 
 ## Monorepo Architecture & How Packages Connect
@@ -380,8 +380,12 @@ yarn workspace @timber/core test
 # Run unit tests in watch mode
 yarn test:watch
 
-# Run mobile browser-resolver unit tests
-node --test apps/mobile/src/features/browsers/browser-resolver.test.ts
+# Run mobile pure-logic unit tests
+node --experimental-strip-types --test \
+  apps/mobile/src/features/browsers/browser-resolver.test.ts \
+  apps/mobile/src/features/bookmarks/state/mobile-mutations.test.ts \
+  apps/mobile/src/features/bookmarks/state/folder-options.test.ts \
+  apps/mobile/src/features/bookmarks/state/pending-share-saves.test.ts
 ```
 
 

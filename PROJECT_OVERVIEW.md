@@ -90,8 +90,9 @@ Status key: **Done** | **In progress** | **Planned**
 | Custom Timber Android launcher icons (`tauri icon` + `mipmap-*`) | Done |
 | Signed standalone offline `universal` Android release APK build (`build:mobile:apk`) and installation docs | Done |
 | GitHub Actions CI (`ci.yml`) and signed Android APK release pipeline (`release-android.yml`) | Done |
-| add Android share target to save URLs into Timber from different app | Done |
+| Translucent native Android share overlay popup (`ShareActivity`, `text/*`) to save URLs without leaving the current app | Done |
 | Per-link browser choice (Default Browser button, installed browsers "Open with" picker, and Default Browser setting) | Done |
+| Manual link creation (`+ Link` at root or inside a folder) and top-level folder creation (`+ Folder`) | Done |
 
 
 ### 4.4 Feature Parity (Extension vs. Mobile)
@@ -108,14 +109,14 @@ Status key: **Done** | **In progress** | **Planned** | **N/A** (platform-specifi
 | | Per-link browser picker ("Open with" installed browsers + Default Browser setting) | N/A | Done |
 | | Copy bookmark URL to clipboard | Done | Done |
 | | Quick-save outside dashboard (toolbar popup / Android Share Sheet) | Done | Done |
-| **Bookmark CRUD** | Create manual link (`+ Link`) at root | Done | Planned |
-| | Create manual link inside a specific folder | Done | Planned |
+| **Bookmark CRUD** | Create manual link (`+ Link`) at root | Done | Done |
+| | Create manual link inside a specific folder | Done | Done |
 | | Edit single bookmark (title & URL) | Done | Planned |
 | | Delete single bookmark (with confirmation) | Done | Planned |
 | | Duplicate-link deletion choice ("only this instance" vs. "all duplicates") | Done | Planned |
 | | Add existing bookmark to a folder (or create folder & add) | Done | Planned |
 | | Remove bookmark from a folder without deleting it from catalog | Done | Planned |
-| **Folder Management** | Create top-level folder (`+ Folder`) | Done | In progress (Share Sheet only) |
+| **Folder Management** | Create top-level folder (`+ Folder`) | Done | Done |
 | | Create nested sub-folder (`Add folder`) | Done | Planned |
 | | Rename folder | Done | Planned |
 | | Delete folder (cascading delete of nested folders & links) | Done | Planned |
@@ -215,6 +216,8 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-24 — Replaced full-app Android share launch with translucent native `ShareActivity` popup (`text/*`, `ClipData` fallback, `SharedPreferences` folder mirror & save queue), fixed direct WebView bridge invocation, removed unused `ShareLinkModal`, and added `pending-share-saves` unit tests.
+- 2026-11-24 — Added mobile manual link (`+ Link`) and folder (`+ Folder`) creation with pure `mobile-mutations` / `folder-options` helpers, `useMobileBookmarkActions` hook, bottom-sheet modals, and unit tests.
 - 2026-11-24 — Added Extension vs. Mobile feature parity matrix (Section 4.4) and removed stale extension popup placeholder note in `PROJECT_OVERVIEW.md`.
 - 2026-11-24 — Added Android browser choice feature (`BrowserBridge.kt`, `features/browsers/`, Default Browser and "Open with" buttons on bookmark cards, Default Browser selector in Settings, and `browser-resolver` unit tests).
 - 2026-11-23 - Added Android share target to save URLs into Timber from different app share option, opens timber popUp for quick save.
