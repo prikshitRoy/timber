@@ -13,7 +13,7 @@
 
 > ⚠️ **Instruction for AI (binding, not descriptive):** This file is the single source of truth for what this project is and what has been built so far. See **"How to Keep This File Updated (Instructions for AI)"** at the bottom — those are operating rules you must act on in every response that changes the project, not prose describing the project.
 
-**Last updated:** 2026-11-24
+**Last updated:** 2026-11-25
 
 ---
 
@@ -93,6 +93,7 @@ Status key: **Done** | **In progress** | **Planned**
 | Translucent native Android share overlay popup (`ShareActivity`, `text/*`) to save URLs without leaving the current app | Done |
 | Per-link browser choice (Default Browser button, installed browsers "Open with" picker, and Default Browser setting) | Done |
 | Manual link creation (`+ Link` at root or inside a folder) and top-level folder creation (`+ Folder`) | Done |
+| Per-bookmark `⋮` action sheet (Edit title/URL, Add to folder, Remove from folder, and duplicate-aware Delete) | Done |
 
 
 ### 4.4 Feature Parity (Extension vs. Mobile)
@@ -111,11 +112,11 @@ Status key: **Done** | **In progress** | **Planned** | **N/A** (platform-specifi
 | | Quick-save outside dashboard (toolbar popup / Android Share Sheet) | Done | Done |
 | **Bookmark CRUD** | Create manual link (`+ Link`) at root | Done | Done |
 | | Create manual link inside a specific folder | Done | Done |
-| | Edit single bookmark (title & URL) | Done | Planned |
-| | Delete single bookmark (with confirmation) | Done | Planned |
-| | Duplicate-link deletion choice ("only this instance" vs. "all duplicates") | Done | Planned |
-| | Add existing bookmark to a folder (or create folder & add) | Done | Planned |
-| | Remove bookmark from a folder without deleting it from catalog | Done | Planned |
+| | Edit single bookmark (title & URL) | Done | Done |
+| | Delete single bookmark (with confirmation) | Done | Done |
+| | Duplicate-link deletion choice ("only this instance" vs. "all duplicates") | Done | Done |
+| | Add existing bookmark to a folder (or create folder & add) | Done | Done |
+| | Remove bookmark from a folder without deleting it from catalog | Done | Done |
 | **Folder Management** | Create top-level folder (`+ Folder`) | Done | Done |
 | | Create nested sub-folder (`Add folder`) | Done | Planned |
 | | Rename folder | Done | Planned |
@@ -216,6 +217,7 @@ yarn workspace @timber/mobile android:dev      # run app on connected Android de
 
 > Newest entry on top. One line per change: date — what changed.
 
+- 2026-11-25 — Added mobile per-bookmark `⋮` action sheet (`ActionSheetModal`, `EditBookmarkModal`, `AddToFolderModal`, `DeleteBookmarkModal`, `BookmarkActionModals`), pure `bookmark-item-mutations` helpers, and unit tests.
 - 2026-11-24 — Replaced full-app Android share launch with translucent native `ShareActivity` popup (`text/*`, `ClipData` fallback, `SharedPreferences` folder mirror & save queue), fixed direct WebView bridge invocation, removed unused `ShareLinkModal`, and added `pending-share-saves` unit tests.
 - 2026-11-24 — Added mobile manual link (`+ Link`) and folder (`+ Folder`) creation with pure `mobile-mutations` / `folder-options` helpers, `useMobileBookmarkActions` hook, bottom-sheet modals, and unit tests.
 - 2026-11-24 — Added Extension vs. Mobile feature parity matrix (Section 4.4) and removed stale extension popup placeholder note in `PROJECT_OVERVIEW.md`.
