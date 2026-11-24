@@ -4,13 +4,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  TIMBER_SCHEMA_VERSION,
-  addBookmarkToPageInState,
-  addBookmarkToRootInState,
   applyBackupImportToState,
   computeRootTiles,
-  createManualLinkInState,
-  createPageInState,
   filterBookmarksByQuery,
   type BackupImportMode,
   type Bookmark,
@@ -26,37 +21,6 @@ import {
 
 // Duration in milliseconds before transient status feedback auto-dismisses.
 const STATUS_AUTO_DISMISS_MS = 4000;
-
-
-
-function createEmptyMobileState(): TimberState {
-  const now = Date.now();
-  const allPageId = crypto.randomUUID();
-
-  return {
-    schemaVersion: TIMBER_SCHEMA_VERSION,
-    sources: [],
-    bookmarks: [],
-    bookmarkSources: [],
-    pages: [
-      {
-        id: allPageId,
-        name: "All Bookmarks",
-        type: "all",
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
-    activePageId: allPageId,
-    rootOrder: [],
-    rootBookmarkIds: [],
-    foldersMigrated: true,
-  };
-}
-
-
-
-
 
 /**
  * Provide reactive catalog state, search results, and JSON backup import actions for the Android UI.
@@ -125,6 +89,14 @@ export function useTimberCatalog() {
     setError("");
   }, []);
 
+  /**
+   * Persist an updated TimberState snapshot to localStorage and update React state.
+   */
+  const commitState = useCallback((nextState: TimberState) => {
+    saveMobileState(nextState);
+    setState(nextState);
+  }, []);
+
   const bookmarks: Bookmark[] = useMemo(
     () => state?.bookmarks ?? [],
     [state]
@@ -160,59 +132,10 @@ export function useTimberCatalog() {
 
   const hasCatalogData = bookmarks.length > 0 || folders.length > 0;
 
-  /**
-  * Save a manually added or shared link to the root grid, an existing folder, or a newly created folder.
-  */
-  const handleAddSharedBookmark = useCallback(
-    (input: {
-      url: string;
-      title: string;
-      folderId?: string;
-      newFolderName?: string;
-    }) => {
-      try {
-        setError("");
-        const nextState: TimberState = state
-          ? structuredClone(state)
-          : createEmptyMobileState();
-
-        const bookmark = createManualLinkInState(
-          nextState,
-          input.url.trim(),
-          input.title.trim() || input.url.trim()
-        );
-
-        let targetFolderId = input.folderId?.trim() || "";
-        const trimmedNewFolder = input.newFolderName?.trim() || "";
-
-        if (trimmedNewFolder) {
-          const createdFolder = createPageInState(nextState, trimmedNewFolder);
-          targetFolderId = createdFolder.id;
-        }
-
-        if (targetFolderId) {
-          addBookmarkToPageInState(nextState, targetFolderId, bookmark.id);
-        } else {
-          addBookmarkToRootInState(nextState, bookmark.id);
-        }
-
-        saveMobileState(nextState);
-        setState(nextState);
-        setStatus(`Saved "${bookmark.title}" to Timber.`);
-        return true;
-      } catch (saveError) {
-        setError(
-          saveError instanceof Error
-            ? saveError.message
-            : "Failed to save bookmark."
-        );
-        return false;
-      }
-    },
-    [state]
-  );
 
   return {
+    state,
+    commitState,
     isLoaded,
     hasCatalogData,
     bookmarks,
@@ -230,6 +153,5 @@ export function useTimberCatalog() {
     setError,
     handleImportJsonFile,
     handleClearCatalog,
-    handleAddSharedBookmark,
   };
 }

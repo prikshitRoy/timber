@@ -3,22 +3,27 @@
  * bookmark/folder count, Settings trigger, and search input.
  */
 
+
 interface MobileHeaderProps {
   bookmarkCount: number;
   folderCount: number;
   query: string;
   onQueryChange: (value: string) => void;
+  onAddLink: () => void;
+  onCreateFolder: () => void;
   onOpenSettings: () => void;
 }
 
 /**
- * Render the decluttered sticky mobile header bar and search input.
+ * Render the decluttered sticky mobile header bar, search input, and quick-create controls.
  */
 export default function MobileHeader({
   bookmarkCount,
   folderCount,
   query,
   onQueryChange,
+  onAddLink,
+  onCreateFolder,
   onOpenSettings,
 }: MobileHeaderProps) {
   return (
@@ -69,6 +74,24 @@ export default function MobileHeader({
             ✕
           </button>
         )}
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onAddLink}
+          className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-semibold text-white transition active:bg-teal-700"
+        >
+          + Link
+        </button>
+
+        <button
+          type="button"
+          onClick={onCreateFolder}
+          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-800 transition active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:active:bg-zinc-800"
+        >
+          + Folder
+        </button>
       </div>
     </header>
   );

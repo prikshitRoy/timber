@@ -4,13 +4,17 @@
 
 interface EmptyCatalogStateProps {
   onTriggerImport: () => void;
+  onAddLink: () => void;
+  onCreateFolder: () => void;
 }
 
 /**
- * Render an empty-state call-to-action card to import a Timber JSON backup file.
+ * Render an empty-state call-to-action card to import a backup or create links/folders directly.
  */
 export default function EmptyCatalogState({
   onTriggerImport,
+  onAddLink,
+  onCreateFolder,
 }: EmptyCatalogStateProps) {
   return (
 
@@ -42,6 +46,24 @@ export default function EmptyCatalogState({
       >
         Import Backup (.json)
       </button>
+
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onAddLink}
+          className="rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-xs font-semibold text-zinc-800 transition active:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:active:bg-zinc-700"
+        >
+          + Add Link
+        </button>
+
+        <button
+          type="button"
+          onClick={onCreateFolder}
+          className="rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-xs font-semibold text-zinc-800 transition active:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:active:bg-zinc-700"
+        >
+          + New Folder
+        </button>
+      </div>
     </section>
   );
 }
