@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep WebView JavaScript bridge methods exposed to the Tauri frontend
+-keepclassmembers class com.timber.mobile.BrowserBridge {
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keepclassmembers class com.timber.mobile.MainActivity$TimberShareBridge {
+    @android.webkit.JavascriptInterface <methods>;
+}

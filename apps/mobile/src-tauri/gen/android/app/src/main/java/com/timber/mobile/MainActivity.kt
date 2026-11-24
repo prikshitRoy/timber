@@ -31,6 +31,7 @@ class MainActivity : TauriActivity() {
     super.onWebViewCreate(webView)
     webViewRef = webView
     webView.addJavascriptInterface(TimberShareBridge(), "TimberAndroidShare")
+    webView.addJavascriptInterface(BrowserBridge(this), "TimberAndroidBrowser")
   }
 
   private fun captureShareIntent(incoming: Intent?): Boolean {
