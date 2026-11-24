@@ -14,7 +14,9 @@ interface FolderItemProps {
   folder: BookmarkPage;
   allFolders: BookmarkPage[];
   bookmarksById: Map<string, Bookmark>;
+  defaultBrowserLabel: string;
   onOpenUrl: (url: string) => void;
+  onChooseBrowser: (bookmark: Bookmark) => void;
   onCopyUrl: (url: string) => void;
 }
 
@@ -25,7 +27,9 @@ export default function FolderItem({
   folder,
   allFolders,
   bookmarksById,
+  defaultBrowserLabel,
   onOpenUrl,
+  onChooseBrowser,
   onCopyUrl,
 }: FolderItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -77,14 +81,18 @@ return (
                   folder={child.folder}
                   allFolders={allFolders}
                   bookmarksById={bookmarksById}
+                  defaultBrowserLabel={defaultBrowserLabel}
                   onOpenUrl={onOpenUrl}
+                  onChooseBrowser={onChooseBrowser}
                   onCopyUrl={onCopyUrl}
                 />
               ) : (
                 <BookmarkRow
                   key={child.key}
                   bookmark={child.bookmark}
+                  defaultBrowserLabel={defaultBrowserLabel}
                   onOpenUrl={onOpenUrl}
+                  onChooseBrowser={onChooseBrowser}
                   onCopyUrl={onCopyUrl}
                 />
               )

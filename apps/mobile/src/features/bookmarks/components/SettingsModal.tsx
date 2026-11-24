@@ -4,11 +4,16 @@
  */
 
 import type { BackupImportMode } from "@timber/core";
+import type { InstalledBrowser } from "@/features/browsers";
 import type { MobileThemeMode } from "@/features/theme";
 
 interface SettingsModalProps {
   themeMode: MobileThemeMode;
   onThemeModeChange: (mode: MobileThemeMode) => void;
+  installedBrowsers: InstalledBrowser[];
+  systemDefaultBrowserLabel: string | null;
+  preferredBrowserPackage: string | null;
+  onPreferredBrowserChange: (packageName: string | null) => void;
   importMode: BackupImportMode;
   onImportModeChange: (mode: BackupImportMode) => void;
   onTriggerImport: () => void;
@@ -29,6 +34,10 @@ const THEME_OPTIONS: { value: MobileThemeMode; label: string }[] = [
 export default function SettingsModal({
   themeMode,
   onThemeModeChange,
+  installedBrowsers,
+  systemDefaultBrowserLabel,
+  preferredBrowserPackage,
+  onPreferredBrowserChange,
   importMode,
   onImportModeChange,
   onTriggerImport,
@@ -87,6 +96,42 @@ export default function SettingsModal({
             ))}
           </div>
         </section>
+
+
+
+        {installedBrowsers.length > 0 && (
+          <section className="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Default Browser
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+              Choose which browser opens links by default when you tap a
+              bookmark.
+            </p>
+
+            <select
+              aria-label="Default browser"
+              value={preferredBrowserPackage ?? ""}
+              onChange={(event) =>
+                onPreferredBrowserChange(event.target.value || null)
+              }
+              className="mt-2.5 w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-teal-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            >
+              <option value="">
+                {systemDefaultBrowserLabel
+                  ? `Mobile Default (${systemDefaultBrowserLabel})`
+                  : "Mobile Default"}
+              </option>
+              {installedBrowsers.map((browser) => (
+                <option key={browser.packageName} value={browser.packageName}>
+                  {browser.label}
+                </option>
+              ))}
+            </select>
+          </section>
+        )}
+
+
 
         <section className="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

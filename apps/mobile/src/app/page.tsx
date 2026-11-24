@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { Bookmark } from "@timber/core";
 import {
   CatalogList,
   ConfirmDialog,
@@ -10,10 +11,14 @@ import {
   ShareLinkModal,
   StatusBanner,
   copyBookmarkUrl,
-  openBookmarkUrl,
   useSharedLinkIntent,
   useTimberCatalog,
 } from "@/features/bookmarks";
+import {
+  BrowserPickerModal,
+  useMobileBrowsers,
+  type InstalledBrowser,
+} from "@/features/browsers";
 import { useMobileTheme } from "@/features/theme";
 
 // Tracks a pending destructive action awaiting explicit confirmation from the user.
@@ -28,6 +33,24 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { themeMode, setThemeMode } = useMobileTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+
+  const [browserPickerBookmark, setBrowserPickerBookmark] =
+    useState<Bookmark | null>(null);
+  const {
+    installedBrowsers,
+    isBridgeAvailable,
+    systemDefaultBrowser,
+    effectiveDefaultBrowser,
+    activePreferredPackage,
+    defaultBrowserLabel,
+    setPreferredPackage,
+    refreshInstalledBrowsers,
+    openInDefaultBrowser,
+    openInSelectedBrowser,
+  } = useMobileBrowsers();
+
+
   const { pendingShare, clearPendingShare } = useSharedLinkIntent();
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingConfirmation | null>(null);
@@ -52,13 +75,45 @@ export default function Home() {
     handleAddSharedBookmark,
   } = useTimberCatalog();
 
+
   /**
-   * Open a bookmark link in Android's default browser and surface any error.
+   * Open a bookmark link in the user's preferred or mobile default browser and surface any error.
    */
   async function handleOpenBookmark(url: string) {
     try {
       setError("");
-      await openBookmarkUrl(url);
+      await openInDefaultBrowser(url);
+    } catch (openError) {
+      setError(
+        openError instanceof Error ? openError.message : "Failed to open link."
+      );
+    }
+  }
+
+  /**
+   * Open the browser picker modal after refreshing the list of installed mobile browsers.
+   */
+  function handleChooseBrowser(bookmark: Bookmark) {
+    refreshInstalledBrowsers();
+    setBrowserPickerBookmark(bookmark);
+  }
+
+  /**
+   * Open a bookmark link in a user-selected browser and optionally persist it as the default.
+   */
+  async function handleOpenInSelectedBrowser(
+    url: string,
+    browser: InstalledBrowser,
+    shouldSetAsDefault: boolean
+  ) {
+    if (shouldSetAsDefault) {
+      setPreferredPackage(browser.packageName);
+      setStatus(`Default browser set to ${browser.label}.`);
+    }
+
+    try {
+      setError("");
+      await openInSelectedBrowser(url, browser.packageName);
     } catch (openError) {
       setError(
         openError instanceof Error ? openError.message : "Failed to open link."
@@ -150,7 +205,9 @@ export default function Home() {
             rootTiles={rootTiles}
             folders={folders}
             bookmarksById={bookmarksById}
+            defaultBrowserLabel={defaultBrowserLabel}
             onOpenUrl={(url) => void handleOpenBookmark(url)}
+            onChooseBrowser={handleChooseBrowser}
             onCopyUrl={(url) => void handleCopyBookmark(url)}
           />
         )}
@@ -168,6 +225,10 @@ export default function Home() {
         <SettingsModal
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
+          installedBrowsers={installedBrowsers}
+          systemDefaultBrowserLabel={systemDefaultBrowser?.label ?? null}
+          preferredBrowserPackage={activePreferredPackage}
+          onPreferredBrowserChange={setPreferredPackage}
           importMode={importMode}
           onImportModeChange={setImportMode}
           onTriggerImport={() => fileInputRef.current?.click()}
@@ -210,6 +271,24 @@ export default function Home() {
           onClose={clearPendingShare}
         />
       )}
+
+
+      {browserPickerBookmark && (
+        <BrowserPickerModal
+          bookmark={browserPickerBookmark}
+          browsers={installedBrowsers}
+          isBridgeAvailable={isBridgeAvailable}
+          effectiveDefaultBrowser={effectiveDefaultBrowser}
+          defaultBrowserLabel={defaultBrowserLabel}
+          hasCustomDefault={activePreferredPackage !== null}
+          onOpenInDefault={(url) => void handleOpenBookmark(url)}
+          onSelectBrowser={(url, browser, shouldSetAsDefault) =>
+            void handleOpenInSelectedBrowser(url, browser, shouldSetAsDefault)
+          }
+          onClose={() => setBrowserPickerBookmark(null)}
+        />
+      )}
+      
     </div>
   );
 }

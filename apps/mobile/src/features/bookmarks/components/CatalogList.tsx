@@ -12,7 +12,9 @@ interface CatalogListProps {
   rootTiles: RootTile[];
   folders: BookmarkPage[];
   bookmarksById: Map<string, Bookmark>;
+  defaultBrowserLabel: string;
   onOpenUrl: (url: string) => void;
+  onChooseBrowser: (bookmark: Bookmark) => void;
   onCopyUrl: (url: string) => void;
 }
 
@@ -25,7 +27,9 @@ export default function CatalogList({
   rootTiles,
   folders,
   bookmarksById,
+  defaultBrowserLabel,
   onOpenUrl,
+  onChooseBrowser,
   onCopyUrl,
 }: CatalogListProps) {
   const hasActiveQuery = query.trim().length > 0;
@@ -56,7 +60,9 @@ export default function CatalogList({
           <BookmarkRow
             key={bookmark.id}
             bookmark={bookmark}
+            defaultBrowserLabel={defaultBrowserLabel}
             onOpenUrl={onOpenUrl}
+            onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
           />
         ))}
@@ -73,14 +79,18 @@ export default function CatalogList({
             folder={tile.page}
             allFolders={folders}
             bookmarksById={bookmarksById}
+            defaultBrowserLabel={defaultBrowserLabel}
             onOpenUrl={onOpenUrl}
+            onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
           />
         ) : (
           <BookmarkRow
             key={tile.key}
             bookmark={tile.bookmark}
+            defaultBrowserLabel={defaultBrowserLabel}
             onOpenUrl={onOpenUrl}
+            onChooseBrowser={onChooseBrowser}
             onCopyUrl={onCopyUrl}
           />
         )
